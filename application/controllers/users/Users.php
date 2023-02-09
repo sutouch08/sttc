@@ -11,7 +11,15 @@ class Users extends PS_Controller{
   {
     parent::__construct();
     $this->home = base_url().'users/users';
-		$this->load->helper('channels');
+		$this->load->model('admin/warehouse_model');
+		$this->load->model('admin/team_model');
+		$this->load->helper('team');
+		$this->load->helper('warehouse');
+
+		if($this->pm->can_view === FALSE)
+    {
+      $this->deny_page();
+    }
   }
 
 
@@ -19,11 +27,10 @@ class Users extends PS_Controller{
   public function index()
   {
 		$filter = array(
-			'uname' => get_filter('uname', 'uname', ''),
-			'dname' => get_filter('dname', 'dname', ''),
-			'ugroup' => get_filter('ugroup', 'ugroup', 'all'),
-			'uteam' => get_filter('uteam', 'uteam', 'all'),
-			'uwh' => get_filter('uwh','uwh', 'all'),
+			'uname' => get_filter('uname', 'user_uname', ''),
+			'dname' => get_filter('dname', 'user_dname', ''),
+			'ugroup' => get_filter('ugroup', 'user_ugroup', 'all'),
+			'team_id' => get_filter('team_id', 'user_team_id', 'all'),
 			'active' => get_filter('active', 'user_active', 'all')
 		);
 
@@ -50,10 +57,15 @@ class Users extends PS_Controller{
   {
 		if($this->pm->can_add)
 		{
-			$this->load->model('masters/warehouse_model');
-			$this->load->helper('warehouse');
 			$this->title = "Add user";
-			$ds['whList'] = $this->warehouse_model->get_all();
+			$whList = $this->warehouse_model->get_listed();
+			$teams = $this->team_model->get_all_active();
+
+			$ds = array(
+				'whList' => $whList,
+				'teamList' => $teams
+			);
+
 			$this->load->view('users/user_add', $ds);
 		}
 		else
@@ -70,23 +82,16 @@ class Users extends PS_Controller{
 
 		if($this->pm->can_add)
 		{
-			$this->load->model('masters/warehouse_model');
-
 			if($this->input->post())
 			{
 				$uname = trim($this->input->post('uname'));
 				$dname = trim($this->input->post('dname'));
-				$sale_id = $this->input->post('sale_id');
-				$emp_id = get_null($this->input->post('emp_id'));
 				$team_id = get_null($this->input->post('team_id'));
-				$quota_no = get_null(trim($this->input->post('quota_no')));
-				$is_customer = is_true($this->input->post('is_customer'));
-				$customer_code = get_null($this->input->post('customer_code'));
-				$channels = get_null($this->input->post('channels'));
-				$warehouse = get_null($this->input->post('warehouse'));
-				$whList = json_decode($this->input->post('warehouse_list'));
+				$team_list = json_decode($this->input->post('team_list'));
+				$fromWhList = json_decode($this->input->post('from_warehouse_list'));
+				$toWhList = json_decode($this->input->post('to_warehouse_list'));
 				$pwd = $this->input->post('pwd');
-				$id_profile = get_null($this->input->post('profile'));
+				$ugroup = $this->input->post('ugroup');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
 				$force_reset = $this->input->post('force_reset') == 1 ? 1 : 0;
 
@@ -94,57 +99,139 @@ class Users extends PS_Controller{
 				{
 					if( ! $this->user_model->is_exists_display_name($dname))
 					{
-						if( ! $is_customer OR ! empty($customer_code))
+						if($ugroup > 0)
 						{
-							$arr = array(
-								'uname' => $uname,
-								'pwd' => password_hash($pwd, PASSWORD_DEFAULT),
-								'name' => $dname,
-								'uid' => md5($uname),
-								'id_profile' => $id_profile,
-								'active' => $active,
-								'sale_id' => $sale_id,
-								'emp_id' => $emp_id,
-								'team_id' => $team_id,
-								'quota_no' => $quota_no,
-								'is_customer' => $is_customer ? 1 : 0,
-								'customer_code' => $customer_code,
-								'channels' => $channels,
-								'warehouse_code' => $warehouse,
-								'last_pass_change' => date('Y-m-d'),
-								'force_reset' => $force_reset
-							);
-
-							$id = $this->user_model->add($arr);
-
-							if( ! $id)
+							if(($ugroup == 2 && empty($team_list)) OR ($ugroup == 3 && empty($team_id)))
 							{
 								$sc = FALSE;
-								set_error('insert', 'user');
+								set_error(0, "Missing Area(s)");
 							}
-							else
-							{
-								if($is_customer && ! empty($whList))
-								{
-									foreach($whList as $wh)
-									{
-										$arr = array(
-											'user_id' => $id,
-											'uname' => $uname,
-											'warehouse_id' => $wh->id,
-											'warehouse_code' => $wh->code,
-											'update_user' => $this->_user->id
-										);
 
-										$this->warehouse_model->add_user_warehouse($arr);
+							if($ugroup == 3 && (empty($fromWhList) OR empty($toWhList)))
+							{
+								$sc = FALSE;
+								set_error(0, "Missing Warehouse(s)");
+							}
+
+							if($sc === TRUE)
+							{
+								$arr = array(
+									'uname' => $uname,
+									'pwd' => password_hash($pwd, PASSWORD_DEFAULT),
+									'name' => $dname,
+									'uid' => md5($uname),
+									'ugroup' => $ugroup,
+									'active' => $active,
+									'team_id' => $ugroup == 3 ? $team_id : NULL,
+									'last_pass_change' => date('Y-m-d'),
+									'force_reset' => $force_reset,
+									'create_at' => now(),
+									'create_by' => $this->_user->id
+								);
+
+								$this->db->trans_begin();
+
+								$id = $this->user_model->add($arr);
+
+								if( ! $id)
+								{
+									$sc = FALSE;
+									set_error('insert', 'user');
+								}
+								else
+								{
+									if($ugroup == 2)
+									{
+										//--- insert user team
+										if( ! empty($team_list))
+										{
+											foreach($team_list as $tid)
+											{
+												if($sc === FALSE)
+												{
+													break;
+												}
+
+												$arr = array(
+													'user_id' => $id,
+													'team_id' => $tid,
+													'team_role' => 'Lead'
+												);
+
+												if( ! $this->team_model->add_user_team($arr))
+												{
+													$sc = FALSE;
+													set_error('insert', 'user area');
+												}
+											}
+										}
 									}
+
+									if($ugroup == 3)
+									{
+										//-- insert user warehouse
+										if( ! empty($fromWhList))
+										{
+											foreach($fromWhList as $whsCode)
+											{
+												if( $sc === FALSE)
+												{
+													break;
+												}
+
+												$arr = array(
+													'user_id' => $id,
+													'warehouse_code' => $whsCode,
+													'type' => 'from'
+												);
+
+												if( ! $this->warehouse_model->add_user_warehouse($arr))
+												{
+													$sc = FALSE;
+													set_error('insert', 'user warehouse');
+												}
+											}
+										}
+
+										if( ! empty($toWhList))
+										{
+											foreach($toWhList as $whsCode)
+											{
+												if( $sc === FALSE)
+												{
+													break;
+												}
+
+												$arr = array(
+													'user_id' => $id,
+													'warehouse_code' => $whsCode,
+													'type' => 'to'
+												);
+
+												if( ! $this->warehouse_model->add_user_warehouse($arr))
+												{
+													$sc = FALSE;
+													set_error('insert', 'user warehouse');
+												}
+											}
+										}
+									}
+								}
+
+								if($sc === TRUE)
+								{
+									$this->db->trans_commit();
+								}
+								else
+								{
+									$this->db->trans_rollback();
 								}
 							}
 						}
 						else
 						{
 							$sc = FALSE;
-							set_error('required', ' : Customer');
+							set_error('required', ' : User group');
 						}
 					}
 					else
@@ -181,31 +268,49 @@ class Users extends PS_Controller{
 
 		if($this->pm->can_edit)
 		{
-			$this->load->model('masters/customers_model');
-			$this->load->model('masters/warehouse_model');
-			$this->load->helper('warehouse');
-
 			$user = $this->user_model->get($id);
 
 			if( ! empty($user))
 			{
-				$user->customer_name = $this->customers_model->get_name($user->customer_code);
-				$whList = $this->warehouse_model->get_all();
-				$userWh = $this->warehouse_model->get_user_warehouse($id);
-				$uw = array();
-
-				if( ! empty($userWh))
+				$whList = $this->warehouse_model->get_listed();
+				$ufromWh = $this->warehouse_model->get_user_from_warehouse($id);
+				$utoWh = $this->warehouse_model->get_user_to_warehouse($id);
+				$ufwh = array();
+				$utwh = array();
+				if( ! empty($ufromWh))
 				{
-					foreach($userWh as $wh)
+					foreach($ufromWh as $rs)
 					{
-						$uw[$wh->warehouse_id] = $wh->warehouse_code;
+						$ufwh[$rs->id] = $rs->code;
+					}
+				}
+
+				if( ! empty($utoWh))
+				{
+					foreach($utoWh as $rs)
+					{
+						$utwh[$rs->id] = $rs->code;
+					}
+				}
+
+				$teams = $this->team_model->get_all_active();
+				$userTeam = $this->team_model->get_user_team($id);
+				$uteam = array();
+				if( ! empty($userTeam))
+				{
+					foreach($userTeam as $rs)
+					{
+						$uteam[$rs->id] = $rs->id;
 					}
 				}
 
 				$ds = array(
 					'user' => $user,
 					'whList' => $whList,
-					'uw' => $uw
+					'ufwh' => $ufwh,
+					'utwh' => $utwh,
+					'teamList' => $teams,
+					'uteam' => $uteam
 				);
 
 				$this->load->view('users/user_edit', $ds);
@@ -232,74 +337,162 @@ class Users extends PS_Controller{
 		{
 			if($this->input->post())
 			{
-				$this->load->model('masters/warehouse_model');
 				$id = $this->input->post('id');
-				$uname = $this->input->post('uname');
 				$dname = trim($this->input->post('dname'));
-				$sale_id = $this->input->post('sale_id');
-				$emp_id = get_null($this->input->post('emp_id'));
 				$team_id = get_null($this->input->post('team_id'));
-				$quota_no = get_null(trim($this->input->post('quota_no')));
-				$is_customer = is_true($this->input->post('is_customer'));
-				$customer_code = get_null($this->input->post('customer_code'));
-				$channels = get_null($this->input->post('channels'));
-				$warehouse = $this->input->post('warehouse');
-				$whList = json_decode($this->input->post('warehouse_list'));
-				$id_profile = get_null($this->input->post('profile'));
+				$team_list = json_decode($this->input->post('team_list'));
+				$fromWhList = json_decode($this->input->post('from_warehouse_list'));
+				$toWhList = json_decode($this->input->post('to_warehouse_list'));
+				$ugroup = $this->input->post('ugroup');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
 
 				if( ! $this->user_model->is_exists_display_name($dname, $id))
 				{
-					if( ! $is_customer OR ! empty($customer_code))
+					if($ugroup > 0)
 					{
-						$arr = array(
-							'name' => $dname,
-							'id_profile' => $id_profile,
-							'active' => $active,
-							'sale_id' => $sale_id,
-							'emp_id' => $emp_id,
-							'team_id' => $team_id,
-							'quota_no' => $quota_no,
-							'is_customer' => $is_customer ? 1 : 0,
-							'customer_code' => $customer_code,
-							'channels' => $channels,
-							'warehouse_code' => $warehouse
-						);
-
-						if( ! $this->user_model->update($id, $arr))
+						if(($ugroup == 2 && empty($team_list)) OR ($ugroup == 3 && empty($team_id)))
 						{
 							$sc = FALSE;
-							set_error('update', 'user');
+							set_error(0, "Missing Area(s)");
 						}
-						else
+
+						if($ugroup == 3 && (empty($fromWhList) OR empty($toWhList)))
 						{
-							if($is_customer)
+							$sc = FALSE;
+							set_error(0, "Missing Warehouse(s)");
+						}
+
+						if($sc === TRUE)
+						{
+							$arr = array(
+								'name' => $dname,
+								'ugroup' => $ugroup,
+								'active' => $active,
+								'team_id' => $ugroup == 3 ? $team_id : NULL,
+								'update_at' => now(),
+								'update_by' => $this->_user->id
+							);
+
+							$this->db->trans_begin();
+
+							if( ! $this->user_model->update($id, $arr))
 							{
-								//--- drop user warehouse
-								$this->warehouse_model->drop_user_warehouse($id);
-
-								if( ! empty($whList))
+								$sc = FALSE;
+								set_error('insert', 'user');
+							}
+							else
+							{
+								//--- drop team and warehouse
+								if( ! $this->warehouse_model->drop_user_warehouse($id))
 								{
-									foreach($whList as $wh)
-									{
-										$arr = array(
-											'user_id' => $id,
-											'uname' => $uname,
-											'warehouse_id' => $wh->id,
-											'warehouse_code' => $wh->code,
-											'update_user' => $this->_user->id
-										);
+									$sc = FALSE;
+									set_error(0, "Drop User warehouse failed");
+								}
 
-										$this->warehouse_model->add_user_warehouse($arr);
+								if($sc === TRUE)
+								{
+									if( ! $this->team_model->drop_user_team($id))
+									{
+										$sc = FALSE;
+										set_error(0, "Drop User area failed");
 									}
 								}
+
+								if($sc === TRUE)
+								{
+									if($ugroup == 2)
+									{
+										//--- insert user team
+										if( ! empty($team_list))
+										{
+											foreach($team_list as $tid)
+											{
+												if($sc === FALSE)
+												{
+													break;
+												}
+
+												$arr = array(
+												'user_id' => $id,
+												'team_id' => $tid,
+												'team_role' => 'Lead'
+												);
+
+												if( ! $this->team_model->add_user_team($arr))
+												{
+													$sc = FALSE;
+													set_error('insert', 'user area');
+												}
+											}
+										}
+									}
+
+									if($ugroup == 3)
+									{
+										//-- insert user warehouse
+										if( ! empty($fromWhList))
+										{
+											foreach($fromWhList as $whsCode)
+											{
+												if( $sc === FALSE)
+												{
+													break;
+												}
+
+												$arr = array(
+												'user_id' => $id,
+												'warehouse_code' => $whsCode,
+												'type' => 'from'
+												);
+
+												if( ! $this->warehouse_model->add_user_warehouse($arr))
+												{
+													$sc = FALSE;
+													set_error('insert', 'user warehouse');
+												}
+											}
+										}
+
+										if( ! empty($toWhList))
+										{
+											foreach($toWhList as $whsCode)
+											{
+												if( $sc === FALSE)
+												{
+													break;
+												}
+
+												$arr = array(
+												'user_id' => $id,
+												'warehouse_code' => $whsCode,
+												'type' => 'to'
+												);
+
+												if( ! $this->warehouse_model->add_user_warehouse($arr))
+												{
+													$sc = FALSE;
+													set_error('insert', 'user warehouse');
+												}
+											}
+										}
+									}
+								}
+							}
+
+							if($sc === TRUE)
+							{
+								$this->db->trans_commit();
+							}
+							else
+							{
+								$this->db->trans_rollback();
 							}
 						}
 					}
 					else
 					{
 						$sc = FALSE;
-						set_error('required', ' : Customer');
+						set_error('required', ' : User group');
 					}
 				}
 				else
@@ -336,24 +529,34 @@ class Users extends PS_Controller{
 
 			if( ! empty($user))
 			{
-				$this->load->model('masters/warehouse_model');
-				$this->load->helper('warehouse');
 				$whList = $this->warehouse_model->get_all();
 				$userWh = $this->warehouse_model->get_user_warehouse($id);
-				$uw = array();
-
+				$uwh = array();
 				if( ! empty($userWh))
 				{
-					foreach($userWh as $wh)
+					foreach($userWh as $rs)
 					{
-						$uw[$wh->warehouse_id] = $wh->warehouse_code;
+						$uwh[$rs->id] = $rs->code;
+					}
+				}
+
+				$teams = $this->team_model->get_all_active();
+				$userTeam = $this->team_model->get_user_team($id);
+				$uteam = array();
+				if( ! empty($userTeam))
+				{
+					foreach($userTeam as $rs)
+					{
+						$uteam[$rs->id] = $rs->id;
 					}
 				}
 
 				$ds = array(
 					'user' => $user,
 					'whList' => $whList,
-					'uw' => $uw
+					'uwh' => $uwh,
+					'teamList' => $teams,
+					'uteam' => $uteam
 				);
 
 				$this->load->view('users/user_detail', $ds);
@@ -514,7 +717,7 @@ class Users extends PS_Controller{
 
 	public function clear_filter()
 	{
-		$filter = array('uname', 'dname', 'uteam', 'ugroup', 'uwh', 'user_active');
+		$filter = array('user_uname', 'user_dname', 'user_team_id', 'user_ugroup', 'user_active');
 
 		return clear_filter($filter);
 

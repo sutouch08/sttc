@@ -264,12 +264,14 @@ function set_error($key, $name = "data")
 		'delete' => "Delete {$name} failed.",
 		'permission' => "You don't have permission to perform this operation.",
 		'required' => "Missing required parameter.",
-		'exists' => "'{$name}' already exists."
+		'exists' => "'{$name}' already exists.",
+		'notfound' => "No data found",
+		'transection' => "Delete failed because completed transection exists OR link to another module."
 	);
 
 	$ci =& get_instance();
 
-	$ci->error = (!empty($error[$key]) ? $error[$key] : "Unknow error.");
+	$ci->error = ( ! empty($error[$key]) ? $error[$key] : ( ! empty($name) ? $name : "Unknow error."));
 }
 
 
@@ -309,7 +311,7 @@ function is_true($value)
 function pagination_config( $base_url, $total_rows = 0, $perpage = 20, $segment = 3)
 {
     $rows = get_rows();
-    $input_rows  = '<p class="pull-right pagination hidden-xs">';
+    $input_rows  = '<p class="pull-right pagination ">';
     $input_rows .= 'ทั้งหมด '.number($total_rows).' รายการ | แสดง';
     $input_rows .= '<input type="number" name="set_rows" id="set_rows" class="input-mini text-center margin-left-15 margin-right-10" value="'.$rows.'" />';
     $input_rows .= 'ต่อหน้า ';

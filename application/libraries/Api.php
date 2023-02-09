@@ -4,12 +4,11 @@ class Api
   private $url;
   protected $ci;
 	public $error;
-  protected $timeout = 0; //-- time out in seconds;
+  private $timeout = 0; //--- timeout in seconds;
 
   public function __construct()
   {
 		$this->ci =& get_instance();
-
 
     $this->url = getConfig('SAP_API_HOST');
 		if($this->url[-1] != '/')
@@ -19,24 +18,14 @@ class Api
   }
 
 
-
-  public function getItemStock($ItemCode, $WhsCode, $QuotaNo)
-  {
-		$WhsCode = is_array($WhsCode) ? $WhsCode : array($WhsCode);
-
-		$arr = array(
-			"ItemCode" => $ItemCode,
-			"WhsCode" => $WhsCode,
-			"QuotaNo" => $QuotaNo
-		);
-
-		$url = $this->url .'GetQuotaStock';
-
+	public function cancle_sap_transfer($arr)
+	{
+		$url = $this->url .'SalesOrder';
 		$curl = curl_init();
 
 		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
+		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+    curl_setopt($curl, CURLOPT_TIMEOUT, 0);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -44,800 +33,221 @@ class Api
 
 		$response = curl_exec($curl);
 
+    if($response === FALSE)
+    {
+      $response = curl_error($curl);
+    }
+
 		curl_close($curl);
 
-		$res = json_decode($response);
+		$rs = json_decode($response);
 
-		if(! empty($res) && ! empty($res->status))
+		if(! empty($rs) && ! empty($rs->status))
 		{
-			if($res->status == 'success')
+			if($rs->status == 'success')
 			{
-				$ds = array(
-					"status" => "success",
-					"OnHand" => $res->OnHand,
-					"QuotaQty" => $res->QuotaQty
-				);
-
-				return $ds;
+				return TRUE;
 			}
 			else
 			{
-				$this->error = $res->error;
-				return FALSE;
+				$this->error = $rs->error;
 			}
 		}
-		else
-		{
-			$this->error = $response;
-			return FALSE;
-		}
-  }
-
-
-  public function getItem($itemCode)
-	{
-		$arr = array(
-			'Counting' => 'N',
-      'ItemCode' => $itemCode
-		);
-
-		$url = $this->url .'Products';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success')
+    else
     {
-			return $rs->itemList[0];
-		}
-		else
-		{
-			return NULL;
-		}
+      $this->error = "no data";
+    }
+
+    return FALSE;
 	}
 
 
-	public function getItemPrice($ItemCode, $PriceList)
-  {
-		$arr = array(
-			"ItemCode" => $ItemCode,
-			"PriceList" => $PriceList
-		);
+	public function exportTransfer($id)
+	{
+    $this->ci->load->model('inventory/transfer_model');
 
-		$url = $this->url .'GetItemPrice';
-		$curl = curl_init();
+		$testMode = getConfig('TEST_MODE') ? TRUE : FALSE;
 
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-
-		curl_close($curl);
-
-		$res = json_decode($response);
-
-		if(! empty($res) && ! empty($res->status))
+		if($testMode)
 		{
-			if($res->status == 'success')
+			$arr = array(
+				'status' => 1,
+				'docEntry' => 1,
+				'docNum' => "22000001"
+			);
+
+			$this->ci->transfer_model->close_document($id, $arr);
+			return TRUE;
+		}
+
+		$logJson = getConfig('LOGS_JSON') == 1 ? TRUE : FALSE;
+
+
+
+		$sc = TRUE;
+		$doc = $this->ci->transfer_model->get($id);
+		$details = $this->ci->transfer_model->get_details($id);
+
+		if(! empty($doc) && ! empty($details))
+		{
+      $currency = getConfig('CURRENCY');
+      $vat_rate = getConfig('SALE_VAT_RATE');
+      $vat_code = getConfig('SALE_VAT_CODE');
+
+      $ds = array(
+        'U_WEBCODE' => $doc->code,
+        'DocType' => 'I',
+        'CANCELED' => 'N',
+        'DocDate' => sap_date($doc->docDate, TRUE),
+        'DocDueDate' => sap_date($doc->docDate, TRUE),
+        'CardCode' => NULL,
+        'CardName' => NULL,
+        'VatPercent' => 0.000000,
+        'VatSum' => 0.000000,
+        'VatSumFc' => 0.000000,
+        'DiscPrcnt' => 0.000000,
+        'DiscSum' => 0.000000,
+        'DiscSumFC' => 0.000000,
+        'DocCur' => $currency,
+        'DocRate' => 1,
+        'DocTotal' => 0.000000,
+        'DocTotalFC' => 0.000000,
+        'Filler' => $doc->fromWhsCode,
+        'ToWhsCode' => $doc->toWhsCode,
+        'Comments' => $doc->remark
+      );
+
+			$orderLine = array();
+
+      $line = 0;
+
+			foreach($details AS $rs)
 			{
-				return $res->Price;
+        $arr = array(
+          'U_WEBCODE' => $doc->code,
+          'LineNum' => $line,
+          'ItemCode' => $rs->ItemCode,
+          'Dscription' => $rs->ItemName,
+          'Quantity' => $rs->Qty,
+          'unitMsr' => NULL,
+          'PriceBefDi' => 0.000000,
+          'LineTotal' => 0.000000,
+          'ShipDate' => sap_date($doc->docDate, TRUE),
+          'Currency' => $currency,
+          'Rate' => 1,
+          'DiscPrcnt' => 0.000000,
+          'Price' => 0.000000,
+          'TotalFrgn' => 0.000000,
+          'FromWhsCod' => $doc->fromWhsCode,
+          'WhsCode' => $doc->toWhsCode,
+          'FisrtBin' => $rs->from_zone,
+          'F_FROM_BIN' => NULL,
+          'F_TO_BIN' => NULL,
+          'AllocBinC' => NULL,
+          'TaxStatus' => 'Y',
+          'VatPrcnt' => 0.000000,
+          'VatGroup' => NULL,
+          'PriceAfVAT' => 0.000000,
+          'VatSum' => 0.000000,
+          'TaxType' => 'Y'
+        );
+
+				array_push($orderLine, $arr);
+        $line++;
+			}
+
+			$ds['DocLine'] = $orderLine;
+
+
+			$url = getConfig('SAP_API_HOST');
+
+			if($url[-1] != '/')
+			{
+				$url .'/';
+			}
+
+			$url = $url."transfer";
+
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_URL, $url);
+			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+      curl_setopt($curl, CURLOPT_TIMEOUT, 0);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($ds));
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+
+			$response = curl_exec($curl);
+
+      if($response === FALSE)
+      {
+        $response = curl_error($curl);
+      }
+
+			curl_close($curl);
+
+			$rs = json_decode($response);
+
+			if(! empty($rs) && ! empty($rs->status))
+			{
+				if($rs->status == 'success')
+				{
+					$arr = array(
+						'status' => 1,
+						'docEntry' => $rs->DocEntry,
+						'docNum' => $rs->DocNum
+					);
+
+					$this->ci->transfer_model->close_document($id, $arr);
+
+				}
+				else
+				{
+					$arr = array(
+						'status' => 3,
+						'message' => $rs->error
+					);
+
+					$this->ci->transfer_model->update($id, $arr);
+
+					$sc = FALSE;
+					$this->error = $rs->error;
+
+					if($logJson)
+					{
+						$this->ci->load->model('rest/logs_model');
+
+						$logs = array(
+							'code' => $doc->code,
+							'status' => 'error',
+							'json' => json_encode($ds)
+						);
+
+						$this->ci->logs_model->log_transfer($logs);
+					}
+				}
+			}
+			else
+			{
+				$sc = FALSE;
+				$this->error = "Export failed : {$response}";
+
+				$arr = array(
+					'status' => 3,
+					'message' => $response
+				);
+
+				$this->ci->transfer_model->update($id, $arr);
 			}
 		}
-
-		return 0.00;
-  }
-
-
-	public function countUpdateProduct($last_sync)
-	{
-		$arr = array(
-			'Date' => $last_sync,
-			'Counting' => 'Y'
-		);
-
-		$url = $this->url .'Products';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->ItemMasterCount;
-		}
 		else
 		{
-			return 0;
+			$sc = FALSE;
+			$this->error = "No data found";
 		}
+
+		return $sc;
 	}
 
-
-	public function getUpdateProduct($last_sync, $limit, $offset)
-	{
-		$arr = array(
-			'Date' => $last_sync,
-			'Limit' => $limit,
-			'Offset' => $offset,
-			'Counting' => 'N'
-		);
-
-		$url = $this->url .'Products';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->itemList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getProductBrandUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'ProductBrand';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->productBrandList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-	public function getProductTypeUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'ProductType';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->productTypeList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getProductModelUpdateData($date = NULL)
-	{
-		$date = empty($date) ? '2021-01-01' : $date;
-
-		$arr = array(
-			'Date' => $date
-		);
-
-		$url = $this->url .'ProductModel';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->productModelList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function countUpdateCustomer($last_sync_date)
-	{
-		$arr = array(
-			'Date' => $last_sync_date,
-			'Counting' => 'Y'
-		);
-
-		$url = $this->url .'Customer';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->CustomerCount;
-		}
-		else
-		{
-			return 0;
-		}
-	}
-
-
-	public function getCustomerUpdateData($last_sync, $limit, $offset)
-	{
-		$arr = array(
-			'Date' => $last_sync,
-			'Counting' => 'N',
-			'Limit' => $limit,
-			'Offset' => $offset
-		);
-
-		$url = $this->url .'Customer';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->customerList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getCustomerGroupUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'CustomerGroup';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->CustomerGroupList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getCustomerTypeUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'CustomerType';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->CustomerTypeList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getCustomerAreaUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'CustomerArea';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->CustomerAreaList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getCustomerGradeUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'CustomerGrade';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->CustomerGradeList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getCustomerRegionUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'CustomerRegion';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->CustomerRegionList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getUomUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'UOM';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->uomList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-
-	public function getCostCenterUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'CostCenter';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs->status) && $rs->status == 'success') {
-
-			return $rs->costCenterList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-
-
-	public function getPaymentGroupUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'PaymentGroup';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->PaymentGroupList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-	public function getVatGroupUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'VatGroup';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->vatGroupList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-	public function getEmployeeUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'Employee';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->employeeList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-	public function getSalesEmployeeUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'SalesEmployee';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->salesEmployeeList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-	public function getWarehouseUpdateData()
-	{
-		$arr = array(
-			'Date' => '2021-01-01'
-		);
-
-		$url = $this->url .'Warehouse';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->warehouseList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-
-
-	public function countUpdateAddress($last_sync_date)
-	{
-		$arr = array(
-			'Date' => $last_sync_date,
-			'Counting' => 'Y'
-		);
-
-		$url = $this->url .'Address';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->AddressCount;
-		}
-		else
-		{
-			return 0;
-		}
-	}
-
-
-	public function getUpdateAddress($last_sync, $limit, $offset)
-	{
-		$arr = array(
-			'Date' => $last_sync,
-			'Counting' => 'N',
-			'Limit' => $limit,
-			'Offset' => $offset
-		);
-
-		$url = $this->url .'Address';
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($arr));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-
-		$response = curl_exec($curl);
-		curl_close($curl);
-		$rs = json_decode($response);
-
-		if(! empty($rs) && $rs->status == 'success') {
-
-			return $rs->AddressList;
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-
-} //-- end class
-
- ?>
+} //--- end class
+?>

@@ -9,7 +9,8 @@ class User_pwd extends CI_Controller
 	public $pm;
   public $error;
 	public $_user;
-	public $_customer = FALSE;
+	public $_SuperAdmin = FALSE;
+	public $_Admin = FALSE;
 
 	public function __construct()
 	{
@@ -17,7 +18,10 @@ class User_pwd extends CI_Controller
 		_check_login();
 		$this->pm = new stdClass();
 		$this->pm->can_view = 1;
-    $this->load->model('users/user_model');
+		$uid = get_cookie('uid');
+    $this->_user = $this->user_model->get_user_by_uid($uid);
+		$this->_SuperAdmin = $this->_user->ugroup == -987654321 ? TRUE : FALSE;
+		$this->_Admin = $this->_user->ugroup == 1 ? TRUE : FALSE;
     $this->home = base_url().'user_pwd';
 	}
 
@@ -58,6 +62,13 @@ class User_pwd extends CI_Controller
       //--- ถ้าไม่มีข้อมูล ให้ไป login ใหม่
   		redirect(base_url().'users/authentication');
     }
+	}
+
+
+	public function change_success()
+	{
+
+		$this->load->view('users/change_success');
 	}
 
 

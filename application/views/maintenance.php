@@ -1,6 +1,12 @@
 <!doctype html>
 <title>Site Maintenance</title>
 <head>
+	<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/bootstrap.css" />
+	<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/font-awesome.css" />
+	<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/ace-fonts.css" />
+	<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/ace.css" class="ace-main-stylesheet" id="main-ace-style" />
+	<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/ace-skins.css" />
+	<link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/jquery-ui-1.10.4.custom.min.css " />
 	<script src="<?php echo base_url(); ?>assets/js/jquery.min.js"></script>
 	<script> var BASE_URL = "<?php echo base_url(); ?>"; </script>
 </head>
@@ -13,16 +19,20 @@
   a:hover { color: #333; text-decoration: none; }
 </style>
 <body>
+
 	<div style="position:absolute; top:10px; right:10px;">
-		<a href="<?php echo base_url(); ?>users/authentication" style="margin-right:20px;">Login</a>
-		<a href="<?php echo base_url(); ?>users/authentication/logout">Logout</a>
+		<?php if(isset($_COOKIE['uid'])) : ?>
+			<a class="btn btn-lg btn-warning"href="<?php echo base_url(); ?>users/authentication/logout">Logout</a>
+		<?php else : ?>
+			<a class="btn btn-lg btn-primary" href="<?php echo base_url(); ?>users/authentication" style="margin-right:20px;">Login</a>
+		<?php endif; ?>
 	</div>
 	<article>
 	    <h1>We&rsquo;ll be back soon!</h1>
 	    <div>
 	        <p>Sorry for the inconvenience but we&rsquo;re performing some maintenance at the moment. If you need to you can always contact us, otherwise we&rsquo;ll be back online shortly!</p>
 	        <p>&mdash; The Team</p>
-					<?php if($this->_SuperAdmin) : ?>
+					<?php if($this->_SuperAdmin OR $this->_Admin) : ?>
 						<p style="float:right;"><button style="padding:15px;" onclick="openSystem()">OPEN SYSTEM</button></p>
 						<script>
 							function openSystem(){

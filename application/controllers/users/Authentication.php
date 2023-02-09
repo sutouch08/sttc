@@ -68,9 +68,9 @@ class Authentication extends CI_Controller
   {
     if(!empty($ds))
     {
-      $times = intval(86400); //-- 1 days
+      $time = intval(86400); //-- 1 days
 
-			$times = $remember ? time() + ($times * 30) : time() + $times;
+			$times = $remember === TRUE ? ($time * 30) : $time;
 
       foreach($ds as $key => $val)
       {
@@ -94,6 +94,7 @@ class Authentication extends CI_Controller
 		delete_cookie('uid');
     delete_cookie('displayName');
     delete_cookie('ugroup');
+		delete_cookie('uname');
     redirect($this->home);
 	}
 

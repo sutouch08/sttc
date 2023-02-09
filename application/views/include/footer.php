@@ -3,6 +3,7 @@
 	  </div><!-- main content inner -->
   </div><!-- main content -->
 
+<?php if($this->_user->ugroup != 3) : ?>
   <div class="footer hidden-print">
 	  <div class="footer-inner">
 			<div class="footer-content">
@@ -16,6 +17,7 @@
 		  	</a>
 	 </div><!-- footer inner-->
 	</div><!-- /.footer -->
+<?php endif; ?>
 </div><!-- /.main-container -->
 
 
@@ -30,7 +32,6 @@
 		<script src="<?php echo base_url(); ?>assets/js/ace/ace.sidebar-scroll-1.js"></script>
 		<script src="<?php echo base_url(); ?>assets/js/ace/ace.submenu-hover.js"></script>
 		<script src="<?php echo base_url(); ?>scripts/template.js?v=<?php echo date('Ymd'); ?>"></script>
-
 	</body>
 
 </html>

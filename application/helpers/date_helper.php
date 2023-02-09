@@ -1,14 +1,19 @@
 <?php
 function thai_date($date, $time = FALSE, $sp = '-')
 {
-  $sp = $sp === '' ? '-' : $sp;
-  $format = $time === TRUE ? 'd'.$sp.'m'.$sp.'Y'.' H:i:s' : 'd'.$sp.'m'.$sp.'Y';
-  if(empty($date))
+  if($date !== NULL)
   {
-    $date = date('d-m-Y');
+    $sp = $sp === '' ? '-' : $sp;
+    $format = $time === TRUE ? 'd'.$sp.'m'.$sp.'Y'.' H:i:s' : 'd'.$sp.'m'.$sp.'Y';
+    if(empty($date))
+    {
+      $date = date('d-m-Y');
+    }
+
+    return date($format, strtotime($date));
   }
 
-  return date($format, strtotime($date));
+  return NULL;
 }
 
 
@@ -62,7 +67,7 @@ function db_date($date, $time = FALSE, $sp = '-')
   {
     $date = date('Y-m-d');
   }
-  
+
   if($time === TRUE)
   {
     $c_time = date('H:i:s', strtotime($date));

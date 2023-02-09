@@ -6,6 +6,7 @@ $menu_sub_group_code = isset($this->menu_sub_group_code) ? $this->menu_sub_group
 <ul class="nav nav-list">
 <?php if(!empty($menuGroups)) : ?>
 <?php 	foreach($menuGroups as $menuGroup) : ?>
+	<?php if($menuGroup->is_admin == 0 OR $this->_Admin OR $this->_SuperAdmin) : ?>
 	<li class="<?php echo isActiveOpenMenu($this->menu_group_code, $menuGroup->code); ?>">
 		<a href="#" class="dropdown-toggle">
 			<i class="menu-icon fa <?php echo $menuGroup->icon; ?>"></i>
@@ -42,6 +43,7 @@ $menu_sub_group_code = isset($this->menu_sub_group_code) ? $this->menu_sub_group
 		</ul> <!-- level 1 -->
 		<?php endif; //--- end count menu ?>
 	</li> <!-- / menu group -->
+<?php endif; //-- is admin ?>
 <?php endforeach; ?>
 <?php endif; ?>
 </ul><!-- /.nav-list -->

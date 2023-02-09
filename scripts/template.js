@@ -362,3 +362,13 @@ function roundNumber(num, digit)
 
 	return Number(parseFloat(num).toFixed(digit));
 }
+
+
+function showModal(name) {
+	$('#'+name).modal('show');
+}
+
+
+function closeModal(name) {
+	$('#'+name).modal('hide');
+}

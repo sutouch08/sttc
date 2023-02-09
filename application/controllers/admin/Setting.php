@@ -9,8 +9,8 @@ class Setting extends PS_Controller{
   public function __construct()
   {
     parent::__construct();
-    $this->home = base_url().'setting';
-		$this->load->model('config_model');
+    $this->home = base_url().'admin/setting';
+		$this->load->model('admin/config_model');
 		$this->load->helper('warehouse');
   }
 
@@ -37,7 +37,7 @@ class Setting extends PS_Controller{
 			}
 		}
 
-		$this->load->view('setting/configs', $ds);
+		$this->load->view('admin/setting/configs', $ds);
 
   }
 
@@ -68,9 +68,6 @@ class Setting extends PS_Controller{
 
   	$this->_response($sc);
   }
-
-
-
 
 }//--- end class
 

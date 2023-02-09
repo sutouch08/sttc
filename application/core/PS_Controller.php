@@ -9,8 +9,9 @@ class PS_Controller extends CI_Controller
 	public $_SuperAdmin = FALSE;
 	public $_Admin = FALSE;
   public $_Lead = FALSE;
+  public $_Outsource = FALSE;
 	public $ms;
-	public $mc;
+
 
   public function __construct()
   {
@@ -28,6 +29,32 @@ class PS_Controller extends CI_Controller
 		$this->_SuperAdmin = $this->_user->ugroup == -987654321 ? TRUE : FALSE;
 		$this->_Admin = $this->_user->ugroup == 1 ? TRUE : FALSE;
     $this->_Lead = $this->_user->ugroup == 2 ? TRUE : FALSE;
+    $this->_Outsource = $this->_user->ugroup == 3 ? TRUE : FALSE;
+
+    if($this->_SuperAdmin OR $this->_Admin)
+    {
+      $pm = array(
+        'can_view' => TRUE,
+        'can_add' => TRUE,
+        'can_edit' => TRUE,
+        'can_delete' => TRUE
+      );
+
+      $this->pm = (object) $pm;
+    }
+    else
+    {
+      $pm = array(
+        'can_view' => FALSE,
+        'can_add' => FALSE,
+        'can_edit' => FALSE,
+        'can_delete' => FALSE
+      );
+
+      $this->pm = (object) $pm;
+    }
+
+    $this->ms = $this->load->database('ms', TRUE);
 
     if($this->close_system == 1 && $this->_SuperAdmin === FALSE)
     {
@@ -42,15 +69,6 @@ class PS_Controller extends CI_Controller
 		if($this->_user->force_reset)
 		{
 			redirect(base_url().'change_password/f');
-		}
-
-	
-    //--- get permission for user
-    $this->pm = get_permission($this->menu_code, $uid, $this->_user->ugroup);
-
-		if($this->pm->can_view == 0)
-		{
-			$this->deny_page();
 		}
 
   }

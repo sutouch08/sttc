@@ -118,7 +118,11 @@ function changePassword() {
 									title:'Success',
 									type:'success',
 									timer:1000
-								})
+								});
+
+								setTimeout(function() {
+									window.location.href = BASE_URL + 'user_pwd/change_success';
+								}, 1200);
 							}
 							else {
 								current.addClass('has-error');

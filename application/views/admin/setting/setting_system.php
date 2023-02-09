@@ -1,7 +1,6 @@
 <?php
     $open     = $CLOSE_SYSTEM == 0 ? 'btn-success' : '';
     $close    = $CLOSE_SYSTEM == 1 ? 'btn-danger' : '';
-    $freze    = $CLOSE_SYSTEM == 2 ? 'btn-warning' : '';
 		$strongOn = $USE_STRONG_PWD == 1 ? 'btn-primary' : '';
 		$strongOff = $USE_STRONG_PWD == 0 ? 'btn-primary' : '';
 		$disable = $this->_SuperAdmin ? "" : "disabled";
@@ -9,17 +8,18 @@
 
   <form id="systemForm" method="post" action="<?php echo $this->home; ?>/update_config">
     <div class="row">
+      <?php if($this->_SuperAdmin) : ?>
     	<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">ปิดระบบ</span></div>
       <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
-      	<div class="btn-group input-xlarge">
-        	<button type="button" class="btn btn-sm <?php echo $open; ?>" style="width:33%;" id="btn-open" onClick="openSystem()" <?php echo $disable; ?>>เปิด</button>
-          <button type="button" class="btn btn-sm <?php echo $close; ?>" style="width:33%;" id="btn-close" onClick="closeSystem()" <?php echo $disable; ?>>ปิด</button>
-          <button type="button" class="btn btn-sm <?php echo $freze; ?>" style="width:34%" id="btn-freze" onclick="frezeSystem()" <?php echo $disable; ?>>ดูอย่างเดียว</button>
+      	<div class="btn-group input-medium">
+        	<button type="button" class="btn btn-sm width-50 <?php echo $open; ?>" id="btn-open" onClick="openSystem()" <?php echo $disable; ?>>เปิด</button>
+          <button type="button" class="btn btn-sm width-50 <?php echo $close; ?>" id="btn-close" onClick="closeSystem()" <?php echo $disable; ?>>ปิด</button>
         </div>
         <span class="help-block">กรณีปิดระบบจะไม่สามารถเข้าใช้งานระบบได้ในทุกส่วน โปรดใช้ความระมัดระวังในการกำหนดค่านี้</span>
       	<input type="hidden" name="CLOSE_SYSTEM" id="closed" value="<?php echo $CLOSE_SYSTEM; ?>" />
       </div>
       <div class="divider-hidden"></div>
+    <?php endif; ?>
 
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Strong Password</span></div>
     <div class="col-lg-5 col-md-9 col-sm-9 col-xs-12">
@@ -35,7 +35,7 @@
 
 		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Password Age</span></div>
     <div class="col-lg-7 col-md-9 col-sm-9 col-xs-12">
-      <input type="number" class="form-control input-sm input-mini text-center" name="USER_PASSWORD_AGE" id="pwd-age" value="<?php echo $USER_PASSWORD_AGE; ?>" />
+      <input type="number" class="form-control input-sm input-small text-center" name="USER_PASSWORD_AGE" id="pwd-age" value="<?php echo $USER_PASSWORD_AGE; ?>" />
       <span class="help-block">กำหนดอายุของรหัสผ่าน(วัน) User จำเป็นต้องเปลี่ยนรหัสผ่านหากรหัสผ่านหมดอายุ</span>
     </div>
     <div class="divider-hidden"></div>
@@ -44,6 +44,17 @@
     <div class="col-lg-5 col-md-7 col-sm-7 col-xs-12">
       <input type="text" class="form-control input-sm" name="SAP_API_HOST" id="" value="<?php echo $SAP_API_HOST; ?>" />
       <span class="help-block">กำหนด URL endpoint สำหรับการ Interface กับ ระบบ SAP</span>
+    </div>
+    <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Barcode Format</span></div>
+    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12">
+      <select class="form-control input-sm input-medium" name="SCANTYPE">
+        <option value="qrcode" <?php echo is_selected('qrcode', $SCANTYPE); ?>>QR CODE</option>
+        <option value="barcode" <?php echo is_selected('barcode', $SCANTYPE); ?>>BARCODE</option>
+        <option value="both" <?php echo is_selected('both', $SCANTYPE); ?>>BOTH</option>
+      </select>
+      <span class="help-block">กำหนดค่าการ Scan QR CODE หรือ BARCODE กรณีเลือก BOTH จะสามารถ Scan ได้ทั้งคู่ แต่จะทำให้ Performance ลดลง</span>
     </div>
     <div class="divider-hidden"></div>
 		<div class="divider-hidden"></div>

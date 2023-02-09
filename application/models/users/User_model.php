@@ -50,15 +50,13 @@ class User_model extends CI_Model
   public function get($id)
   {
 		$this->db
-		->select('u.*, u.name AS display_name, p.name AS profile_name')
-		->select('s.name AS sale_name, c.CardCode AS customer_code, c.CardName AS customer_name, t.name AS team_name')
+		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
 		->from('user AS u')
-		->join('profile AS p', 'u.id_profile = p.id', 'left')
-		->join('sale_person AS s', 'u.sale_id = s.id', 'left')
-		->join('customers AS c', 'u.customer_code = c.CardCode', 'left')
-		->join('sale_team AS t', 'u.team_id = t.id', 'left');
+		->join('user_group AS g', 'u.ugroup = g.id', 'left')
+		->join('team AS t', 'u.team_id = t.id', 'left');
 
     $rs = $this->db->where('u.id', $id)->get();
+
     if($rs->num_rows() === 1)
     {
       return $rs->row();
@@ -80,32 +78,23 @@ class User_model extends CI_Model
   }
 
 
-  public function get_by_uname($uname)
+	public function get_by_uname($uname)
+	{
+		$rs = $this->db->where('uname', $uname)->get($this->tb);
+
+		if($rs->num_rows() === 1)
+		{
+			return $rs->row();
+		}
+
+		return NULL;
+	}
+
+
+
+  public function get_name($id)
   {
-		$this->db
-		->select('u.*, u.name AS display_name, p.name AS profile_name')
-		->select('s.name AS sale_name, c.CardCode AS customer_code, c.CardName AS customer_name, t.name AS team_name')
-		->from('user AS u')
-		->join('profile AS p', 'u.id_profile = p.id', 'left')
-		->join('sale_person AS s', 'u.sale_id = s.id', 'left')
-		->join('customers AS c', 'u.customer_code = c.CardCode', 'left')
-		->join('sale_team AS t', 'u.team_id = t.id', 'left');
-
-    $rs = $this->db->where('u.uname', $uname)->get();
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function get_name($uname)
-  {
-    $rs = $this->db->where('uname', $uname)->get($this->tb);
+    $rs = $this->db->where('id', $id)->get($this->tb);
     if($rs->num_rows() == 1)
     {
       return $rs->row()->name;
@@ -113,6 +102,19 @@ class User_model extends CI_Model
 
     return "";
   }
+
+
+	public function get_uname($id)
+	{
+		$rs = $this->db->where('id', $id)->get($this->tb);
+
+		if($rs->num_rows() === 1)
+		{
+			return $rs->row()->uname;
+		}
+
+		return NULL;
+	}
 
 
 
@@ -142,9 +144,10 @@ class User_model extends CI_Model
 	}
 
 
-	public function get_all_batch_no()
+	public function get_user_team($user_id)
 	{
-		$rs = $this->db->distinct()->select('batch_no')->where('batch_no IS NOT NULL', NULL, FALSE)->get($this->tb);
+		$qr = "SELECT * FROM user_team WHERE user_id = {$user_id}";
+		$rs = $this->db->query($qr); 
 
 		if($rs->num_rows() > 0)
 		{
@@ -159,14 +162,12 @@ class User_model extends CI_Model
 	public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
 	{
 		$this->db
-		->select('u.*, u.name AS display_name, p.name AS profile_name')
-		->select('s.name AS sale_name, c.CardCode AS customer_code, c.CardName AS customer_name, t.name AS team_name')
+		->select('u.*, u.name AS display_name, g.name AS group_name')
+		->select('t.name AS team_name')
 		->from('user AS u')
-		->join('profile AS p', 'u.id_profile = p.id', 'left')
-		->join('sale_person AS s', 'u.sale_id = s.id', 'left')
-		->join('customers AS c', 'u.customer_code = c.CardCode', 'left')
-		->join('sale_team AS t', 'u.team_id = t.id', 'left')
-    ->where('id_profile >', 0, FALSE);
+		->join('user_group AS g', 'u.ugroup = g.id', 'left')
+		->join('team AS t', 'u.team_id = t.id', 'left')
+		->where('u.id >', 0);
 
 		if( ! empty($ds['uname']))
 		{
@@ -178,21 +179,9 @@ class User_model extends CI_Model
 			$this->db->like('u.name', $ds['dname']);
 		}
 
-		if( ! empty($ds['customer']))
+		if(isset($ds['ugroup']) && $ds['ugroup'] != 'all')
 		{
-			$this->db->group_start();
-			$this->db->like('c.CardCode', $ds['customer'])->or_like('c.CardName', $ds['customer']);
-			$this->db->group_end();
-		}
-
-		if(isset($ds['profile_id']) && $ds['profile_id'] != 'all')
-		{
-			$this->db->where('u.id_profile', $ds['profile_id']);
-		}
-
-		if(isset($ds['sale_id']) && $ds['sale_id'] != 'all')
-		{
-			$this->db->where('u.sale_id', $ds['sale_id']);
+			$this->db->where('u.ugroup', $ds['ugroup']);
 		}
 
 		if(isset($ds['team_id']) && $ds['team_id'] != 'all')
@@ -207,17 +196,12 @@ class User_model extends CI_Model
 			}
 		}
 
-		if(isset($ds['is_customer']) &&  $ds['is_customer'] != 'all')
-		{
-			$this->db->where('u.is_customer', $ds['is_customer']);
-		}
-
 		if(isset($ds['active']) && $ds['active'] != 'all')
 		{
 			$this->db->where('u.active', $ds['active']);
 		}
 
-		$rs = $this->db->order_by('u.id', 'DESC')->limit($perpage, $offset)->get();
+		$rs = $this->db->order_by('u.uname', 'ASC')->limit($perpage, $offset)->get();
 
 		if($rs->num_rows() > 0)
 		{
@@ -232,11 +216,9 @@ class User_model extends CI_Model
   {
 		$this->db
 		->from('user AS u')
-		->join('profile AS p', 'u.id_profile = p.id', 'left')
-		->join('sale_person AS s', 'u.sale_id = s.id', 'left')
-		->join('customers AS c', 'u.customer_code = c.CardCode', 'left')
-		->join('sale_team AS t', 'u.team_id = t.id', 'left')
-    ->where('id_profile >', 0, FALSE);
+		->join('user_group AS g', 'u.ugroup = g.id', 'left')
+		->join('team AS t', 'u.team_id = t.id', 'left')
+		->where('u.id >', 0);
 
 		if( ! empty($ds['uname']))
 		{
@@ -248,21 +230,9 @@ class User_model extends CI_Model
 			$this->db->like('u.name', $ds['dname']);
 		}
 
-		if( ! empty($ds['customer']))
+		if(isset($ds['ugroup']) && $ds['ugroup'] != 'all')
 		{
-			$this->db->group_start();
-			$this->db->like('c.CardCode', $ds['customer'])->or_like('c.CardName', $ds['customer']);
-			$this->db->group_end();
-		}
-
-		if(isset($ds['profile_id']) && $ds['profile_id'] != 'all')
-		{
-			$this->db->where('u.id_profile', $ds['profile_id']);
-		}
-
-		if(isset($ds['sale_id']) && $ds['sale_id'] != 'all')
-		{
-			$this->db->where('u.sale_id', $ds['sale_id']);
+			$this->db->where('u.ugroup', $ds['ugroup']);
 		}
 
 		if(isset($ds['team_id']) && $ds['team_id'] != 'all')
@@ -277,11 +247,6 @@ class User_model extends CI_Model
 			}
 		}
 
-		if(isset($ds['is_customer']) &&  $ds['is_customer'] != 'all')
-		{
-			$this->db->where('u.is_customer', $ds['is_customer']);
-		}
-
 		if(isset($ds['active']) && $ds['active'] != 'all')
 		{
 			$this->db->where('u.active', $ds['active']);
@@ -290,52 +255,6 @@ class User_model extends CI_Model
     return $this->db->count_all_results();
   }
 
-
-
-  public function get_permission($menu, $id_profile)
-  {
-    if(!empty($menu))
-    {
-      $rs = $this->db->where('code', $menu)->get('menu');
-
-      if($rs->num_rows() === 1)
-      {
-        if($rs->row()->valid == 1)
-        {
-          return $this->get_profile_permission($menu, $id_profile);
-        }
-        else
-        {
-          $ds = new stdClass();
-          $ds->can_view = 1;
-          $ds->can_add = 1;
-          $ds->can_edit = 1;
-          $ds->can_delete = 1;
-          $ds->can_approve = 1;
-          return $ds;
-        }
-      }
-    }
-
-    return FALSE;
-  }
-
-
-
-  private function get_profile_permission($menu, $id_profile)
-  {
-    $rs = $this->db
-		->where('menu', $menu)
-		->where('id_profile', $id_profile)
-		->get('permission');
-
-		if($rs->num_rows() === 1)
-		{
-			return $rs->row();
-		}
-
-		return FALSE;
-  }
 
 
 
@@ -400,11 +319,7 @@ class User_model extends CI_Model
 
 	public function has_transection($id)
 	{
-		$so = $this->db->where('user_id', $id)->or_where('upd_user_id', $id)->count_all_results('orders');
-		$sq = $this->db->where('user_id', $id)->or_where('upd_user_id', $id)->count_all_results('quotation');
-		$apv = $this->db->where('user_id', $id)->count_all_results('approver');
-
-		$total = $so + $sq + $apv;
+		$total = 1;
 
 		return $total > 0 ? TRUE : FALSE;
 	}

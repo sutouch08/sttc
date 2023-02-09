@@ -77,6 +77,7 @@ class Change_password extends CI_Controller
 		if(!empty($code))
 		{
 			$user = $this->user_model->get_by_uname($code);
+      
 			if(!empty($user))
 			{
 				$ds['data'] = $user;

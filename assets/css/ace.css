@@ -9095,7 +9095,7 @@ input[type=radio].ace.disabled + .lbl::before {
   background-color: #DDD !important;
   border-color: #CCC !important;
   box-shadow: none !important;
-  color: #BBB;
+  color: #6fb3e0;
 }
 .checkbox label input[type=checkbox].ace + .lbl,
 .radio label input[type=radio].ace + .lbl {

@@ -25,7 +25,8 @@ function doLogin() {
 		cache:false,
 		data:{
 			'uname' : uname,
-			'pwd' : ipwd
+			'pwd' : ipwd,
+			'remember' : remember
 		},
 		success:function(rs) {
 			rs = $.trim(rs);
