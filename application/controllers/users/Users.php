@@ -88,8 +88,8 @@ class Users extends PS_Controller{
 				$dname = trim($this->input->post('dname'));
 				$team_id = get_null($this->input->post('team_id'));
 				$team_list = json_decode($this->input->post('team_list'));
-				$fromWhList = json_decode($this->input->post('from_warehouse_list'));
-				$toWhList = json_decode($this->input->post('to_warehouse_list'));
+				$fromWhsCode = $this->input->post('fromWhsCode');
+				$toWhsCode = $this->input->post('toWhsCode');
 				$pwd = $this->input->post('pwd');
 				$ugroup = $this->input->post('ugroup');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
@@ -107,10 +107,10 @@ class Users extends PS_Controller{
 								set_error(0, "Missing Area(s)");
 							}
 
-							if($ugroup == 3 && (empty($fromWhList) OR empty($toWhList)))
+							if($ugroup == 3 && (empty($fromWhsCode) OR empty($toWshCode)) && $fromWhsCode == $toWhsCode)
 							{
 								$sc = FALSE;
-								set_error(0, "Missing Warehouse(s)");
+								set_error(0, "Invalid Warehouse");
 							}
 
 							if($sc === TRUE)
@@ -123,6 +123,8 @@ class Users extends PS_Controller{
 									'ugroup' => $ugroup,
 									'active' => $active,
 									'team_id' => $ugroup == 3 ? $team_id : NULL,
+									'fromWhsCode' => $ugroup == 3 ? $fromWhsCode : NULL,
+									'toWhsCode' => $ugroup == 3 ? $toWhsCode : NULL,
 									'last_pass_change' => date('Y-m-d'),
 									'force_reset' => $force_reset,
 									'create_at' => now(),
@@ -162,56 +164,6 @@ class Users extends PS_Controller{
 												{
 													$sc = FALSE;
 													set_error('insert', 'user area');
-												}
-											}
-										}
-									}
-
-									if($ugroup == 3)
-									{
-										//-- insert user warehouse
-										if( ! empty($fromWhList))
-										{
-											foreach($fromWhList as $whsCode)
-											{
-												if( $sc === FALSE)
-												{
-													break;
-												}
-
-												$arr = array(
-													'user_id' => $id,
-													'warehouse_code' => $whsCode,
-													'type' => 'from'
-												);
-
-												if( ! $this->warehouse_model->add_user_warehouse($arr))
-												{
-													$sc = FALSE;
-													set_error('insert', 'user warehouse');
-												}
-											}
-										}
-
-										if( ! empty($toWhList))
-										{
-											foreach($toWhList as $whsCode)
-											{
-												if( $sc === FALSE)
-												{
-													break;
-												}
-
-												$arr = array(
-													'user_id' => $id,
-													'warehouse_code' => $whsCode,
-													'type' => 'to'
-												);
-
-												if( ! $this->warehouse_model->add_user_warehouse($arr))
-												{
-													$sc = FALSE;
-													set_error('insert', 'user warehouse');
 												}
 											}
 										}
@@ -272,27 +224,6 @@ class Users extends PS_Controller{
 
 			if( ! empty($user))
 			{
-				$whList = $this->warehouse_model->get_listed();
-				$ufromWh = $this->warehouse_model->get_user_from_warehouse($id);
-				$utoWh = $this->warehouse_model->get_user_to_warehouse($id);
-				$ufwh = array();
-				$utwh = array();
-				if( ! empty($ufromWh))
-				{
-					foreach($ufromWh as $rs)
-					{
-						$ufwh[$rs->id] = $rs->code;
-					}
-				}
-
-				if( ! empty($utoWh))
-				{
-					foreach($utoWh as $rs)
-					{
-						$utwh[$rs->id] = $rs->code;
-					}
-				}
-
 				$teams = $this->team_model->get_all_active();
 				$userTeam = $this->team_model->get_user_team($id);
 				$uteam = array();
@@ -306,9 +237,6 @@ class Users extends PS_Controller{
 
 				$ds = array(
 					'user' => $user,
-					'whList' => $whList,
-					'ufwh' => $ufwh,
-					'utwh' => $utwh,
 					'teamList' => $teams,
 					'uteam' => $uteam
 				);
@@ -341,8 +269,8 @@ class Users extends PS_Controller{
 				$dname = trim($this->input->post('dname'));
 				$team_id = get_null($this->input->post('team_id'));
 				$team_list = json_decode($this->input->post('team_list'));
-				$fromWhList = json_decode($this->input->post('from_warehouse_list'));
-				$toWhList = json_decode($this->input->post('to_warehouse_list'));
+				$fromWhsCode = $this->input->post('fromWhsCode');
+				$toWhsCode = $this->input->post('toWhsCode');
 				$ugroup = $this->input->post('ugroup');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
 
@@ -356,10 +284,10 @@ class Users extends PS_Controller{
 							set_error(0, "Missing Area(s)");
 						}
 
-						if($ugroup == 3 && (empty($fromWhList) OR empty($toWhList)))
+						if($ugroup == 3 && (empty($fromWhsCode) OR empty($toWhsCode)) && $fromWhsCode == $toWhsCode)
 						{
 							$sc = FALSE;
-							set_error(0, "Missing Warehouse(s)");
+							set_error(0, "Invalid Warehouse(s)");
 						}
 
 						if($sc === TRUE)
@@ -369,6 +297,8 @@ class Users extends PS_Controller{
 								'ugroup' => $ugroup,
 								'active' => $active,
 								'team_id' => $ugroup == 3 ? $team_id : NULL,
+								'fromWhsCode' => $ugroup == 3 ? $fromWhsCode : NULL,
+								'toWhsCode' => $ugroup == 3 ? $toWhsCode : NULL,
 								'update_at' => now(),
 								'update_by' => $this->_user->id
 							);
@@ -382,13 +312,6 @@ class Users extends PS_Controller{
 							}
 							else
 							{
-								//--- drop team and warehouse
-								if( ! $this->warehouse_model->drop_user_warehouse($id))
-								{
-									$sc = FALSE;
-									set_error(0, "Drop User warehouse failed");
-								}
-
 								if($sc === TRUE)
 								{
 									if( ! $this->team_model->drop_user_team($id))
@@ -422,56 +345,6 @@ class Users extends PS_Controller{
 												{
 													$sc = FALSE;
 													set_error('insert', 'user area');
-												}
-											}
-										}
-									}
-
-									if($ugroup == 3)
-									{
-										//-- insert user warehouse
-										if( ! empty($fromWhList))
-										{
-											foreach($fromWhList as $whsCode)
-											{
-												if( $sc === FALSE)
-												{
-													break;
-												}
-
-												$arr = array(
-												'user_id' => $id,
-												'warehouse_code' => $whsCode,
-												'type' => 'from'
-												);
-
-												if( ! $this->warehouse_model->add_user_warehouse($arr))
-												{
-													$sc = FALSE;
-													set_error('insert', 'user warehouse');
-												}
-											}
-										}
-
-										if( ! empty($toWhList))
-										{
-											foreach($toWhList as $whsCode)
-											{
-												if( $sc === FALSE)
-												{
-													break;
-												}
-
-												$arr = array(
-												'user_id' => $id,
-												'warehouse_code' => $whsCode,
-												'type' => 'to'
-												);
-
-												if( ! $this->warehouse_model->add_user_warehouse($arr))
-												{
-													$sc = FALSE;
-													set_error('insert', 'user warehouse');
 												}
 											}
 										}

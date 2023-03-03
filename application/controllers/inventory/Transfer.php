@@ -48,63 +48,130 @@ class Transfer extends PS_Controller
 
 		$this->pagination->initialize($init);
 
-    if($this->_Outsource)
-    {
-      $this->load->view('inventory/transfer/transfer_list', $filter);
-    }
-    else
-    {
-      $this->load->view('inventory/transfer/transfer_list_admin', $filter);
-    }
+    $this->load->view('inventory/transfer/transfer_list', $filter);
   }
 
 
-  public function add_new() {
-    $ds = array(
-      'fromWhList' => $this->warehouse_model->get_user_from_warehouse($this->_user->id),
-      'toWhList' => $this->warehouse_model->get_user_to_warehouse($this->_user->id)
-    );
 
-    $this->load->view('inventory/transfer/transfer_add', $ds);
+  public function get_list()
+  {
+		$filter = array(
+			'code' => $this->input->post('code'),
+      'from_date' => $this->input->post('fromDate'),
+      'to_date' => $this->input->post('toDate'),
+      'status' => $this->input->post('status')
+		);
+
+    //$filter['create_by'] = $this->_user->id;
+
+		//--- แสดงผลกี่รายการต่อหน้า
+		// $perpage = $this->input->post('perpage');
+    // $offset = $this->input->post('offset');
+    //
+    $perpage = $this->input->post('perpage');
+    $offset = $this->input->post('offset');
+    $rows = $this->transfer_model->count_rows($filter);
+
+		// $rows = $this->transfer_model->count_doc_rows($filter);
+    $init	= pagination_config("#", $rows, $perpage, $offset);
+    $this->pagination->initialize($init);
+
+    $ds = $this->transfer_model->get_list($filter, $perpage, $offset);
+    $data = array();
+
+    if( ! empty($ds))
+    {
+      foreach($ds as $rs)
+      {
+        $arr = array(
+          'id' => $rs->id,
+          'date_add' => thai_date($rs->date_add),
+          'code' => $rs->code,
+          'teamName' => $rs->team_name,
+          'statusLabel' => transfer_status_label($rs->status),
+          'remark' => $rs->remark,
+          'uname' => $rs->uname
+        );
+
+        array_push($data, $arr);
+      }
+    }
+
+		$filter['data'] = $data;
+
+
+    $filter['pagination'] = $this->pagination->create_links();
+
+    echo json_encode($filter);
   }
 
 
-  public function add()
+
+  public function checkin()
+  {
+    $this->load->view('inventory/transfer/check_in');
+  }
+
+
+  public function getTransferDetail()
   {
     $sc = TRUE;
     $ds = array();
+    $docNum = $this->input->get('docNum');
 
-    if($this->input->post())
+    if( ! empty($docNum))
     {
-      $fromWhsCode = $this->input->post('fromWhsCode');
-      $toWhsCode = $this->input->post('toWhsCode');
-      $code = $this->get_new_code();
+      $warehouse = $this->warehouse_model->get_user_from_warehouse($this->_user->id);
+      $uWh = array();
 
-      $arr = array(
-        'code' => $code,
-        'fromWhsCode' => $fromWhsCode,
-        'toWhsCode' => $toWhsCode,
-        'docDate' => date('Y-m-d'),
-        'docDueDate' => date('Y-m-d'),
-        'team_id' => $this->_user->team_id,
-        'remark' => get_null($this->input->post('remark')),
-        'create_at' => now(),
-        'create_by' => $this->_user->id
-      );
-
-      $id = $this->transfer_model->add($arr);
-
-      if($id)
+      if(! empty($warehouse))
       {
-        $ds = array(
-          'id' => $id,
-          'status' => 'success'
-        );
+        foreach($warehouse as $wh)
+        {
+          $uWh[] = $wh->code;
+        }
+
+        //$doc = $this->transfer_model->getSapDoc($docNum, $uWh);
+        $doc = array('docEntry' => 2066);
+
+        if( ! empty($doc))
+        {
+          $details = $this->transfer_model->getSapTransferSerialDetails($docNum);
+
+          if( ! empty($details))
+          {
+            $no = 1;
+            foreach($details as $rs)
+            {
+              $arr = array(
+                'no' => $no,
+                'DocNum' => $docNum,
+                'Serial' => $rs->Serial,
+                'ItemCode' => $rs->ItemCode,
+                'ItemName' => $rs->ItemName,
+                'WhsCode' => $rs->WhsCode
+              );
+
+              array_push($ds, $arr);
+              $no++;
+            }
+          }
+          else
+          {
+            $sc = FALSE;
+            set_error(0, "ไม่พบรายการสินค้าในเอกสาร {$docNum}");
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          set_error(0, "ไม่พบเอกสาร {$docNum}");
+        }
       }
       else
       {
         $sc = FALSE;
-        set_error(0, "Create Document Failed");
+        set_error(0, "คุณยังไม่ได้ผูกคลังสินค้า");
       }
     }
     else
@@ -118,34 +185,133 @@ class Transfer extends PS_Controller
 
 
 
-  public function edit($id)
+  public function add_new()
   {
-    $doc = $this->transfer_model->get($id);
+    $ds = array(
+      'fromWhList' => $this->warehouse_model->get_user_from_warehouse($this->_user->id),
+      'toWhList' => $this->warehouse_model->get_user_to_warehouse($this->_user->id)
+    );
 
-    if( ! empty($doc))
+    $this->load->view('inventory/transfer/transfer_add', $ds);
+  }
+
+
+
+  public function add()
+  {
+    $sc = TRUE;
+
+    if($this->input->post())
     {
-      $ds = array(
-        'doc' => $doc,
-        'details' => $this->transfer_model->get_details($id),
-        'totalQty' => 10,
-        'fromWhList' => $this->warehouse_model->get_user_from_warehouse($this->_user->id),
-        'toWhList' => $this->warehouse_model->get_user_to_warehouse($this->_user->id)
+      $fromWhsCode = $this->input->post('fromWhsCode');
+      $toWhsCode = $this->input->post('toWhsCode');
+      $itemCode = $this->input->post('itemCode');
+      $itemName = $this->input->post('itemName');
+      $iSerial = $this->input->post('iSerial');
+      $uSerial = $this->input->post('uSerial');
+      $peaNo = $this->input->post('peaNo');
+      $powerNo = $this->input->post('runNo');
+      $mYear = $this->input->post('mYear');
+      $cond = $this->input->post('cond');
+      $iImage = $this->input->post('iImage');
+      $uImage = $this->input->post('uImage');
+      $fromDoc = get_null($this->input->post('fromDoc'));
+      $remark = get_null(trim($this->input->post('remark')));
+      $usageAge = $this->input->post('usageAge');
+
+      $i_path = $this->config->item('image_path')."installed/{$iSerial}.jpg";
+      $u_path = $this->config->item('image_path')."returnned/{$uSerial}.jpg";
+
+      $code = $this->get_new_code();
+
+      $arr = array(
+        'date_add' => date('Y-m-d'),
+        'code' => $code,
+        'ItemCode' => $itemCode,
+        'ItemName' => $itemName,
+        'InstallSerialNum' => $iSerial,
+        'ReturnnedSerialNum' => $uSerial,
+        'Qty' => 1,
+        'fromWhsCode' => $fromWhsCode,
+        'toWhsCode' => $toWhsCode,
+        'install_image' => $i_path,
+        'returnned_image' => $u_path,
+        'peaNo' => $peaNo,
+        'powerNo' => $powerNo,
+        'mYear' => $mYear,
+        'cond' => $cond,
+        'usageAge' => $usageAge,
+        'status' => 0,
+        'remark' => $remark,
+        'team_id' => $this->_user->team_id,
+        'create_at' => now(),
+        'create_by' => $this->_user->id,
+        'fromDoc' => $fromDoc
       );
 
-      if($this->_Outsource)
+      if( ! $this->transfer_model->add($arr))
       {
-        $this->load->view('inventory/transfer/transfer_edit', $ds);
+        $sc = FALSE;
+        set_error(0, "Create Document Failed");
       }
       else
       {
-        $this->load->view('inventory/transfer/transfer_view_detail', $ds);
+        if($this->createImage($uImage, $u_path ) === FALSE)
+        {
+          $sc = FALSE;
+          set_error(0, "Create Returnned Image Failed");
+        }
+
+        if($this->createImage($iImage, $i_path ) === FALSE)
+        {
+          $sc = FALSE;
+          set_error(0, "Create Installed Image Failed");
+        }
       }
     }
     else
     {
-      $this->page_error();
+      $sc = FALSE;
+      set_error('required');
     }
+
+    $this->_response($sc);
   }
+
+
+  public function createImage($imageObject, $path)
+  {
+    if( ! empty($imageObject))
+    {
+      $img = explode(',', $imageObject);
+      $count = count($img);
+      if($count == 1)
+      {
+        $imageData = base64_decode($img[0]);
+      }
+      else
+      {
+        $imageData = base64_decode($img[1]);
+      }
+
+      $source = imagecreatefromstring($imageData);
+      return imagejpeg($source, $path, 100);
+    }
+
+    return FALSE;
+  }
+
+
+  public function readImage($path)
+  {
+    $type = pathinfo($path, PATHINFO_EXTENSION);
+    $data = file_get_contents($path);
+    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+    return $base64;
+  }
+
+
 
 
   public function save_item()
@@ -159,6 +325,8 @@ class Transfer extends PS_Controller
       $u_path = $this->config->item('image_path').'returnned/';
       $iImage = isset( $_FILES['iImage'] ) ? $_FILES['iImage'] : FALSE;
       $uImage = isset( $_FILES['uImage'] ) ? $_FILES['uImage'] : FALSE;
+      $iOrientation = $this->input->post('iOrientation');
+      $uOrientation = $this->input->post('uOrientation');
 
       $transId = $this->input->post('trans_id');
       $transCode = $this->input->post('trans_code');
@@ -175,7 +343,17 @@ class Transfer extends PS_Controller
         {
           if(empty($itemCode) OR empty($itemName))
           {
-            $item = $this->transfer_model->getItemBySerial($iSerial);
+            //$item = $this->transfer_model->getItemBySerial($iSerial);
+
+            $item = array(
+              "Serial" => $iSerial,
+              "ItemCode" => "FG-7-01003",
+              "ItemName" => "Optical probe for meter communication",
+              "Quantity" => 1,
+              "WhsCode" => "2-PD"
+            );
+
+            $item = (object) $item;
 
             if( ! empty($item))
             {
@@ -217,7 +395,7 @@ class Transfer extends PS_Controller
               {
                 if($iImage !== FALSE)
                 {
-                  $rs = $this->do_upload($iImage, $i_path, $iSerial);
+                  $rs = $this->do_upload($iImage, $i_path, $iSerial, $iOrientation);
 
                   if($rs !== TRUE)
                   {
@@ -228,7 +406,7 @@ class Transfer extends PS_Controller
 
                 if($uImage !== FALSE)
                 {
-                  $rs = $this->do_upload($uImage, $u_path, $uSerial);
+                  $rs = $this->do_upload($uImage, $u_path, $uSerial, $uOrientation);
 
                   if($rs !== TRUE)
                   {
@@ -280,7 +458,7 @@ class Transfer extends PS_Controller
     $this->_json_response($sc, $ds);
   }
 
-  public function do_upload($file, $path, $name)
+  public function do_upload($file, $path, $name, $rotation = 1)
 	{
     $sc = TRUE;
 
@@ -291,6 +469,7 @@ class Transfer extends PS_Controller
 
     if( $image->uploaded )
     {
+      //$exif = exif_read_data($file->name);
       $image->file_new_name_body = $name; 		//--- เปลี่ยนชือ่ไฟล์ตาม serial
       $image->image_resize			 = TRUE;		//--- อนุญาติให้ปรับขนาด
       $image->image_retio_fill	 = TRUE;		//--- เติกสีให้เต็มขนาดหากรูปภาพไม่ได้สัดส่วน
@@ -302,6 +481,7 @@ class Transfer extends PS_Controller
       //$image->image_ratio_y      = TRUE;  //--- ให้คงสัดส่วนเดิมไว้
       $image->image_background_color	= "#FFFFFF";		//---  เติมสีให้ตามี่กำหนดหากรูปภาพไม่ได้สัดส่วน
       $image->image_convert			= 'jpg';		//--- แปลงไฟล์
+      $image->image_rotate = ($rotation == 3 ? 180 : ($rotation == 6 ? 90 : ($rotation == 8 ? -90 : NULL)));
 
       $image->process($image_path);						//--- ดำเนินการตามที่ได้ตั้งค่าไว้ข้างบน
 
@@ -317,78 +497,8 @@ class Transfer extends PS_Controller
 	}
 
 
-  public function get_detail()
-  {
-    $sc = TRUE;
-    $ds = array();
-    $id = $this->input->get('id');
 
-    if($id)
-    {
-      $rs = $this->transfer_model->get_detail($id);
-
-      if( ! empty($rs))
-      {
-        $ds = array(
-          'id' => $rs->id,
-          'i_serial' => $rs->InstallSerialNum,
-          'u_serial' => $rs->ReturnnedSerialNum,
-          'i_item_code' => $rs->ItemCode,
-          'i_item_name' => $rs->ItemName,
-          'i_image_path' => get_image_path($rs->InstallSerialNum, 'installed'),
-          'u_image_path' => get_image_path($rs->ReturnnedSerialNum, 'returnned'),
-          'fromWhsCode' => $rs->fromWhsCode,
-          'fromWhsName' => $rs->from_warehouse_name,
-          'toWhsCode' => $rs->toWhsCode,
-          'toWhsName' => $rs->to_warehouse_name,
-          'status_label' => transfer_line_status_label($rs->LineStatus)
-        );
-      }
-      else
-      {
-        $sc = FALSE;
-        set_error('notfound');
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error("required");
-    }
-
-    $this->_json_response($sc , $ds);
-  }
-
-
-  public function delete_detail()
-  {
-    $sc = TRUE;
-    $id = $this->input->post('id');
-
-    $detail = $this->transfer_model->get_detail($id);
-
-    if( ! empty($detail))
-    {
-      if($detail->LineStatus == 'O')
-      {
-        if( ! $this->transfer_model->delete_detail($id))
-        {
-          $sc = FALSE;
-          set_error('delete');
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        set_error(0, "Invalid Line status");
-      }
-    }
-
-    $this->_response($sc);
-  }
-
-
-  function save_document()
+  function approve()
   {
     $sc = TRUE;
 
@@ -400,12 +510,17 @@ class Transfer extends PS_Controller
 
       if( ! empty($doc))
       {
-        if($doc->status == -1 OR $doc->status == 0 OR $doc->status == 3)
+        if($doc->status == 0 OR $doc->isApprove == 0)
         {
-          if( ! $this->transfer_model->save_document($id))
+          $arr = array(
+            'isApprove' => 1,
+            'approver' => $this->_user->uname
+          );
+
+          if( ! $this->transfer_model->update($id, $arr))
           {
             $sc = FALSE;
-            set_error(0, "Save document failed");
+            set_error(0, "อนุมัติเอกสารไม่สำเร็จ");
           }
           else
           {
@@ -414,7 +529,7 @@ class Transfer extends PS_Controller
             if( ! $this->api->exportTransfer($id))
             {
               $sc = FALSE;
-              set_error(0, "Save Document success but Create Document on SAP Failed");
+              set_error(0, "อนัมัติเอกสารสำเร็จแต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง");
             }
           }
         }
@@ -448,6 +563,36 @@ class Transfer extends PS_Controller
     $this->_response($sc);
   }
 
+
+
+  public function get_row($id)
+  {
+    $sc = TRUE;
+    $rs = $this->transfer_model->get($id);
+
+    if( ! empty($rs))
+    {
+      $ds = array(
+        "id" => $rs->id,
+        "date_add" => thai_date($rs->date_add, FALSE),
+        "code" => $rs->code,
+        "i_serial" => $rs->InstallSerialNum,
+        "fromWhs" => $rs->fromWhsCode." : ".$rs->from_warehouse_name,
+        "toWhs" => $rs->toWhsCode." : ".$rs->to_warehouse_name,
+        "uname" => $rs->uname,
+        "teamName" => $rs->team_name,
+        "docNum" => $rs->docNum,
+        "status_label" => transfer_status_label($rs->status)
+      );
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "ไม่พบรายการ";
+    }
+
+    $this->_json_response($sc, $ds);
+  }
 
 
   public function cancle_document()
@@ -492,78 +637,88 @@ class Transfer extends PS_Controller
   }
 
 
-  public function view_document($id)
-  {
-
-  }
-
-  function get_item()
+  public function view_detail($id)
   {
     $sc = TRUE;
-    $ds = array();
-    $data = json_decode(file_get_contents("php://input"));
 
-    if( ! empty($data))
+    $rs = $this->transfer_model->get($id);
+
+    if( ! empty($rs))
     {
-      if($data->type == 'i')
-      {
-        if( ! $this->transfer_model->is_exists_detail($data->serial, $data->type))
-        {
-          $item = $this->transfer_model->getInstallItemDataBySerial($data->serial, $data->whsCode);
-
-          if( ! empty($item))
-          {
-            $ds = array(
-              'status' => 'success',
-              'Serial' => $item->Serial,
-              'ItemCode' => $item->ItemCode,
-              'ItemName' => $item->ItemName,
-              'instock' => number($item->Quantity),
-              'whsCode' => $item->WhsCode
-            );
-          }
-          else
-          {
-            $sc = FALSE;
-            $ds = array(
-              'status' => 'error',
-              'message' => "ไม่พบสินค้าในคลังที่กำหนด : {$data->whsCode}"
-            );
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $ds = array(
-            'status' => 'error',
-            'message' => "{$data->serial} ถูกติดตั้งไปแล้ว"
-          );
-        }
-      }
-      else
-      {
-        $item = $this->transfer_model->getReturnItemDataBySerial($data->serial);
-
-        $ds = array(
-          'status' => 'success',
-          'Serial' => empty($item) ? $data->serial : $item->Serial,
-          'ItemCode' => empty($item) ? "" : $item->ItemCode,
-          'ItemName' => empty($item) ? "" : $item->ItemName,
-          'instock' => 0,
-          'whsCode' => 0
-        );
-      }
+      $arr = array(
+        "id" => $rs->id,
+        "date_add" => thai_date($rs->date_add, FALSE),
+        "code" => $rs->code,
+        "itemCode" => $rs->ItemCode,
+        "itemName" => $rs->ItemName,
+        "iSerial" => $rs->InstallSerialNum,
+        "uSerial" => $rs->ReturnnedSerialNum,
+        "fromWhsCode" => $rs->fromWhsCode,
+        "toWhsCode" => $rs->toWhsCode,
+        "i_image_path" => $rs->install_image,
+        "u_image_path" => $rs->returnned_image,
+        "i_image_data" => $this->readImage($rs->install_image),
+        "u_image_data" => $this->readImage($rs->returnned_image),
+        "peaNo" => $rs->peaNo,
+        "powerNo" => $rs->powerNo,
+        "mYear" => $rs->mYear,
+        "cond" => $rs->cond,
+        "usageAge" => $rs->usageAge,
+        "status" => $rs->status,
+        "fromDoc" => $rs->fromDoc
+      );
     }
     else
     {
       $sc = FALSE;
-      $ds = array(
-        'status' => 'error',
-        'message' => "Invalid Request format"
-      );
+      $this->error = "ไม่พบรายการ";
     }
 
-    echo json_encode($ds);
+    $this->_json_response($sc, $arr);
+  }
+
+
+
+
+  function get_item($id)
+  {
+    $sc = TRUE;
+    $ds = array();
+    $rs = $this->transfer_model->get($id);
+
+    if( ! empty($rs))
+    {
+      $ds = array(
+        "id" => $rs->id,
+        "code" => $rs->code,
+        "item_code" => $rs->ItemCode,
+        "item_name" => $rs->ItemName,
+        "i_serial" => $rs->InstallSerialNum,
+        "fromWhsCode" => $rs->fromWhsCode,
+        "fromWhsName" => $rs->from_warehouse_name,
+        "toWhsCode" => $rs->toWhsCode,
+        "toWhsName" => $rs->to_warehouse_name,
+        "i_image_path" => base_url().$rs->install_image,
+        "u_serial" => $rs->ReturnnedSerialNum,
+        "pea_no" => $rs->peaNo,
+        "power_no" => $rs->powerNo,
+        "mYear" => $rs->mYear,
+        "cond" => condLabel($rs->cond),
+        "color" => condLabelColor($rs->usageAge, $rs->cond),
+        "usageAge" => $rs->usageAge,
+        "u_image_path" => base_url().$rs->returnned_image,
+        "status" => $rs->status,
+        "is_approve" => $rs->isApprove,
+        "approver" => $rs->approver
+      );
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "ไม่พบรายการ";
+    }
+
+    echo $sc === TRUE ? json_encode($ds) : $this->error;
   }
 
 
@@ -588,6 +743,26 @@ class Transfer extends PS_Controller
     }
 
     return $new_code;
+  }
+
+
+  public function getNewCode()
+  {
+    $code = $this->get_new_code();
+
+    if($code)
+    {
+      $arr = array(
+        'status' => 'success',
+        'code' => $code
+      );
+
+      echo json_encode($arr);
+    }
+    else
+    {
+      echo "Cannot generate new code at this time";
+    }
   }
 
 

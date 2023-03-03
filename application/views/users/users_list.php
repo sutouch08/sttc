@@ -71,13 +71,14 @@
 			<thead>
 				<tr>
 					<th class="fix-width-60 middle text-center">#</th>
-					<th class="min-width-120 max-width-120"></th>
+					<th class="fix-width-120 max-width-120"></th>
 					<th class="fix-width-100 middle">User name</th>
-					<th class="fix-width-200 middle">Display name</th>
+					<th class="min-width-200 middle">ชื่อพนักงาน</th>
 					<th class="fix-width-150 middle">User Group</th>
-					<th class="fix-width-150 middle">Area</th>
-					<th class="min-width-150 middle">Warehouse</th>
-					<th class="fix-width-60 middle text-center">Status</th>
+					<th class="fix-width-150 middle">เขต/พื้นที่</th>
+					<th class="fix-width-150 middle">คลังต้นทาง</th>
+					<th class="fix-width-150 middle">คลังปลายทาง</th>
+					<th class="fix-width-60 middle text-center">สถานะ</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -104,9 +105,8 @@
 					<td class="middle">
 						<?php echo ($rs->ugroup == 3 ? $rs->team_name : ($rs->ugroup == 2 ? user_team_names($rs->id) : "")); ?>
 					</td>
-					<td class="middle">
-						<?php echo ($rs->ugroup == 3 ? user_warehouse_names($rs->id) : ""); ?>
-					</td>
+					<td class="middle"><?php echo (empty($rs->fromWhsCode) ? "" : $rs->fromWhsCode.' : '.$rs->from_warehouse_name); ?></td>
+					<td class="middle"><?php echo (empty($rs->toWhsCode) ? "" : $rs->toWhsCode .' : '. $rs->to_warehouse_name); ?></td>
 					<td class="middle text-center"><?php echo is_active($rs->active); ?></td>
 				</tr>
 				<?php $no++; ?>

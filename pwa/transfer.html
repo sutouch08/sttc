@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>STTC Web App</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="theme-color" content="salmon" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="shortcut icon" href="assets/img/favicon.png">
+    <link rel="apple-touch-icon" href="icon/icon.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.css" />
+    <link rel="stylesheet" href="assets/css/font-awesome.css" />
+    <link rel="stylesheet" href="assets/css/ace-fonts.css" />
+    <link rel="stylesheet" href="assets/css/ace.css" class="ace-main-stylesheet" id="main-ace-style" />
+    <link rel="stylesheet" href="assets/css/ace-skins.css" />
+    <link rel="stylesheet" href="assets/css/jquery-ui-1.10.4.custom.min.css " />
+    <link rel="stylesheet" href="assets/css/template.css"/>
+    <link rel="stylesheet" href="assets/css/sweet-alert.css">
+
+    <!-- ace settings handler -->
+    <script src="assets/js/ace-extra.js"></script>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script src="assets/js/bootstrap.js"></script>
+    <script src="assets/js/ace/ace.js"></script>
+    <script src="assets/js/sweet-alert.js"></script>
+    <script src="assets/js/handlebars-v3.js"></script>
+    <script src="assets/js/localforage.js" async></script>
+
+    <script src="scripts/template.js"></script>
+    <script src="scripts/app.js" async></script>
+    <script src="scripts/main.js" async></script>
+
+  </head>
+  <body class="no-skin">
+		<div id="loader">
+        <div class="loader"></div>
+		</div>
+		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
+
+		<!-- #section:basics/navbar.layout -->
+		<div id="navbar" class="navbar navbar-default">
+			<div class="navbar-container" id="navbar-container">
+				<!-- #section:basics/sidebar.mobile.toggle -->
+				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
+					<span class="sr-only">Toggle sidebar</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+
+				<div class="navbar-header pull-left">
+					<a href="index.html" class="navbar-brand" style="min-width:167px;">
+						<small>Smart TTC</small>
+					</a>
+				</div>
+				<!-- /section:basics/navbar.dropdown -->
+			</div><!-- /.navbar-container -->
+		</div>
+
+    <!-- /section:basics/navbar.layout -->
+    <div class="main-container" id="main-container">
+      <script type="text/javascript">
+        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
+      </script>
+      <!-- #section:basics/sidebar -->
+
+      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
+        <script type="text/javascript">
+        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
+        </script>
+
+        <ul class="nav nav-list">
+          <li class="">
+            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
+              <i class="menu-icon fa fa-key"></i>
+              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
+            </a>
+          </li>
+          <li class="">
+            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
+              <i class="menu-icon fa fa-arrow-left"></i>
+              <span class="menu-text">ออกจากระบบ</span>
+            </a>
+          </li>
+          </ul>
+      </div>
+      <!-- /section:basics/sidebar -->
+      <div class="main-content">
+        <div class="main-content-inner">
+          <div id="sidebar2"
+            class="sidebar h-sidebar navbar-collapse collapse"
+            data-sidebar="true" data-sidebar-scoll="true"
+            data-sidebar-hover="true" aria-expanded="false"
+            style="height:1px;">
+          </div>
+          <div class="page-content">
+            <div class="row">
+              <div class="col-xs-6">
+                <label>code</label>
+                <input type="text" class="form-control input-sm search-box" name="code" id="code" value="">
+              </div>
+              <div class="col-xs-6">
+                <label>วันที่</label>
+                <div class="input-daterange input-group width-100">
+                  <input type="text" class="width-50 text-center from-date" name="from_date" id="fromDate" value="" />
+                  <input type="text" class="width-50 text-center" name="to_date" id="toDate" value="" />
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <label>Status</label>
+                <select class="form-control input-sm" name="status" id="status">
+                  <option value="all">ทั้งหมด</option>
+                  <option value="0">Pending</option>
+                  <option value="1">Success</option>
+                  <option value="2">Cancelled</option>
+                  <option value="3">Failed</option>
+                </select>
+              </div>
+              <div class="col-xs-3">
+                <label class="display-block not-show">buton</label>
+                <button type="button" class="btn btn-xs btn-primary btn-block" onclick="getFilterList()"><i class="fa fa-search"></i> Search</button>
+              </div>
+              <div class="col-xs-3">
+                <label class="display-block not-show">buton</label>
+                <button type="button" class="btn btn-xs btn-warning btn-block" onclick="clearFilterList()"><i class="fa fa-retweet"></i> Reset</button>
+              </div>
+              <input type="hidden" id="perpage" value="20" />
+              <input type="hidden" id="offset" value="0" />
+            </div>
+            <div class="row">
+              <div class="col-xs-12" id="pagination"></div>
+            </div>
+            <hr class="margin-top-15">
+            <div class="row" id="offline-job"></div>
+            <div class="row" id="online-job" style="margin-bottom:30px;"></div>
+
+            <div class="pg-footer visible-xs">
+              <div class="pg-footer-inner">
+                <div class="pg-footer-content text-right" style="z-index:100; background-color:lightsalmon;">
+                  <div class="footer-menu width-20">
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
+                  </div>
+                  <div class="footer-menu width-60">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i></a></li>
+                  </div>
+                </div>
+             </div>
+           </div>
+          </div> <!-- pang content -->
+      </div><!-- main content inner -->
+    </div><!-- main content -->
+  </div><!-- /.main-container -->
+
+<script id="online-template" type="text/x-handlebarsTemplate">
+  {{#each this}}
+      <div class="col-md-4 col-sm-6 col-xs-12" id="detail-{{id}}">
+        <div class="doc-card" style="padding:8px;">
+          <div class="doc-head"><a href="#" onClick="viewDetail({{id}})">{{code}}</a></div>
+          <table class="doc-table">
+            <tr><td class="td-label">Date : {{date_add}}</td><td class="td-label hide-text"> Area : {{teamName}}</td></tr>
+            <tr><td class="td-label">Status : {{{statusLabel}}} </td><td class="td-label hide-text">Create By : {{uname}}</td></tr>
+            {{#if remark}}
+            <tr><td colspan="2" class="td-label hide-text">remark : {{remark}}</td></tr>
+            {{/if}}
+        </table>
+        </div>
+      </div>
+  {{/each}}
+</script>
+
+
+<script id="offline-template" type="text/x-handlebarsTemplate">
+  {{#each this}}
+    <div class="col-md-4 col-sm-6 col-xs-12" id="detail-{{iSerial}}">
+      <div class="doc-card" style="padding:8px;">
+        <div class="doc-head"><a href="#" onclick="viewOfflineDetail('{{iSerial}}')">{{iSerial}}</a></div>
+        <table class="doc-table">
+          <tr>
+            <td class="td-label">Date : {{date_add}}</td>
+            <td class="td-label">Status : <span class="label label-lg label-purple">Draft</span> </td>
+          </tr>
+          <tr>
+            <td colspan="2" class="td-label hide-text">remark : {{remark}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  {{/each}}
+</script>
+
+
+  <script src="scripts/transfer/transfer_list.js"></script>
+
+    <!-- ace scripts -->
+    <script>
+      $('#fromDate').datepicker({
+        dateFormat:'dd-mm-yy',
+        onClose:function(sd) {
+          $('#toDate').datepicker('option', 'minDate', sd);
+        }
+      });
+
+      $('#toDate').datepicker({
+        dateFormat:'dd-mm-yy',
+        onClose:function(sd) {
+          $('#fromDate').datepicker('option', 'maxDate', sd);
+        }
+      });
+    </script>
+    <script src="assets/js/ace/ace.sidebar.js"></script>
+    <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
+    <script src="assets/js/ace/ace.submenu-hover.js"></script>
+  </body>
+</html>

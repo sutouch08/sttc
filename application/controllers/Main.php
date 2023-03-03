@@ -41,6 +41,13 @@ class Main extends PS_Controller
   }
 
 
+	public function getConfig()
+	{
+		$code = $this->input->post('config_code');
+
+		echo getConfig($code);
+	}
+
 	public function testApi()
   {
 		$curl = curl_init();

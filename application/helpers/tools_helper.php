@@ -77,6 +77,30 @@ function get_filter($postName, $cookieName, $defaultValue = "")
 
 
 
+function get_filter_get($getName, $cookieName, $defaultValue = "")
+{
+  $CI =& get_instance();
+  $sc = '';
+
+  if($CI->input->get($getName) !== NULL)
+  {
+    $sc = trim($CI->input->get($getName));
+    $CI->input->set_cookie(array('name' => $cookieName, 'value' => $sc, 'expire' => 3600 , 'path' => '/'));
+  }
+  else if($CI->input->cookie($cookieName) !== NULL)
+  {
+    $sc = $CI->input->cookie($cookieName);
+  }
+  else
+  {
+    $sc = $defaultValue;
+  }
+
+	return $sc;
+}
+
+
+
 
 function clear_filter($cookies)
 {

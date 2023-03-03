@@ -44,6 +44,8 @@ function saveAdd() {
 		return false;
 	}
 
+  // console.log(validUname, validDname, validUgroup, validTeam, validWh, validPwd);
+  // return false;
 	const uname = $('#uname').val();
 	const dname = $('#dname').val();
 	const team_id = $('#team_id').val();
@@ -51,10 +53,10 @@ function saveAdd() {
 	const ugroup = $('#ugroup').val();
 	const active = $('#active').is(':checked') ? 1 : 0;
 	const force_reset = $('#force_reset').is(':checked') ? 1 : 0;
+  const fromWhsCode = $('#fromWhsCode').val();
+  const toWhsCode = $('#toWhsCode').val();
 
   let teamList = [];
-  let fwhList = [];
-  let twhList = [];
 
   $('.chk-area').each(function() {
     if($(this).is(':checked')) {
@@ -62,17 +64,6 @@ function saveAdd() {
     }
   });
 
-  $('.from-wh').each(function() {
-    if($(this).is(':checked')) {
-      fwhList.push($(this).val());
-    }
-  });
-
-  $('.to-wh').each(function() {
-    if($(this).is(':checked')) {
-      twhList.push($(this).val());
-    }
-  });
 
 	load_in();
 
@@ -86,8 +77,8 @@ function saveAdd() {
       'ugroup' : ugroup,
 			'team_id' : team_id,
       'team_list' : JSON.stringify(teamList),
-      'from_warehouse_list' : JSON.stringify(fwhList),
-      'to_warehouse_list' : JSON.stringify(twhList),
+      'fromWhsCode' : fromWhsCode,
+      'toWhsCode' : toWhsCode,
 			'pwd' : pwd,
 			'active' : active,
 			'force_reset' : force_reset
@@ -146,26 +137,14 @@ function update() {
 	const team_id = $('#team_id').val();
 	const ugroup = $('#ugroup').val();
 	const active = $('#active').is(':checked') ? 1 : 0;
+  const fromWhsCode = $('#fromWhsCode').val();
+  const toWhsCode = $('#toWhsCode').val();
 
   let teamList = [];
-  let fwhList = [];
-  let twhList = [];
 
   $('.chk-area').each(function() {
     if($(this).is(':checked')) {
       teamList.push($(this).val());
-    }
-  });
-
-  $('.from-wh').each(function() {
-    if($(this).is(':checked')) {
-      fwhList.push($(this).val());
-    }
-  });
-
-  $('.to-wh').each(function() {
-    if($(this).is(':checked')) {
-      twhList.push($(this).val());
     }
   });
 
@@ -181,8 +160,8 @@ function update() {
 			'dname' : dname,
 			'team_id' : team_id,
       'team_list' : JSON.stringify(teamList),
-      'from_warehouse_list' : JSON.stringify(fwhList),
-      'to_warehouse_list' : JSON.stringify(twhList),
+      'fromWhsCode' : fromWhsCode,
+      'toWhsCode' : toWhsCode,
 			'ugroup' : ugroup,
 			'active' : active
 		},
@@ -436,10 +415,11 @@ function validDisplayName() {
 
 
 function validUserTeam() {
+  let er = 0;
   let ugroup = $('#ugroup');
 
   if(ugroup.val() == "") {
-    validTeam = false;
+    er++;
   }
 
   if(ugroup.val() == 3) {
@@ -447,11 +427,10 @@ function validUserTeam() {
     let label = $('#team-error');
     if(el.val() == "") {
       set_error(el, label, "Area is required");
-      validTeam = false;
+      er++;
     }
     else {
       clear_error(el, label);
-      validTeam = true;
     }
   }
 
@@ -469,73 +448,83 @@ function validUserTeam() {
 
     if(areaList == 0) {
       set_error(el, label, "Area is required");
-      validTeam = false;
+      er++;
     }
     else {
       clear_error(el, label);
-      validTeam = true;
     }
+  }
+
+  if(er > 0) {
+    validTeam = false;
+  }
+  else {
+    validTeam = true;
   }
 }
 
 
 function validWarehouse() {
+  let er = 0;
   let ugroup = $('#ugroup');
-  let fm = $('#from-wh-list');
-  let to = $('#to-wh-list');
+  let fm = $('#fromWhsCode');
+  let to = $('#toWhsCode');
   let flabel = $('#from-warehouse-error');
   let tlabel = $('#to-warehouse-error');
-  let fwhList = 0;
-  let twhList = 0;
-
-  $('.from-wh').each(function() {
-    if($(this).is(':checked')) {
-      fwhList++;
-    }
-  });
-
-  $('.to-wh').each(function() {
-    if($(this).is(':checked')) {
-      twhList++;
-    }
-  });
 
   if(ugroup.val() == "") {
-    validWh = false;
+    er++;
   }
 
-  if(ugroup.val() == 3 && fwhList == 0) {
+  if(ugroup.val() == 3 && fm.val() == "") {
     set_error(fm, flabel, "Warehouse is required");
-    validWh = false;
+    er++;
   }
   else {
     clear_error(fm, flabel);
-    validWh = true;
   }
 
-  if(ugroup.val() == 3 && twhList == 0) {
+  if(ugroup.val() == 3 && to.val() == "") {
     set_error(to, tlabel, "Warehouse is required");
-    validWh = false;
+    er++;
   }
   else {
     clear_error(to, tlabel);
+  }
+
+  if(ugroup.val() == 3 && fm.val() == to.val()) {
+    set_error(to, tlabel, "Warehouse cannot be the same");
+    er++;
+  }
+
+  if(er > 0) {
+    validWh = false;
+  }
+  else {
     validWh = true;
   }
 }
 
 
 function validUserGroup() {
+  let er = 0;
 	let el = $('#ugroup');
 	let label = $('#ugroup-error');
 
 	if(el.val() == "") {
 		set_error(el, label, "Required !");
-		validUgroup = false;
+		er++;
 	}
 	else {
 		clear_error(el, label);
-		validUgroup = true;
 	}
+
+  if(er > 0) {
+    validUgroup = false;
+  }
+  else {
+    validUgroup = true;
+  }
 }
 
 
@@ -558,7 +547,11 @@ $('#team_id').focusout(function() {
 });
 
 
-$('#warehouse').focusout(function() {
+$('#fromWhsCode').focusout(function() {
+  validWarehouse();
+});
+
+$('#toWhsCode').focusout(function() {
   validWarehouse();
 });
 

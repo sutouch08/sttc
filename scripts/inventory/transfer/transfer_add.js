@@ -123,6 +123,8 @@ function saveItem() {
   let uSerial = $('#u-serial').val();
   let iImage = $('#i-photo')[0].files[0];
   let uImage = $('#u-photo')[0].files[0];
+  let iOrientation = $('#i-image').data('orientation');
+  let uOrientation = $('#u-image').data('orientation');
   let itemCode = $('#i-item-code').val();
   let itemName = $('#i-item-name').val();
 
@@ -159,6 +161,8 @@ function saveItem() {
   let fd = new FormData();
 	fd.append('iImage', iImage);
   fd.append('uImage', uImage);
+  fd.append('iOrientation', iOrientation);
+  fd.append('uOrientation', uOrientation);
 	fd.append('trans_id', trans_id);
 	fd.append('trans_code', trans_code);
 	fd.append('fromWhsCode', fromWhsCode);
@@ -459,20 +463,30 @@ function takePhoto(side) {
 }
 
 
-function readURL(input, side)
-{
-   if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-          $('#'+side+'-preview').html('<img id="'+side+'-image" src="'+e.target.result+'" class="width-100" alt="Item image" />');
-        }
-        reader.readAsDataURL(input.files[0]);
-        $('#del-'+side+'-image').removeClass('hide');
-
-        isDone();
-    }
+function getExif(name) {
+	var img = document.getElementById(name);
+  //console.log(img);
+	EXIF.getData(img, function () {
+		var MetaData = EXIF.getAllTags(this);
+    //console.log(MetaData);
+    return JSON.stringify(MetaData, null, "\t");
+		//console.log(JSON.stringify(MetaData, null, "\t"));
+	});
 }
 
+
+function readURL(input, side)
+{
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      $('#'+side+'-preview').html('<img id="'+side+'-image" src="'+e.target.result+'" class="width-100" alt="Item image" />');
+    }
+    reader.readAsDataURL(input.files[0]);
+    $('#del-'+side+'-image').removeClass('hide');
+    isDone();
+  }
+}
 
 function removeImage(side)
 {
@@ -500,6 +514,17 @@ $("#u-photo").change(function(){
 		}
 
 		readURL(this, 'u');
+
+    setTimeout(() => {
+      var img = document.getElementById("u-image");
+      console.log(img);
+    	EXIF.getData(img, function () {
+        let orientation = EXIF.getTag(this, "Orientation");
+        img.dataset.orientation = orientation;
+        //console.log(img.dataset.orientation);
+        swal(img.dataset.orientation);
+    	});
+    }, 1000);
 	}
 });
 
@@ -511,6 +536,7 @@ $("#i-photo").change(function(){
 		var name		= file.name;
 		var type 		= file.type;
 		var size		= file.size;
+    var orientation = "";
 		if(file.type != 'image/png' && file.type != 'image/jpg' && file.type != 'image/gif' && file.type != 'image/jpeg' )
 		{
 			swal("รูปแบบไฟล์ไม่ถูกต้อง", "กรุณาเลือกไฟล์นามสกุล jpg, jpeg, png หรือ gif เท่านั้น", "error");
@@ -519,6 +545,17 @@ $("#i-photo").change(function(){
 		}
 
 		readURL(this, 'i');
+
+    setTimeout(() => {
+      var img = document.getElementById("i-image");
+      //console.log(img);
+    	EXIF.getData(img, function () {
+        let orientation = EXIF.getTag(this, "Orientation");
+        img.dataset.orientation = orientation;
+        console.log(img.dataset.orientation);
+        swal(img.dataset.orientation);
+    	});
+    }, 1000);
 	}
 });
 

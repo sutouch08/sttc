@@ -6,7 +6,14 @@
 </div>
 <?php $this->load->view('inventory/transfer/tab_content'); ?>
 
+<script src="<?php echo base_url(); ?>assets/js/exif.js"></script>
 <script src="<?php echo base_url(); ?>scripts/inventory/transfer/transfer.js?v=<?php echo date('YmdHis'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/inventory/transfer/transfer_add.js?v=<?php echo date('YmdHis'); ?>"></script>
+
+<script>
+//window.onload = getExif;
+
+
+</script>
 
 <?php $this->load->view('include/footer'); ?>

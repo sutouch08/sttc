@@ -1856,7 +1856,7 @@ input[type=number]::-webkit-outer-spin-button {
 
 
 .footer-menu {
-  float: left;  
+  float: left;
   text-align: center;
   vertical-align: middle;
   padding: 8px;
@@ -2042,4 +2042,96 @@ input[type=number]::-webkit-outer-spin-button {
 
 .outline {
   outline: solid 1px #dddddd;
+}
+
+.doc-card {
+  border:solid 1px lightsalmon;
+  border-radius: 5px;
+  margin-bottom:10px;
+  text-align: center;
+}
+
+.doc-head {
+  font-size: 20px;
+  font-weight: bold;
+  color:white;
+  background-color: lightsalmon;
+  text-align: center;
+  margin: -8px -8px 8px;
+  padding: 5px;
+}
+
+.doc-table {
+  width:100%;
+  max-width:100%;
+  margin-bottom: 10px;
+}
+
+.doc-table > tbody > tr > td {
+  padding: 0px 8px 0px 8px;
+  font-size: 16px;
+}
+
+.td-label {
+  width:50%;
+  text-align: left;
+}
+
+.hide-text {
+  max-width: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-bar {
+  font-size: 16px;
+  font-weight: bold;
+  color:white;
+  margin: -8px -8px 8px;
+  padding: 5px;
+}
+
+.border-none > tbody > tr > td {
+  border: none;
+}
+
+.list-card {
+  border-radius: 5px;
+  border: solid 1px lightsalmon;
+  padding: 0px;
+}
+
+
+.top-li {
+  list-style-type: none;
+  cursor: pointer;
+  line-height: 30px;
+}
+.focus {
+  background-color:lightsalmon;
+  color:white !important;
+}
+
+li {
+  list-style-type: none;
+}
+
+.width-22-5 {
+  width:22.5% !important;
+}
+
+.ui-helper-hidden-accessible {
+  display:none;
+}
+
+.ui-autocomplete {
+  max-height: 250px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+.ui-widget {
+  width:auto;
 }

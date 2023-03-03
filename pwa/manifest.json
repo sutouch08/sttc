@@ -1,0 +1,23 @@
+{
+  "background_color" : "white",
+  "description" : "Get the job done!",
+  "display" : "fullscreen",
+  "icons" : [
+    {
+      "src" : "icon/icon.png",
+      "sizes" : "192x192",
+      "type" : "image/png",
+      "purpose" : "any maskable"
+    },
+    {
+      "src" : "icon/icon512.png",
+      "sizes" : "512x512",
+      "type" : "image/png",
+      "purpose" : "any maskable"
+    }
+  ],
+  "name" : "Smart TTC",
+  "short_name" : "STTC",
+  "theme_color" : "white",
+  "start_url" : "index.html"
+}

@@ -51,9 +51,12 @@ class User_model extends CI_Model
   {
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
+		->select('fm.name AS from_warehouse_name, to.name AS to_warehouse_name')
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
-		->join('team AS t', 'u.team_id = t.id', 'left');
+		->join('team AS t', 'u.team_id = t.id', 'left')
+		->join('warehouse AS fm', 'u.fromWhsCode = fm.code', 'left')
+		->join('warehouse AS to', 'u.toWhsCode = to.code', 'left');
 
     $rs = $this->db->where('u.id', $id)->get();
 
@@ -147,11 +150,24 @@ class User_model extends CI_Model
 	public function get_user_team($user_id)
 	{
 		$qr = "SELECT * FROM user_team WHERE user_id = {$user_id}";
-		$rs = $this->db->query($qr); 
+		$rs = $this->db->query($qr);
 
 		if($rs->num_rows() > 0)
 		{
 			return $rs->result();
+		}
+
+		return NULL;
+	}
+
+
+	public function get_user_team_name($team_id)
+	{
+		$rs = $this->db->select('name')->where('id', $team_id)->get('team');
+
+		if($rs->num_rows() == 1)
+		{
+			return $rs->row()->name;
 		}
 
 		return NULL;
@@ -163,10 +179,12 @@ class User_model extends CI_Model
 	{
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name')
-		->select('t.name AS team_name')
+		->select('t.name AS team_name, fm.name AS from_warehouse_name, to.name AS to_warehouse_name')
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
 		->join('team AS t', 'u.team_id = t.id', 'left')
+		->join('warehouse AS fm', 'u.fromWhsCode = fm.code', 'left')
+		->join('warehouse AS to', 'u.toWhsCode = to.code', 'left')
 		->where('u.id >', 0);
 
 		if( ! empty($ds['uname']))

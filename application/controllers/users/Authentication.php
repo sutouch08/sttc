@@ -41,7 +41,11 @@ class Authentication extends CI_Controller
 						'uid' => $rs->uid,
 						'uname' => $rs->uname,
 						'displayName' => $rs->name,
-						'ugroup' => $rs->ugroup
+						'ugroup' => $rs->ugroup,
+						'teamName' => $this->user_model->get_user_team_name($rs->team_id),
+						'team_id' => $rs->team_id,
+						'fromWhsCode' => $rs->fromWhsCode,
+						'toWhsCode' => $rs->toWhsCode
 					);
 
 					$this->create_user_data($ds, $rem);
@@ -70,7 +74,7 @@ class Authentication extends CI_Controller
     {
       $time = intval(86400); //-- 1 days
 
-			$times = $remember === TRUE ? ($time * 30) : $time;
+			$times = $time * 365 ; //$remember === TRUE ? ($time * 365) : $time;
 
       foreach($ds as $key => $val)
       {

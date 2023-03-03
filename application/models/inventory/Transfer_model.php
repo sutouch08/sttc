@@ -2,7 +2,6 @@
 class Transfer_model extends CI_Model
 {
   private $tb = "transfer";
-  private $td = "transfer_detail";
 
   public function __construct()
   {
@@ -13,32 +12,13 @@ class Transfer_model extends CI_Model
   {
     if( ! empty($ds))
     {
-      $rs = $this->db->insert($this->tb, $ds);
-
-      if($rs)
-      {
-        return $this->db->insert_id();
-      }
+      return $this->db->insert($this->tb, $ds);
     }
 
     return FALSE;
   }
 
 
-  public function add_detail(array $ds = array())
-  {
-    if( ! empty($ds))
-    {
-      $rs = $this->db->insert($this->td, $ds);
-
-      if($rs)
-      {
-        return $this->db->insert_id();
-      }
-    }
-
-    return FALSE;
-  }
 
   public function update($id, array $ds = array())
   {
@@ -51,23 +31,16 @@ class Transfer_model extends CI_Model
   }
 
 
-  public function update_detail($id, array $ds = array())
-  {
-    if( ! empty($ds))
-    {
-      return $this->db->where('id', $id)->update($this->td, $ds);
-    }
-
-    return FALSE;
-  }
-
   public function get($id)
   {
     $rs = $this->db
     ->select('tr.*, fwh.name AS from_warehouse_name, twh.name AS to_warehouse_name')
+    ->select('u.uname, t.name AS team_name')
     ->from('transfer AS tr')
     ->join('warehouse AS fwh', 'tr.fromWhsCode = fwh.code', 'left')
     ->join('warehouse AS twh', 'tr.toWhsCode = twh.code', 'left')
+    ->join('user AS u', 'tr.create_by = u.id', 'left')
+    ->join('team AS t', 'tr.team_id = t.id', 'left')
     ->where('tr.id', $id)
     ->get();
 
@@ -79,75 +52,6 @@ class Transfer_model extends CI_Model
     return NULL;
   }
 
-
-  public function get_detail($id)
-  {
-    $rs = $this->db
-    ->select('tr.*, fwh.name AS from_warehouse_name, twh.name AS to_warehouse_name')
-    ->from('transfer_detail AS tr')
-    ->join('warehouse AS fwh', 'tr.fromWhsCode = fwh.code', 'left')
-    ->join('warehouse AS twh', 'tr.toWhsCode = twh.code', 'left')
-    ->where('tr.id', $id)
-    ->get();
-
-    if( ! empty($rs))
-    {
-      return $rs->row();
-    }
-
-    return NULL;
-  }
-
-
-  public function get_details($transfer_id)
-  {
-    $rs = $this->db->where('transfer_id', $transfer_id)->get($this->td);
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function delete_detail($id)
-  {
-    return $this->db->where('id', $id)->delete($this->td);
-  }
-
-
-  public function save_document($id)
-  {
-    return $this->db->set('status', 0)->where('id', $id)->update($this->tb);
-  }
-
-
-  public function close_document($id, array $ds = array())
-  {
-    if( ! empty($ds))
-    {
-      if( ! empty($ds['docEntry']) && ! empty($ds['docNum']))
-      {
-        $this->db->trans_begin();
-        $uh = $this->db->update($this->tb, $ds);
-        $ul = $this->db->set('LineStatus', 'C')->where('transfer_id', $id)->update($this->td);
-
-        if($uh && $ul)
-        {
-          $this->db->trans_commit();
-          return TRUE;
-        }
-        else
-        {
-          $this->db->trans_rollback();
-        }
-      }
-    }
-
-    return FALSE;
-  }
 
 
   public function cancle_document($id)
@@ -177,32 +81,6 @@ class Transfer_model extends CI_Model
     return FALSE;
   }
 
-
-
-  public function is_exists_detail($serial, $type = 'i')
-  {
-    if($type == 'i')
-    {
-      $rs = $this->db->where('InstallSerialNum', $serial)->count_all_results($this->td);
-
-      if($rs > 0)
-      {
-        return TRUE;
-      }
-    }
-
-    if($type == 'u')
-    {
-      $rs = $this->db->where('ReturnnedSerialNum', $serial)->count_all_results($this->td);
-
-      if($rs > 0)
-      {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
 
 
   public function get_list(array $ds = array(), $limit = 20, $offset = 0)
@@ -249,8 +127,8 @@ class Transfer_model extends CI_Model
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
       $this->db
-      ->where('tr.docDate >=', from_date($ds['from_date']))
-      ->where('tr.docDate <=', to_date($ds['to_date']));
+      ->where('tr.date_add >=', from_date($ds['from_date']))
+      ->where('tr.date_add <=', to_date($ds['to_date']));
     }
 
     if( isset($ds['status']) && $ds['status'] != 'all')
@@ -263,7 +141,7 @@ class Transfer_model extends CI_Model
       $this->db->where('tr.team_id', $ds['team_id']);
     }
 
-    if( ! $this->_Admin && ! $this->_SuperAdmin && !$this->_Lead)
+    if($this->_Outsource)
     {
       $this->db->where('tr.create_by', $this->_user->id);
     }
@@ -289,7 +167,9 @@ class Transfer_model extends CI_Model
       }
     }
 
-    $rs = $this->db->order_by($order_by, $sort_by)->limit($limit, $offset)->get();
+    $this->db->order_by($order_by, $sort_by)->limit($limit, $offset);
+    $rs = $this->db->get();
+    // echo $this->db->get_compiled_select();
 
     if($rs->num_rows() > 0)
     {
@@ -341,8 +221,8 @@ class Transfer_model extends CI_Model
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
       $this->db
-      ->where('tr.docDate >=', from_date($ds['from_date']))
-      ->where('tr.docDate <=', to_date($ds['to_date']));
+      ->where('tr.date_add >=', from_date($ds['from_date']))
+      ->where('tr.date_add <=', to_date($ds['to_date']));
     }
 
     if( isset($ds['status']) && $ds['status'] != 'all')
@@ -383,6 +263,75 @@ class Transfer_model extends CI_Model
 
     return $this->db->count_all_results();
 
+  }
+
+
+
+  public function count_doc_rows(array $ds = array())
+  {
+    $this->db
+    ->from('transfer AS tr')
+    ->join('user AS u', 'tr.create_by = u.id', 'left');
+
+    if( isset($ds['code']) && $ds['code'] != "" && $ds['code'] != NULL)
+    {
+      $this->db->like('tr.code', $ds['code']);
+    }
+
+    if( ! empty($ds['fromDate']) && ! empty($ds['toDate']))
+    {
+      $this->db
+      ->where('tr.date_add >=', from_date($ds['fromDate']))
+      ->where('tr.date_add <=', to_date($ds['toDate']));
+    }
+
+    if( isset($ds['status']) && $ds['status'] != 'all')
+    {
+      $this->db->where('tr.status', $ds['status']);
+    }
+
+    $this->db->where('tr.create_by', $this->_user->id);
+
+    return $this->db->count_all_results();
+  }
+
+
+  public function get_doc_list(array $ds = array())
+  {
+    $perpage = empty($ds['perpage']) ? 20 : $ds['perpage'];
+    $offset = empty($ds['offset']) ? 0 : $ds['offset'];
+
+    $this->db
+    ->from('transfer AS tr')
+    ->join('user AS u', 'tr.create_by = u.id', 'left');
+
+    if( isset($ds['code']) && $ds['code'] != "" && $ds['code'] != NULL)
+    {
+      $this->db->like('tr.code', $ds['code']);
+    }
+
+    if( ! empty($ds['fromDate']) && ! empty($ds['toDate']))
+    {
+      $this->db
+      ->where('tr.date_add >=', from_date($ds['fromDate']))
+      ->where('tr.date_add <=', to_date($ds['toDate']));
+    }
+
+    if( isset($ds['status']) && $ds['status'] != 'all')
+    {
+      $this->db->where('tr.status', $ds['status']);
+    }
+
+    $this->db->where('tr.create_by', $this->_user->id);
+
+    $rs = $this->db->limit($perpage, $offset)->get();
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
   }
 
 
@@ -459,6 +408,43 @@ class Transfer_model extends CI_Model
     if($rs->num_rows() === 1)
     {
       return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
+  public function getSapDoc($docNum, $filler)
+  {
+    $rs = $this->ms
+    ->select('DocEntry, DocNum')
+    ->where('DocNum', $docNum)
+    ->where_in('Filler', $filler)
+    ->get('OWTR');
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
+  public function getSapTransferSerialDetails($docNum)
+  {
+    $rs = $this->db->get('demo_item');
+    // $rs = $this->ms
+    // ->select('S.DistNumber AS Serial, D.ItemCode, D.ItemName, D.WhsCode')
+    // ->from('SRI1 AS D')
+    // ->join('OSRN AS S', 'D.SysSerial = S.SysNumber AND D.ItemCode = S.ItemCode', 'left')
+    // ->where('D.BaseNum', $docNum)
+    // ->where('D.Direction', 0)
+    // ->get();
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
     }
 
     return NULL;

@@ -19,6 +19,26 @@ function select_warehouse($code = NULL)
 }
 
 
+function select_listed_warehouse($code = NULL)
+{
+	$ds = '';
+	$ci =& get_instance();
+	$ci->load->model('admin/warehouse_model');
+
+	$option = $ci->warehouse_model->get_listed();
+
+	if( ! empty($option))
+	{
+		foreach($option as $rs)
+		{
+			$ds .= '<option value="'.$rs->code.'" '.is_selected($rs->code, $code).'>'.$rs->code.' : '.$rs->name.'</option>';
+		}
+	}
+
+	return $ds;
+}
+
+
 function user_warehouse_names($user_id)
 {
 	$ds = "";

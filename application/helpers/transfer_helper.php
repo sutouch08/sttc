@@ -49,4 +49,37 @@ function transfer_line_status_label($status = 'O')
 
   return $label;
 }
+
+function condLabel($cond)
+{
+  return $cond == 1 ? "สภาพดี" : "ชำรุด";
+}
+
+
+function condLabelColor($age, $cond)
+{
+  $color = "red";
+
+  if($age < 10)
+  {
+    if($cond == 2 && $age > 3)
+    {
+      $color = "orange";
+    }
+
+    if($cond == 2 && $age <= 3)
+    {
+      $color = "blue";
+    }
+
+    if($cond == 1)
+    {
+      $color = "green";
+    }
+  }
+
+  $label = '<div style="background-color:'.$color.'; width:20px; height:20px;"></div>';
+
+  return $label;
+}
  ?>

@@ -88,71 +88,23 @@
 
   <div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="from-warehouse-table">
 		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">From Warehouse</label>
-		<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12" id="from-wh-list" style="margin-top:10px; max-height:400px; overflow-y:auto;">
-			<table class="table table-bordered border-1">
-				<thead>
-					<tr class="freez">
-						<th class="fix-width-60 text-center outline">#</th>
-						<th class="fix-width-100 text-center outline">Code</th>
-						<th class="min-width-100 text-left outline">Name</th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php if( ! empty($whList)) : ?>
-					<?php foreach($whList as $rs) : ?>
-            <?php $checked = isset($ufwh[$rs->id]) ? 'checked' : ''; ?>
-						<tr>
-							<td class="middle text-center">
-								<label>
-									<input type="checkbox" class="ace from-wh" value="<?php echo $rs->code; ?>" <?php echo $checked; ?> />
-									<span class="lbl"></span>
-								</label>
-							</td>
-							<td class="middle text-center"><?php echo $rs->code; ?></td>
-							<td class="middle"><?php echo $rs->name; ?></td>
-						</tr>
-					<?php endforeach; ?>
-				<?php else : ?>
-					<tr><td colspan="3" class="text-center">Please Define Warehouse</td></tr>
-				<?php endif; ?>
-				</tbody>
-			</table>
-		</div>
+		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<select class="form-control" id="fromWhsCode">
+				<option value="">-ไม่ระบุ-</option>
+      <?php echo select_listed_warehouse($user->fromWhsCode); ?>
+      </select>
+    </div>
 		<div class="col-xs-12 col-sm-reset inline red" id="from-warehouse-error"></div>
   </div>
 
 	<div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="to-warehouse-table">
 		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">To Warehouse</label>
-		<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12" id="to-wh-list" style="margin-top:10px; max-height:400px; overflow-y:auto;">
-			<table class="table table-bordered border-1">
-				<thead>
-					<tr class="freez">
-						<th class="fix-width-60 text-center outline">#</th>
-						<th class="fix-width-100 text-center outline">Code</th>
-						<th class="min-width-100 text-left outline">Name</th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php if( ! empty($whList)) : ?>
-					<?php foreach($whList as $rs) : ?>
-            <?php $checked = isset($utwh[$rs->id]) ? 'checked' : ''; ?>
-						<tr>
-							<td class="middle text-center">
-								<label>
-									<input type="checkbox" class="ace to-wh" value="<?php echo $rs->code; ?>" <?php echo $checked; ?> />
-									<span class="lbl"></span>
-								</label>
-							</td>
-							<td class="middle text-center"><?php echo $rs->code; ?></td>
-							<td class="middle"><?php echo $rs->name; ?></td>
-						</tr>
-					<?php endforeach; ?>
-				<?php else : ?>
-					<tr><td colspan="3" class="text-center">Please Define Warehouse</td></tr>
-				<?php endif; ?>
-				</tbody>
-			</table>
-		</div>
+		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<select class="form-control" id="toWhsCode">
+				<option value="">-ไม่ระบุ-</option>
+      <?php echo select_listed_warehouse($user->toWhsCode); ?>
+      </select>
+    </div>
 		<div class="col-xs-12 col-sm-reset inline red" id="to-warehouse-error"></div>
   </div>
 

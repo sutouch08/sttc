@@ -76,7 +76,7 @@ class Api
 				'docNum' => "22000001"
 			);
 
-			$this->ci->transfer_model->close_document($id, $arr);
+			$this->ci->transfer_model->update($id, $arr);
 			return TRUE;
 		}
 
@@ -86,7 +86,6 @@ class Api
 
 		$sc = TRUE;
 		$doc = $this->ci->transfer_model->get($id);
-		$details = $this->ci->transfer_model->get_details($id);
 
 		if(! empty($doc) && ! empty($details))
 		{
@@ -98,8 +97,8 @@ class Api
         'U_WEBCODE' => $doc->code,
         'DocType' => 'I',
         'CANCELED' => 'N',
-        'DocDate' => sap_date($doc->docDate, TRUE),
-        'DocDueDate' => sap_date($doc->docDate, TRUE),
+        'DocDate' => sap_date($doc->date_add, TRUE),
+        'DocDueDate' => sap_date($doc->date_add, TRUE),
         'CardCode' => NULL,
         'CardName' => NULL,
         'VatPercent' => 0.000000,
@@ -119,42 +118,34 @@ class Api
 
 			$orderLine = array();
 
-      $line = 0;
-
-			foreach($details AS $rs)
-			{
-        $arr = array(
-          'U_WEBCODE' => $doc->code,
-          'LineNum' => $line,
-          'ItemCode' => $rs->ItemCode,
-          'Dscription' => $rs->ItemName,
-          'Quantity' => $rs->Qty,
-          'unitMsr' => NULL,
-          'PriceBefDi' => 0.000000,
-          'LineTotal' => 0.000000,
-          'ShipDate' => sap_date($doc->docDate, TRUE),
-          'Currency' => $currency,
-          'Rate' => 1,
-          'DiscPrcnt' => 0.000000,
-          'Price' => 0.000000,
-          'TotalFrgn' => 0.000000,
-          'FromWhsCod' => $doc->fromWhsCode,
-          'WhsCode' => $doc->toWhsCode,
-          'FisrtBin' => $rs->from_zone,
-          'F_FROM_BIN' => NULL,
-          'F_TO_BIN' => NULL,
-          'AllocBinC' => NULL,
-          'TaxStatus' => 'Y',
-          'VatPrcnt' => 0.000000,
-          'VatGroup' => NULL,
-          'PriceAfVAT' => 0.000000,
-          'VatSum' => 0.000000,
-          'TaxType' => 'Y'
-        );
-
-				array_push($orderLine, $arr);
-        $line++;
-			}
+      $arr = array(
+        'U_WEBCODE' => $doc->code,
+        'LineNum' => 0,
+        'ItemCode' => $rs->ItemCode,
+        'Dscription' => $rs->ItemName,
+        'Quantity' => $rs->Qty,
+        'unitMsr' => NULL,
+        'PriceBefDi' => 0.000000,
+        'LineTotal' => 0.000000,
+        'ShipDate' => sap_date($doc->date_add, TRUE),
+        'Currency' => $currency,
+        'Rate' => 1,
+        'DiscPrcnt' => 0.000000,
+        'Price' => 0.000000,
+        'TotalFrgn' => 0.000000,
+        'FromWhsCod' => $doc->fromWhsCode,
+        'WhsCode' => $doc->toWhsCode,
+        'FisrtBin' => NULL,
+        'F_FROM_BIN' => NULL,
+        'F_TO_BIN' => NULL,
+        'AllocBinC' => NULL,
+        'TaxStatus' => 'Y',
+        'VatPrcnt' => 0.000000,
+        'VatGroup' => NULL,
+        'PriceAfVAT' => 0.000000,
+        'VatSum' => 0.000000,
+        'TaxType' => 'Y'
+      );
 
 			$ds['DocLine'] = $orderLine;
 
@@ -198,7 +189,7 @@ class Api
 						'docNum' => $rs->DocNum
 					);
 
-					$this->ci->transfer_model->close_document($id, $arr);
+					$this->ci->transfer_model->update($id, $arr);
 
 				}
 				else
