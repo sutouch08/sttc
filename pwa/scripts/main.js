@@ -6,9 +6,11 @@ var teamName = "";
 var cameraId = "";
 var fWhCode = "";
 var tWhCode = "";
+var userId = "";
 
 window.addEventListener('load', function() {
   uid = getCookie('uid');
+  userId = getCookie('userId');
   uname = getCookie('uname');
   displayName = decodeURIComponent(getCookie('displayName'));
   ugroup = getCookie('ugroup');
@@ -18,11 +20,13 @@ window.addEventListener('load', function() {
   tWhCode = getCookie('toWhsCode');
 
   if( uid == "") {
-    if(navigator.onLine) {
-      window.location.href = BASE_URL + "users/authentication";
-    }
-    else {
-      window.location.href = "login.html";
-    }
+    window.location.href = "login.html";
+  }
+
+  if(navigator.onLine) {
+    $('#online-status').text('Online');
+  }
+  else {
+    $('#online-status').text('Offline');
   }
 });

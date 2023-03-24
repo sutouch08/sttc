@@ -1,5 +1,5 @@
 var BASE_URL = 'http://localhost/sttc/';
-var COOKIE_PATH = '/sttc';
+var COOKIE_PATH = 'sttc';
 
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').then(() => {
@@ -11,10 +11,28 @@ if('serviceWorker' in navigator) {
 
 
 function logout() {
-  deleteCookie('uid', COOKIE_PATH);
-  window.location.href = "login.html";
+  if(navigator.onLine) {
+    doLogout();
+  }
+  else {
+    swal({
+      title:'คำเตือน !',
+      text:"คุณกำลังจะออกจากระบบในขณะออฟไลน์ <br/>คุณจะไม่สามารถกลับเข้าระบบได้อีกจนกว่าจะกลับมาออนไลน์อีกครั้ง<br/>ต้องการออกจากระบบหรือไม่ ?",
+      type:'warning',
+      html:true,
+      showCancelButton: true,
+  		confirmButtonColor: '#FA5858',
+  		confirmButtonText: 'ยืนยัน',
+  		cancelButtonText: 'ยกเลิก',
+  		closeOnConfirm: true
+    }, () => {
+      doLogout();
+    });
+  }
 }
 
-function isOnline() {
-  return navigator.onLine;
+
+function doLogout() {
+  deleteCookie('uid', COOKIE_PATH);
+  window.location.href = "login.html";
 }

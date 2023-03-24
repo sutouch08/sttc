@@ -1,5 +1,6 @@
 
 window.addEventListener('load', function() {
+  updateScanType();
   getItemList();
 });
 
@@ -8,44 +9,59 @@ function showTab(name) {
   $('.tab-pane').removeClass('active in');
   $('#'+name).addClass('focus');
   $('#'+name+'-tab').addClass('active in');
+
+  if(name == 'home') {
+    $('#sync-li').addClass('hide');
+    $('#scan-li').removeClass('hide');
+  }
+  else {
+    $('#scan-li').addClass('hide');
+    $('#sync-li').removeClass('hide');
+  }
 }
 
-let scan_type = $('#scan-type').val();
+var scanner;
+var config;
 
-let formatToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
-let qrWidth = 250;
-let qrHeight = 250;
+function readerInit() {
+  let scan_type = $('#scan-type').val();
 
-if( scan_type == 'barcode') {
-  formatToSupport = [
-    Html5QrcodeSupportedFormats.EAN_13,
-    Html5QrcodeSupportedFormats.CODE_39,
-    Html5QrcodeSupportedFormats.CODE_93,
-    Html5QrcodeSupportedFormats.CODE_128
-  ];
-
-  qrWidth = 350;
-  qrHeight = 100;
-}
-
-if( scan_type == 'both') {
-  formatToSupport = [
+  let formatToSupport = [
     Html5QrcodeSupportedFormats.QR_CODE,
     Html5QrcodeSupportedFormats.EAN_13,
     Html5QrcodeSupportedFormats.CODE_39,
     Html5QrcodeSupportedFormats.CODE_93,
     Html5QrcodeSupportedFormats.CODE_128
   ];
-}
 
-const scanner = new Html5Qrcode("reader", {formatsToSupport: formatToSupport});
-const config = {
-  fps: 60,
-  qrbox: {width: qrWidth, height: qrHeight},
-  experimentalFeatures: {
-    useBarCodeDetectorIfSupported: true
+  let qrWidth = 250;
+  let qrHeight = 250;
+
+  if( scan_type == 'barcode') {
+    formatToSupport = [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.CODE_93,
+      Html5QrcodeSupportedFormats.CODE_128
+    ];
+
+    qrWidth = 350;
+    qrHeight = 100;
   }
-};
+
+  if( scan_type == 'qrcode') {
+    formatToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
+  }
+
+  scanner = new Html5Qrcode("reader", {formatsToSupport: formatToSupport});
+  config = {
+    fps: 60,
+    qrbox: {width: qrWidth, height: qrHeight},
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true
+    }
+  };
+}
 
 
 
@@ -94,42 +110,42 @@ function startScan() {
   	});
   }
   else {
-    $('#cam').removeClass('hide');
-    $('#btn-scan').addClass('hide');
-    $('#btn-stop').removeClass('hide');
-    $('#btn-save').addClass('hide');
-    $('#promt-text').removeClass('hide');
+    if(navigator.onLine) {
 
-    scanner.start({deviceId: {exact: camId}}, config, (decodedText, decodedResult) => {
-      stopScan();
-      let exists = false;
+      $('#cam').removeClass('hide');
+      $('#btn-scan').addClass('hide');
+      $('#btn-stop').removeClass('hide');
+      $('#btn-save').addClass('hide');
+      $('#promt-text').removeClass('hide');
 
-      localforage.getItem('inventory').then((data) => {
-        if(data != null && data != undefined) {
-          exists = data.filter((row) => {
-            return row.hasOwnProperty(decodedText);
-          }).length > 0;
-        }
+      scanner.start({deviceId: {exact: camId}}, config, (decodedText, decodedResult) => {
+        stopScan();
+        $('#code').val(decodedText);
 
-        if(exists) {
-          swal("Error!", `${decodedText} เคยถูกบันทึกไปแล้ว`, "warning");
-          return false;
-        }
-        else {
-          getTransferDetail(decodedText);
-        }
+        getTransferDetail(decodedText);
       });
-    });
+    }
+    else {
+      swal({
+        title:'ข้อผิดพลาด',
+        text:'ไม่สามารถโหลดข้อมูลในขณะออฟไลน์ได้',
+        type:'warning'
+      });
+    }
   }
 }
 
-function submitDocument() {
-  if(navigator.onLine) {
-    let docnum = $('#doc-num').val();
 
-    if(docnum.length > 5) {
-      getTransferDetail(docnum);
-    }
+function submitDocument() {
+  let exists = false;
+  let docnum = $('#doc-num').val();
+
+  if(docnum.length < 5) {
+    return false;
+  }
+
+  if(navigator.onLine) {
+    getTransferDetail(docnum);
   }
   else {
     swal({
@@ -143,35 +159,110 @@ function submitDocument() {
 
 function getTransferDetail(docnum) {
   if(docnum.length > 5 ) {
-    load_in();
-    $.ajax({
-      url:BASE_URL + 'inventory/transfer/getTransferDetail',
-      type:'GET',
-      cache:false,
-      data:{
-        "docNum" : docnum
-      },
-      success:function(rs) {
-        load_out();
-        if(isJson(rs)) {
-          let data = JSON.parse(rs);
-          let source = $('#template').html();
-          let output = $('#result');
+    if(navigator.onLine) {
+      $('#code').val(docnum);
+      load_in();
+      let json = JSON.stringify({"docNum" : docnum, 'reload' : 'N'});
+      let requestUri = URI + 'get_transfer_details';
+      let header = new Headers();
+      header.append('X-API-KEY', API_KEY);
+      header.append('Authorization', AUTH);
+      header.append('Content-type', 'application/json');
 
-          render(source, data, output);
-          $('#btn-save').removeClass('hide');
-          $('#promt-text').addClass('hide');
-          window.scrollTo(0, document.body.scrollHeight);
-        }
-        else {
-          swal({
-            title:'Error!',
-            text:rs,
-            type:'error'
-          });
-        }
-      }
-    });
+      let requestOptions = {
+        method : 'POST',
+        headers : header,
+        body : json,
+        redirect : 'follow'
+      };
+
+      fetch(requestUri, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+          load_out();
+          $('#doc-num').val('');
+          if(isJson(result)) {
+            let ds = JSON.parse(result);
+            if(ds.status == 'success') {
+              let source = $('#template').html();
+              let output = $('#result');
+
+              render(source, ds.data, output);
+              $('#btn-save').removeClass('hide');
+              $('#promt-text').addClass('hide');
+              window.scrollTo(0, document.body.scrollHeight);
+            }
+            else if(ds.status == 'exists') {
+              swal({
+                title:'เอกสารถูกโหลดไปแล้ว',
+                text:`เอกสาร ${docnum} ถูกโหลดไปแล้ว ต้องการโหลดใหม่อีกครั้งหรือไม่`,
+                type:'warning',
+                showCancelButton: true,
+            		confirmButtonColor: '#FA5858',
+            		confirmButtonText: 'โหลดใหม่',
+            		cancelButtonText: 'ยกเลิก',
+            		closeOnConfirm: true
+              }, function() {
+                let body = JSON.stringify({"docNum" : docnum, 'reload' : 'Y'});
+                let uri = URI + 'get_transfer_details';
+                let hd = new Headers({
+                  'X-API-KEY' : API_KEY,
+                  'Authorization' : AUTH,
+                  'Content-Type' : 'application/json'
+                });
+
+                let options = {method : 'POST', headers : hd, body : body};
+
+                load_in();
+
+                fetch(uri, options).then(rest => rest.text())
+                .then(res => {
+                  let rs = JSON.parse(res);
+                  load_out();
+                  if(rs.status == 'success') {
+                    let source = $('#template').html();
+                    let output = $('#result');
+
+                    render(source, rs.data, output);
+                    $('#btn-save').removeClass('hide');
+                    $('#promt-text').addClass('hide');
+                    window.scrollTo(0, document.body.scrollHeight);
+                  }
+                  else {
+                    swal({
+                      title:'Error!',
+                      text:rs.message,
+                      type:'error'
+                    });
+                  }
+                })
+              });
+            }
+            else {
+              swal({
+                title:'Error!',
+                text:ds.message,
+                type:'error'
+              });
+            }
+          }
+          else {
+            swal({
+              title:'Error!',
+              text:result,
+              type:'error'
+            });
+          }
+        })
+        .catch(error => console.log('error', error));
+    }
+    else {
+      swal({
+        title:'ข้อผิดพลาด',
+        text:'ไม่สามารถโหลดข้อมูลในขณะออฟไลน์ได้',
+        type:'warning'
+      });
+    }
   }
   else {
     swal({
@@ -229,32 +320,31 @@ function getItemList() {
 }
 
 
+
 function saveItem() {
-  let ds = [];
-  localforage.getItem('inventory').then((data) => {
-    if(data != null && data != undefined) {
-      ds = data;
-    }
-
-    $('.item-data').each(function() {
-      let serial = $(this).data('serial');
-      let docnum = $(this).data('docnum');
-
-      let arr = {
-        "docnum" : docnum,
-        "serial" : serial,
-        "code" : $(this).data('code'),
-        "name" : $(this).data('name'),
-        "whCode" : $(this).data('wh')
-      };
-      arr[serial] = serial;
-      arr[docnum] = docnum;
-
-      ds.push(arr);
+  const code = $('#code').val();
+  if(navigator.onLine) {
+    let requestUri = URI + 'update_user_item';
+    let json = JSON.stringify({"docNum" : code});
+    let header = new Headers({
+      'X-API-KEY' : API_KEY,
+      'Authorization' : AUTH,
+      'Content-Type' : 'application/json'
     });
 
-    if(ds.length > 0) {
-      localforage.setItem('inventory', ds).then(() => {
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      let rs = JSON.parse(result);
+      if(rs.status == 'success') {
+        syncItem();
         setTimeout(() => {
           swal({
             title:'Success!',
@@ -269,31 +359,203 @@ function saveItem() {
           showTab('detail');
 
         }, 500);
+      }
+      else {
+        swal({
+          title:'Error!',
+          text:rs.message,
+          type:'error'
+        });
+      }
+    })
+    .catch((error)=> {
+      console.error('error', error);
+    });
 
-      }).catch((err) => {
-        console.log(err);
-      });
-    }
+  }
+}
+
+
+
+function deleteStockByDocNum(code) {
+  swal({
+    title:'Are sure ?',
+    text:'ต้องการลบ ' + code + ' หรือไม่ ?',
+    type:'warning',
+    showCancelButton: true,
+		confirmButtonColor: '#FA5858',
+		confirmButtonText: 'ยืนยัน',
+		cancelButtonText: 'ยกเลิก',
+		closeOnConfirm: true
+  },function() {
+    let json = JSON.stringify({'docNum' : code});
+    let requestUri = URI + 'delete_open_user_items';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      let rs = JSON.parse(result);
+
+      if(rs.status == 'success') {
+        localforage.getItem('inventory').then((data) => {
+          if(data != null && data != undefined) {
+            let items = data.filter((el) => {
+              return el.docnum != code;
+            });
+
+            if(items.length == 0) {
+              localforage.removeItem('inventory').then(() => {
+                getItemList();
+              });
+            }
+            else {
+              localforage.setItem('inventory', items).then(() => {
+                getItemList();
+              });
+            }
+          }
+        }).then(() => {
+          setTimeout(() => {
+            swal({
+              title:'Success',
+              type:'success',
+              timer:1000
+            });
+          }, 200);
+        })
+      }
+      else {
+        swal({
+          title:'Error!',
+          text:rs.message,
+          type:'error'
+        });
+      }
+    })
+    .catch(error => {
+      console.error('error', error);
+    });
   });
 }
 
-function deleteStockByDocNum(code) {
-  localforage.getItem('inventory').then((data) => {
-    if(data != null && data != undefined) {
-      let items = data.filter((el) => {
-        return el.docnum != code;
-      });
 
-      if(items.length == 0) {
-        localforage.removeItem('inventory').then(() => {
-          getItemList();
-        });
-      }
-      else {
-        localforage.setItem('inventory', items).then(() => {
-          getItemList();
-        });
-      }
+function updateScanType() {
+  if(navigator.onLine) {
+    let json = JSON.stringify({"config_code" : "SCANTYPE"});
+    let requestUri = URI + 'getConfig';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      let ds = JSON.parse(result);
+      $('#scan-type').val(ds);
+      localStorage.setItem('scanType', ds);
+    })
+    .then(() => {
+      readerInit();
+    })
+  }
+  else {
+    let ds = localStorage.getItem('scanType');
+
+    if(ds == "qrcode" || ds == "barcode" || ds == "both")
+    {
+      $('#scan-type').val(ds);
     }
-  })
+
+    readerInit();
+  }
+}
+
+
+function syncItem() {
+  if(navigator.onLine) {
+    load_in();
+
+    let json = JSON.stringify({'user_id' : userId});
+    let requestUri = URI + 'sync_user_items';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      let ds = JSON.parse(result);
+
+      if(ds.data != null || ds.data != "") {
+        let data = [];
+
+        ds.data.forEach((item, i) => {
+          let serial = item.Serial;
+          let docnum = item.DocNum;
+
+          let arr = {
+            "docnum" : item.DocNum,
+            "serial" : item.Serial,
+            "code" : item.ItemCode,
+            "name" : item.ItemName,
+            "whCode" : item.WhsCode
+          };
+
+          arr[serial] = serial;
+          arr[docnum] = docnum;
+
+          data.push(arr);
+        });
+
+        if(data.length == 0) {
+          localforage.removeItem('inventory').then(() => {
+            getItemList();
+          });
+        }
+        else {
+          localforage.setItem('inventory', data).then(() => {
+            getItemList();
+          });
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('error', error);
+    });
+
+    load_out();
+  }
+  else {
+    swal({
+      title:'ข้อผิดพลาด',
+      text:'ไม่สามารถโหลดข้อมูลในขณะออฟไลน์ได้',
+      type:'warning'
+    });
+  }
 }

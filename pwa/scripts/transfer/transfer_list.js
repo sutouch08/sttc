@@ -19,12 +19,21 @@ function viewOfflineDetail(id) {
 
 
 window.addEventListener('load', () => {
-  $('#code').val(getCookie('trCode'));
-  $('#fromDate').val(getCookie('trFrom'));
-  $('#toDate').val(getCookie('trTo'));
-  $('#status').val(getCookie('trStatus'));
-  $('#perpage').val(getCookie('trPerpage'));
-  $('#offset').val(getCookie('trOffset'));
+  let code = getCookie('trCode');
+  let serial = getCookie('trSerial');
+  let from = getCookie('trFrom');
+  let to = getCookie('trTo');
+  let status = getCookie('trStatus');
+  let perpage = $('#perpage').val();
+  let offset = $('#offset').val();
+
+  $('#code').val(code);
+  $('#serial').val(serial);
+  $('#fromDate').val(from);
+  $('#toDate').val(to);
+  $('#status').val((status == "" ? "all" : status));
+  //$('#perpage').val(perpage);
+  //$('#offset').val((offset == "" ? 0 : offset));
 
   loadPage();
 });
@@ -32,11 +41,12 @@ window.addEventListener('load', () => {
 
 function clearFilterList() {
   setCookie('trCode', '');
+  setCookie('trSerial', '');
   setCookie('trFrom', '');
   setCookie('trTo', '');
   setCookie('trStatus', 'all');
-  setCookie('trPerpage', 20);
-  setCookie('trOffset', 0);
+  // setCookie('trPerpage', 20);
+  // setCookie('trOffset', 0);
 
   window.location.reload();
 }
@@ -44,12 +54,12 @@ function clearFilterList() {
 async function loadPage() {
   await updateOfflineList();
   await getFilterList();
-  return true;
 }
 
 
 async function getFilterList() {
   let code = $('#code').val();
+  let serial = $('#serial').val();
   let fromDate = $('#fromDate').val();
   let toDate = $('#toDate').val();
   let status = $('#status').val();
@@ -57,52 +67,92 @@ async function getFilterList() {
   let offset = $('#offset').val();
 
   setCookie('trCode', code);
+  setCookie('trSerial', serial);
   setCookie('trFrom', fromDate);
   setCookie('trTo', toDate);
   setCookie('trStatus', status);
-  setCookie('trPerpage', perpage);
-  setCookie('trOffset', offset);
 
   if(navigator.onLine) {
-    $.ajax({
-      url:BASE_URL + 'inventory/transfer/get_list',
-      type:'POST',
-      cache:false,
-      data: {
-        "code" : code,
-        "fromDate" : fromDate,
-        "toDate" : toDate,
-        "status" : status,
-        "perpage" : perpage,
-        "offset" : offset
-      },
-      success:function(rs) {
-        if(isJson(rs)) {
-          let ds = JSON.parse(rs);
+    let requestUri = URI + 'get_transfer_list';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
 
-          $('#code').val(ds.code);
-          $('#fromDate').val(ds.from_date);
-          $('#toDate').val(ds.to_date);
-          $('#status').val(ds.status);
-          $('#pagination').html(ds.pagination);
+    let json = JSON.stringify({
+      "code" : code,
+      "serial" : serial,
+      "fromDate" : fromDate,
+      "toDate" : toDate,
+      "status" : status,
+      "perpage" : perpage,
+      "offset" : offset
+    });
 
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      if(isJson(result)) {
+        let ds = JSON.parse(result);
+        $('#code').val(ds.code);
+        $('#serial').val(ds.serial);
+        $('#fromDate').val(ds.from_date);
+        $('#toDate').val(ds.to_date);
+        $('#status').val(ds.status);
+        $('#num_rows').text(addCommas(ds.rows));
+
+        if(ds.data.length) {
           let source = $('#online-template').html();
           let output = $('#online-job');
-
-          render(source, ds.data, output);
+          render_append(source, ds.data, output);
+          offset = offset == 0 ? 1 * perpage : offset * perpage;
+          $('#offset').val(offset);
+          let rows = $('#show_rows').text();
+          rows = removeCommas(rows);
+          rows = parseDefault(parseInt(rows), 0);
+          rows = rows + ds.data.length;
+          $('#show_rows').text(addCommas(rows));
         }
         else {
-          swal({
-            title:'Error!',
-            text:rs,
-            type:'error'
-          });
+          console.log('nodata');
+          noData();
         }
       }
+      else {
+        swal({
+          title:'Error!',
+          text:rs,
+          type:'error'
+        });
+      }
     })
+    .catch(error => console.log('error', error));
+  }
+  else {
+    noData();
   }
 }
 
+
+function noData() {
+  $('#no-list').css('display', 'block');
+  $('#no-list-label').animate({opacity:0.9},500);
+  console.log('animate in');
+  setTimeout(() => {
+    $('#no-list-label').animate({opacity:0}, 500);
+    console.log('animate out');
+    setTimeout(() => {
+      $('#no-list').css('display', 'none');
+    }, 500);
+  }, 1000);
+}
 
 async function updateOfflineList() {
   return new Promise((resolve, reject) => {
@@ -114,7 +164,7 @@ async function updateOfflineList() {
         //--- send data to server if online
         if(navigator.onLine) {
           data.forEach((ds, index, array) => {
-            let data = {
+            let json = JSON.stringify({
               "itemCode" : ds.itemCode,
               "itemName" : ds.itemName,
               "fromWhsCode" : ds.fromWhsCode,
@@ -129,20 +179,42 @@ async function updateOfflineList() {
               "usageAge" : ds.usageAge,
               "uImage" : ds.uImage,
               "iImage" : ds.iImage,
+              "uOrientation" : ds.uOrientation,
+              "iOrientation" : ds.iOrientation,
               "fromDoc" : ds.fromDoc
+            });
+
+            let requestUri = URI + 'add_transfer';
+            let header = new Headers();
+            header.append('X-API-KEY', API_KEY);
+            header.append('Authorization', AUTH);
+            header.append('Content-type', 'application/json');
+
+            let requestOptions = {
+              method : 'POST',
+              headers : header,
+              body : json,
+              redirect : 'follow'
             };
 
-            $.ajax({
-              url:BASE_URL + 'inventory/transfer/add',
-              type:'POST',
-              cache:false,
-              data: ds,
-              success:function(rs) {
-                if(rs == 'success') {
+            fetch(requestUri, requestOptions)
+            .then(response => response.text())
+            .then(result => {
+              if(isJson(result)) {
+                let rs = JSON.parse(result);
+                if(rs.status == 'success') {
                   deleteOfflineTransfer(ds.iSerial);
                 }
               }
-            });
+              else {
+                swal({
+                  title:'Error!',
+                  text:rs,
+                  type:'error'
+                });
+              }
+            })
+            .catch(error => console.log('error', error));
 
             if(index === array.length -1) {
               resolve();
@@ -189,41 +261,6 @@ function addNew() {
 }
 
 
-function fetchList() {
-  console.log('fetchList');
-  return new Promise(resolve => {
-    var data = [];
-    if(navigator.onLine) {
-      load_in();
-      $.ajax({
-        url:BASE_URL + 'inventory/transfer/get_list',
-        type:'POST',
-        cache:false,
-        success:function(rs) {
-          load_out();
-          if(isJson(rs)) {
-
-            let data = JSON.parse(rs);
-            resolve(data);
-          }
-          else {
-            swal({
-              title:'Error!',
-              text:rs,
-              type:'error'
-            });
-          }
-        }
-      });
-    }
-    else {
-      let ds = [];
-      resolve(ds);
-    }
-  });
-}
-
-
 async function getTransfer(id) {
   return new Promise(resolve => {
     var data = {};
@@ -235,4 +272,17 @@ async function getTransfer(id) {
       resolve(row);
     }
   });
+}
+
+
+function getSearch() {
+  $('#offset').val(0);
+  $('#rows').text(0);
+  $('#show_rows').text(0);
+  $('#online-job').html('');
+  getFilterList();
+}
+
+function loadMore() {
+  getFilterList();
 }

@@ -2,6 +2,7 @@
 class Transfer_model extends CI_Model
 {
   private $tb = "transfer";
+  private $ti = "user_item";
 
   public function __construct()
   {
@@ -56,29 +57,13 @@ class Transfer_model extends CI_Model
 
   public function cancle_document($id)
   {
-    $this->db->trans_begin();
-
     $arr = array(
       'status' => 2,
       'update_at' => now(),
       'update_by' => $this->_user->id
     );
 
-    $ch = $this->db->where('id', $id)->update($this->tb, $arr);
-    $cd = $this->db->set('LineStatus', 'D')->where('transfer_id', $id)->update($this->td);
-
-    if($ch && $cd)
-    {
-      $this->db->trans_commit();
-
-      return TRUE;
-    }
-    else
-    {
-      $this->db->trans_rollback();
-    }
-
-    return FALSE;
+    return $this->db->where('id', $id)->update($this->tb, $arr);
   }
 
 
@@ -101,28 +86,30 @@ class Transfer_model extends CI_Model
       $this->db->like('tr.code', $ds['code']);
     }
 
-    if( isset($ds['docNum']) && $ds['docNum'] != "" && $ds['docNum'] != NULL)
-    {
-      $this->db->like('tr.docNum', $ds['docNum']);
-    }
-
-    if( isset($ds['fromWhCode']) && $ds['fromWhCode'] != "" && $ds['fromWhCode'] != NULL)
+    if(isset($ds['serial']) && $ds['serial'] != "" && $ds['serial'] != NULL)
     {
       $this->db
       ->group_start()
-      ->like('tr.fromWhsCode', $ds['fromWhCode'])
-      ->or_like('wf.name', $ds['fromWhCode'])
+      ->like('InstallSerialNum', $ds['serial'])
+      ->or_like('ReturnnedSerialNum', $ds['serial'])
       ->group_end();
     }
 
-    if( isset($ds['toWhCode']) && $ds['toWhCode'] != "" && $ds['toWhCode'] != NULL)
+    if(isset($ds['fromWhCode']) && $ds['fromWhCode'] != 'all')
     {
-      $this->db
-      ->group_start()
-      ->like('tr.toWhsCode', $ds['toWhCode'])
-      ->or_like('wt.name', $ds['toWhCode'])
-      ->group_end();
+      $this->db->where('tr.fromWhsCode', $ds['fromWhCode']);
     }
+
+    if(isset($ds['toWhCode']) && $ds['toWhCode'] != "all")
+    {
+      $this->db->where('tr.toWhsCode', $ds['toWhCode']);
+    }
+
+    if(isset($ds['is_approve']) && $ds['is_approve'] != 'all')
+    {
+      $this->db->where('tr.isApprove', $ds['is_approve']);
+    }
+
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
@@ -141,7 +128,13 @@ class Transfer_model extends CI_Model
       $this->db->where('tr.team_id', $ds['team_id']);
     }
 
-    if($this->_Outsource)
+    if(isset($ds['user_id']) && $ds['user_id'] != 'all')
+    {
+      $this->db->where('tr.create_by', $ds['user_id']);
+    }
+
+
+    if( ! $this->_Admin && ! $this->_SuperAdmin && ! $this->_Lead)
     {
       $this->db->where('tr.create_by', $this->_user->id);
     }
@@ -195,27 +188,28 @@ class Transfer_model extends CI_Model
       $this->db->like('tr.code', $ds['code']);
     }
 
-    if( isset($ds['docNum']) && $ds['docNum'] != "" && $ds['docNum'] != NULL)
-    {
-      $this->db->like('tr.docNum', $ds['docNum']);
-    }
-
-    if( isset($ds['fromWhCode']) && $ds['fromWhCode'] != "" && $ds['fromWhCode'] != NULL)
+    if(isset($ds['serial']) && $ds['serial'] != "" && $ds['serial'] != NULL)
     {
       $this->db
       ->group_start()
-      ->like('tr.fromWhsCode', $ds['fromWhCode'])
-      ->or_like('wf.name', $ds['fromWhCode'])
+      ->like('InstallSerialNum', $ds['serial'])
+      ->or_like('ReturnnedSerialNum', $ds['serial'])
       ->group_end();
     }
 
-    if( isset($ds['toWhCode']) && $ds['toWhCode'] != "" && $ds['toWhCode'] != NULL)
+    if(isset($ds['fromWhCode']) && $ds['fromWhCode'] != 'all')
     {
-      $this->db
-      ->group_start()
-      ->like('tr.toWhsCode', $ds['toWhCode'])
-      ->or_like('wt.name', $ds['toWhCode'])
-      ->group_end();
+      $this->db->where('tr.fromWhsCode', $ds['fromWhCode']);
+    }
+
+    if(isset($ds['toWhcode']) && $ds['toWhCode'] != "all")
+    {
+      $this->db->where('tr.toWhsCode', $ds['toWhCode']);
+    }
+
+    if(isset($ds['is_approve']) && $ds['is_approve'] != 'all')
+    {
+      $this->db->where('tr.isApprove', $ds['is_approve']);
     }
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
@@ -233,6 +227,11 @@ class Transfer_model extends CI_Model
     if(isset($ds['team_id']) && $ds['team_id'] != 'all')
     {
       $this->db->where('tr.team_id', $ds['team_id']);
+    }
+
+    if(isset($ds['user_id']) && $ds['user_id'] != 'all')
+    {
+      $this->db->where('tr.create_by', $ds['user_id']);
     }
 
     if( ! $this->_Admin && ! $this->_SuperAdmin && !$this->_Lead)
@@ -335,6 +334,54 @@ class Transfer_model extends CI_Model
   }
 
 
+  public function is_loaded($docNum)
+  {
+    $rs = $this->db->where('DocNum', $docNum)->count_all_results($this->ti);
+
+    if($rs > 0)
+    {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+
+  public function add_user_item($ds = array())
+  {
+    return $this->db->insert($this->ti, $ds);
+  }
+
+
+  public function get_open_user_items($user_id)
+  {
+    $rs = $this->db->where('user_id', $user_id)->where('status', 0)->get($this->ti);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
+
+  public function delete_open_user_items($user_id, $docNum)
+  {
+    return $this->db->where('user_id', $user_id)->where('DocNum', $docNum)->where('status', 0)->delete($this->ti);
+  }
+
+
+  public function set_valid_item($user_id, $serial)
+  {
+    return $this->db->set('status', 1)->where('user_id', $user_id)->where('serial', $serial)->update($this->ti);
+  }
+
+  public function unvalid_item($user_id, $serial)
+  {
+    return $this->db->set('status', 0)->where('user_id', $user_id)->where('serial', $serial)->update($this->ti);
+  }
+
 
   public function get_max_code($pre)
   {
@@ -414,12 +461,11 @@ class Transfer_model extends CI_Model
   }
 
 
-  public function getSapDoc($docNum, $filler)
+  public function getSapDoc($docNum)
   {
     $rs = $this->ms
-    ->select('DocEntry, DocNum')
+    ->select('DocEntry, DocNum, Filler')
     ->where('DocNum', $docNum)
-    ->where_in('Filler', $filler)
     ->get('OWTR');
 
     if($rs->num_rows() === 1)

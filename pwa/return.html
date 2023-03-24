@@ -101,23 +101,9 @@
           </div>
           <div class="page-content">
             <div class="row">
-              <div class="col-xs-4">
-                <label>เลขที่</label>
+              <div class="col-xs-6">
+                <label>code</label>
                 <input type="text" class="form-control input-sm search-box" name="code" id="code" value="">
-              </div>
-              <div class="col-xs-4">
-                <label>Serial</label>
-                <input type="text" class="form-control input-sm search-box" name="serial" id="serial" value="">
-              </div>
-              <div class="col-xs-4">
-                <label>สถานะ</label>
-                <select class="form-control input-sm" name="status" id="status">
-                  <option value="all">ทั้งหมด</option>
-                  <option value="0">Pending</option>
-                  <option value="1">Success</option>
-                  <option value="2">Cancelled</option>
-                  <option value="3">Failed</option>
-                </select>
               </div>
               <div class="col-xs-6">
                 <label>วันที่</label>
@@ -126,9 +112,19 @@
                   <input type="text" class="width-50 text-center" name="to_date" id="toDate" value="" />
                 </div>
               </div>
+              <div class="col-xs-6">
+                <label>Status</label>
+                <select class="form-control input-sm" name="status" id="status">
+                  <option value="all">ทั้งหมด</option>
+                  <option value="-1">Draft</option>
+                  <option value="0">Pending</option>
+                  <option value="1">Recieved</option>
+                  <option value="2">Cancelled</option>
+                </select>
+              </div>
               <div class="col-xs-3">
                 <label class="display-block not-show">buton</label>
-                <button type="button" class="btn btn-xs btn-primary btn-block" onclick="getSearch()"><i class="fa fa-search"></i> Search</button>
+                <button type="button" class="btn btn-xs btn-primary btn-block" onclick="getFilterList()"><i class="fa fa-search"></i> Search</button>
               </div>
               <div class="col-xs-3">
                 <label class="display-block not-show">buton</label>
@@ -138,33 +134,26 @@
               <input type="hidden" id="offset" value="0" />
             </div>
             <div class="row">
-              <div class="col-xs-12 text-center margin-top-10">
-                ทั้งหมด <span id="num_rows">0</span> รายการ แสดง <span id="show_rows">0</span> รายการ
+              <div class="col-xs-12 margin-top-10" id="pagination">
               </div>
             </div>
-            <hr class="margin-bottom-15">
-            <div class="row" id="offline-job" style="max-height:70vh; overflow:auto;"></div>
-            <div class="row" id="online-job" style="max-height:65vh; overflow: auto; padding-bottom:30px;"></div>
+            <hr class="margin-top-15">
+            <div class="row" id="online-job" style="max-height:90vh; padding-bottom:30px; overflow: auto;">
+
+            </div>
+
             <div class="row"><div class="divider-hidden"></div></div>
-
-            <div class="col-xs-12 text-center" id="no-list" style="display:none; position:fixed; bottom:80px; z-index:100;">
-              <div id="no-list-label" style="border-radius: 10px; background-color:#afafaf; width:150px; height:60px; line-height:60px; vertical-align:middle; margin:auto; opacity:0.3;">
-                <div style="font-size:16px; color:white;">No data found</div>
-              </div>
-            </div>
-
-
-            <div class="pg-footer">
+            <div class="pg-footer visible-xs">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
                   </div>
                   <div class="footer-menu width-60">
-                    <button type="button" class="btn btn-white btn-default btn-sm btn-100" style="border-radius:7px;" id="btn-load-more" onclick="loadMore()">--Load More--</button>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i></a></li>
+                    <li><a href="javascript:goAdd()"><i class="fa fa-plus fa-2x white"></i></a></li>
                   </div>
                 </div>
              </div>
@@ -178,12 +167,11 @@
   {{#each this}}
       <div class="col-md-4 col-sm-6 col-xs-12" id="detail-{{id}}">
         <div class="doc-card" style="padding:8px;">
-          <div class="doc-head"><a href="#" onClick="viewDetail({{id}})">{{code}}</a></div>
+          <div class="doc-head"><a href="#" onClick="edit({{id}}, '{{code}}')">{{code}}</a></div>
           <table class="doc-table">
-            <tr><td class="td-label">วันที่ : {{date_add}}</td><td class="td-label">สถานะ : {{{statusLabel}}} </td></tr>
-            <tr><td colspan="2" class="td-label">ซีเรียล : {{serial}}</td></tr>
+            <tr><td class="td-label">วันที่ : {{date_add}}</td><td class="td-label">Status : {{{statusLabel}}} </td></tr>
             {{#if remark}}
-            <tr><td colspan="2" class="td-label hide-text">หมายเหตุ : {{remark}}</td></tr>
+            <tr><td colspan="2" class="td-label hide-text">remark : {{remark}}</td></tr>
             {{/if}}
         </table>
         </div>
@@ -192,27 +180,7 @@
 </script>
 
 
-<script id="offline-template" type="text/x-handlebarsTemplate">
-  {{#each this}}
-    <div class="col-md-4 col-sm-6 col-xs-12" id="detail-{{iSerial}}">
-      <div class="doc-card" style="padding:8px;">
-        <div class="doc-head"><a href="#" onclick="viewOfflineDetail('{{iSerial}}')">{{iSerial}}</a></div>
-        <table class="doc-table">
-          <tr>
-            <td class="td-label">Date : {{date_add}}</td>
-            <td class="td-label">Status : <span class="label label-lg label-purple">Draft</span> </td>
-          </tr>
-          <tr>
-            <td colspan="2" class="td-label hide-text">remark : {{remark}}</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  {{/each}}
-</script>
-
-
-  <script src="scripts/transfer/transfer_list.js"></script>
+  <script src="scripts/transfer/return_list.js"></script>
 
     <!-- ace scripts -->
     <script>
@@ -229,6 +197,12 @@
           $('#fromDate').datepicker('option', 'maxDate', sd);
         }
       });
+
+      function goAdd() {
+        if(navigator.onLine) {
+          window.location.href = "return_add.html";
+        }
+      }
     </script>
     <script src="assets/js/ace/ace.sidebar.js"></script>
     <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>

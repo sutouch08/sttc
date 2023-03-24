@@ -29,6 +29,7 @@
     <script src="scripts/app.js"></script>
     <script src="scripts/template.js"></script>
     <script src="scripts/main.js"></script>
+    <script src="scripts/api.js" async></script>
     <script src="assets/js/localforage.js"></script>
     <script src="assets/js/html5-qrcode.min.js"></script>
   </head>
@@ -53,6 +54,9 @@
 					<a href="index.html" class="navbar-brand" style="min-width:167px;">
 						<small>Smart TTC</small>
 					</a>
+				</div>
+        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+					<div class="online-status" id="online-status">Online</div>
 				</div>
 				<!-- /section:basics/navbar.dropdown -->
 			</div><!-- /.navbar-container -->
@@ -93,15 +97,16 @@
           </div>
           <div class="page-content">
             <input type="hidden" id="scan-type" value="" />
+            <input type="hidden" id="code" value="" />
             <div id="cam" class="hide" style="position: absolute; top:0; left:0; height: 100vh; width:100vw; z-index:10;">
               <div id="reader" style="width:100%;"></div>
             </div>
             <div class="row" style="margin-top:8px; border-bottom:solid 1px #dddddd;">
-              <div class="col-xs-6 header-menu green focus" id="home">
-                <li class="top-li foucs" onclick="showTab('home')"><i class="fa fa-qrcode fa-2x"></i></li>
+              <div class="col-xs-6 header-menu blue focus" id="detail">
+                <li class="top-li" onclick="showTab('detail')"><i class="fa fa-tags fa-2x"></i></li>
               </div>
-              <div class="col-xs-6 header-menu blue" id="detail">
-                <li class="top-li" onclick="showTab('detail')"><i class="fa fa-mobile fa-2x"></i></li>
+              <div class="col-xs-6 header-menu green" id="home">
+                <li class="top-li foucs" onclick="showTab('home')"><i class="fa fa-qrcode fa-2x"></i></li>
               </div>
             </div><!-- End Row -->
             <div class="row">
@@ -111,7 +116,7 @@
             				<div class="tabbable">
             					<div class="tab-content" style="border: none;">
 
-            						<div id="home-tab" class="tab-pane fade active in">
+            						<div id="home-tab" class="tab-pane">
             							<div class="row">
             								<div class="col-xs-12 text-center">
             									<div class="input-group">
@@ -135,21 +140,9 @@
             								</div>
             							</div>
 
-            							<div class="bp-footer">
-            								<span id="test"></span>
-            								<div class="bp-footer-inner">
-            									<div class="bp-footer-content text-center" style="z-index:100;">
-            										<div class="footer-menu width-90 text-center">
-            											<button type="button" class="btn btn-sm btn-primary btn-100" id="btn-scan" onclick="startScan()">Scan</button>
-            											<button type="button" class="btn btn-sm btn-info btn-100 hide" id="btn-stop" onclick="stopScan()">Stop</button>
-            										</div>
-            										<div class="footer-menu width-10"><li onclick="changeCameraId()"><i class="fa fa-ellipsis-v fa-2x"></i></li></div>
-            									</div>
-            								</div><!-- footer inner-->
-            							</div><!-- /.footer -->
             						</div><!-- home tab -->
 
-            						<div id="detail-tab" class="tab-pane" style="margin-top:-10px;">
+            						<div id="detail-tab" class="tab-pane fade active in" style="margin-top:-10px;">
             							<div class="row">
             								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive" id="doc-table" style="max-height:200px; overflow: auto; margin-bottom:5px;">
             								</div><!-- col-->
@@ -164,15 +157,18 @@
             </div>
           </div> <!-- row -->
 
-            <div class="bp-footer">
-              <div class="bp-footer-inner">
-                <div class="bp-footer-content text-right" style="z-index:100; background-color:lightsalmon;">
+            <div class="pg-footer">
+              <div class="pg-footer-inner">
+                <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
                     <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
                   </div>
-                  <div class="footer-menu width-60">
-                    <li id="btn-scan"><a href="javascript:startScan()"><i class="fa fa-qrcode fa-2x white"></i></a></li>
-                    <li id="btn-stop" class="hide"><a href="javascript:stopScan()"><i class="fa fa-qrcode fa-2x white"></i></a></li>
+                  <div class="footer-menu width-60 hide" id="scan-li">
+                    <button type="button" class="btn btn-white btn-primary btn-100 btn-sm" style="border-radius:15px;" id="btn-scan" onclick="startScan()">สแกน</button>
+                    <button type="button" class="btn btn-white btn-danger btn-100 btn-sm hide" style="border-radius:15px;" id="btn-stop" onclick="stopScan()">หยุดสแกน</button>
+                  </div>
+                  <div class="footer-menu width-60" id="sync-li">
+                    <button type="button" class="btn btn-white btn-primary btn-100 btn-sm" style="border-radius:15px;" onclick="syncItem()">ซิงค์รายการ</button>                    
                   </div>
                   <div class="footer-menu width-20"><li onclick="changeCameraId()"><i class="fa fa-cog fa-2x white"></i></li></div>
                 </div>
@@ -317,7 +313,6 @@
   	</div>
   </script>
 
-  <script src="scripts/transfer/transfer.js"></script>
   <script src="scripts/transfer/checkin.js"></script>
 
     <!-- ace scripts -->

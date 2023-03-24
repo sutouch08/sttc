@@ -29,7 +29,10 @@
     <script src="assets/js/sweet-alert.js"></script>
     <script src="assets/js/handlebars-v3.js"></script>
 
+    <script src="scripts/template.js"></script>
     <script src="scripts/app.js" async></script>
+    <script src="scripts/main.js" async></script>
+    <script src="scripts/api.js" async></script>
 
   </head>
   <body class="no-skin">
@@ -98,54 +101,24 @@
             style="height:1px;">
           </div>
           <div class="page-content" id="page-content">
-
             <div class="row">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 text-center">
-                <h1 id="hello"></h1>
-                <h5>Good to see you here</h5>
-              </div>
-              <div class="divider"></div>
-            </div>
-            <div class="row">
-              <div class="col-xs-12 text-center" style="padding-left:30px; padding-right:30px; margin-bottom:5px;">
-                <a href="transfer.html" class="btn btn-info btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-tasks bigger-160"></i>Jobs List
-                </a>
-                <a href="transfer_add.html" class="btn btn-success btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-plus bigger-230"></i>New Job
-                </a>
-                <a href="checkin.html" class="btn btn-primary btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-check-square-o bigger-230"></i>Check in
-                </a>
-              </div>
-              <div class="col-xs-12 text-center" style="padding-left:30px; padding-right:30px;">
-                <a href="return.html" class="btn btn-purple btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-undo bigger-230"></i>Return
-                </a>
-                <a href="user.html" class="btn btn-warning btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-user bigger-230"></i>Account
-                </a>
-              </div>
-            </div>
-
-
+          	  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 text-center">
+                <h1><i class="fa fa-check-circle fa-5x green"></i></h1>
+          	    <h1>Password Changed!</h1>
+          	    <h5>Your password has been changed successfully</h5>
+          	  </div>
+          	</div>
             <div class="pg-footer">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
-                  <div class="footer-menu width-20">
+                  <div class="footer-menu width-33 text-center">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                  </div>
+                  <div class="footer-menu width-33 text-center">
                     <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
                   </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="checkin.html"><i class="fa fa-check-square-o fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i></a></li>
+                  <div class="footer-menu width-33 text-center">
+                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i></a></li>
                   </div>
                 </div>
              </div>
@@ -156,21 +129,9 @@
     </div><!-- main content -->
   </div><!-- /.main-container -->
 
-      <!-- ace scripts -->
-    <script>
-      window.addEventListener('load', function() {
-        let uname = getCookie('uname');
 
-        if(uname != "") {
-          const hello = document.getElementById('hello');
-          hello.innerHTML = "Hello "+uname;
-        }
-      });
-    </script>
-    <script src="assets/js/ace/ace.sidebar.js"></script>
-    <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
-    <script src="assets/js/ace/ace.submenu-hover.js"></script>
-    <script src="scripts/template.js"></script>
-    <script src="scripts/main.js" async></script>
+  <script src="assets/js/ace/ace.sidebar.js"></script>
+  <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
+  <script src="assets/js/ace/ace.submenu-hover.js"></script>
   </body>
 </html>

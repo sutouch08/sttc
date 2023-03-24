@@ -18,6 +18,6 @@
   ],
   "name" : "Smart TTC",
   "short_name" : "STTC",
-  "theme_color" : "white",
+  "theme_color" : "salmon",
   "start_url" : "index.html"
 }

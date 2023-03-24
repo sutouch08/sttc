@@ -29,8 +29,11 @@
     <script src="assets/js/sweet-alert.js"></script>
     <script src="assets/js/handlebars-v3.js"></script>
 
-    <script src="scripts/app.js" async></script>
-
+    <script src="scripts/template.js"></script>
+    <script src="scripts/app.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/api.js" async></script>
+    <script src="assets/js/localforage.js"></script>    
   </head>
   <body class="no-skin">
 		<div id="loader">
@@ -97,80 +100,60 @@
             data-sidebar-hover="true" aria-expanded="false"
             style="height:1px;">
           </div>
-          <div class="page-content" id="page-content">
-
+          <div class="page-content">
             <div class="row">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 text-center">
-                <h1 id="hello"></h1>
-                <h5>Good to see you here</h5>
-              </div>
-              <div class="divider"></div>
-            </div>
-            <div class="row">
-              <div class="col-xs-12 text-center" style="padding-left:30px; padding-right:30px; margin-bottom:5px;">
-                <a href="transfer.html" class="btn btn-info btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-tasks bigger-160"></i>Jobs List
-                </a>
-                <a href="transfer_add.html" class="btn btn-success btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-plus bigger-230"></i>New Job
-                </a>
-                <a href="checkin.html" class="btn btn-primary btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-check-square-o bigger-230"></i>Check in
-                </a>
-              </div>
-              <div class="col-xs-12 text-center" style="padding-left:30px; padding-right:30px;">
-                <a href="return.html" class="btn btn-purple btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-undo bigger-230"></i>Return
-                </a>
-                <a href="user.html" class="btn btn-warning btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-user bigger-230"></i>Account
-                </a>
+              <div class="col-xs-12">
+                <h3 class="title">คืนสินค้า</h3>
               </div>
             </div>
+            <hr/>
+            <div class="row">
+              <div class="col-xs-6">
+                <label>เลขที่</label>
+                <input type="text" class="form-control" disabled />
+              </div>
+              <div class="col-xs-6">
+                <label>วันที่</label>
+                <input type="text" class="form-control text-center" id="date-add" value="" disabled/>
+              </div>
+              <div class="col-xs-12 text-left">
+                <label class="">หมายเหตุ</label>
+                <textarea class="autosize-transition limited form-control"
+                style="overflow: hidden; overflow-wrap: break-word; resize: horizontal; height: 52px;"
+                id="remark" maxlength="254" placeholder="หมายเหตุ"></textarea>
+              </div>
 
+            </div>
+            <div class="row">
+              <div class="bp-footer">
+                <div class="bp-footer-inner">
+                  <div class="bp-footer-content text-right">
+                    <div class="footer-menu">
+                      <button type="button" class="btn btn-prev" id="btn-back" onclick="goList()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; กลับ</button>
+                    </div>
+                    <button type="button" class="btn btn-success" onclick="add()">สร้างเอกสาร</button>
+                  </div>
+               </div><!-- footer inner-->
+              </div><!-- /.footer -->
+            </div> <!-- row -->
 
-            <div class="pg-footer">
-              <div class="pg-footer-inner">
-                <div class="pg-footer-content text-right">
-                  <div class="footer-menu width-20">
-                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="checkin.html"><i class="fa fa-check-square-o fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i></a></li>
-                  </div>
-                </div>
-             </div>
-           </div>
-
-        </div> <!-- pang content -->
+          </div> <!-- pang content -->
       </div><!-- main content inner -->
     </div><!-- main content -->
   </div><!-- /.main-container -->
 
-      <!-- ace scripts -->
-    <script>
-      window.addEventListener('load', function() {
-        let uname = getCookie('uname');
 
-        if(uname != "") {
-          const hello = document.getElementById('hello');
-          hello.innerHTML = "Hello "+uname;
-        }
-      });
-    </script>
+  <script>
+    function goList() {
+      window.location.href = "return.html";
+    }
+  </script>
+  <script src="scripts/transfer/return_add.js"></script>
+
+    <!-- ace scripts -->
     <script src="assets/js/ace/ace.sidebar.js"></script>
     <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
     <script src="assets/js/ace/ace.submenu-hover.js"></script>
-    <script src="scripts/template.js"></script>
-    <script src="scripts/main.js" async></script>
+    <script src="assets/js/jquery.autosize.js"></script>
   </body>
 </html>

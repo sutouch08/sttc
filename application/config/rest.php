@@ -110,7 +110,7 @@ $config['rest_realm'] = 'Bexsys@1234';
 |           authorization key
 |
 */
-$config['rest_auth'] = 'digest'; //FALSE;
+$config['rest_auth'] = 'basic'; //FALSE;
 
 /*
 |--------------------------------------------------------------------------

@@ -1,101 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-		<meta charset="utf-8" />
-		<title>Login Page - Smart TTC</title>
-		<meta name="description" content="User login page" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-		<link rel="shortcut icon" href="assets/img/favicon.png">
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta charset="utf-8" />
+  <title>Login Page - Smart TTC</title>
+  <meta name="description" content="User login page" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="salmon" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="shortcut icon" href="icon/icon.png">
+  <link rel="apple-touch-icon" href="icon/icon.png">
+	<link rel="stylesheet" type="text/css" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="assets/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="assets/fonts/iconic/css/material-design-iconic-font.min.css">
+	<link rel="stylesheet" type="text/css" href="assets/vendor/animate/animate.css">
+	<link rel="stylesheet" type="text/css" href="assets/vendor/animsition/css/animsition.min.css">
+	<link rel="stylesheet" type="text/css" href="assets/css/util.css">
+	<link rel="stylesheet" type="text/css" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/sweet-alert.css">
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/sweet-alert.js"></script>
+  <script src="scripts/template.js"></script>
+  <script src="scripts/app.js" async></script>
+  <script src="scripts/api.js" async></script>
+</head>
+<body>
 
-		<link rel="stylesheet" href="assets/css/bootstrap.css" />
-		<link rel="stylesheet" href="assets/css/font-awesome.css" />
-		<link rel="stylesheet" href="assets/css/ace-fonts.css" />
-		<link rel="stylesheet" href="assets/css/ace.css" />
-		<link rel="stylesheet" href="assets/css/ace-rtl.css" />
-		<link rel="stylesheet" href="assets/css/sweet-alert.css">
-		<script src="assets/js/jquery.min.js"></script>
-		<script src="assets/js/sweet-alert.js"></script>
-    <script src="scripts/app.js" async></script>
-	</head>
+	<div class="limiter">
+		<div class="container-login100">
+			<div class="wrap-login100 p-b-20">
+				<form class="login100-form validate-form" method="post" action="authentication/validate_credentials">
+					<!--<span class="login100-form-title p-b-70">
+						Welcome
+					</span>-->
+					<span class="login100-form-avatar" style="width:160px; height:160px; padding:20px; padding-left:10px;">
+						<img src="assets/img/favicon.png" alt="Smart TTC">
+					</span>
 
-	<body class="login-layout blur-login">
-		<div class="main-container">
-			<div class="main-content">
-				<div class="row">
-					<div class="col-sm-10 col-sm-offset-1">
-						<div class="login-container">
-							<div class="center">
-								<h1>
-									<span class="orange">Smart TTC</span>
-									<span class="white" id="id-text2">Web Applications</span>
-								</h1>
-								<h4 class="blue" id="id-company-text">&copy; Smart TTC Co., Ltd.</h4>
-							</div>
+					<div class="wrap-input100 validate-input m-t-85 m-b-35" data-validate = "Enter username">
+						<input class="input100" type="text" name="uname" id="uname" autofocus>
+						<span class="focus-input100" data-placeholder="Username"></span>
+					</div>
 
-							<div class="space-6"></div>
+					<div class="wrap-input100 validate-input m-b-35" data-validate="Enter password">
+						<input class="input100" type="password" id="input-pwd" onkeyup="bindPwd(this)">
+						<span class="focus-input100" data-placeholder="Password"></span>
+            <input type="hidden" id="pwd" value="" />
+					</div>
 
-							<div class="position-relative">
-								<div id="login-box" class="login-box visible widget-box no-border">
-									<div class="widget-body">
-										<div class="widget-main">
-											<h4 class="header blue lighter bigger">Please Enter Your Information</h4>
+					<div class="validate-input m-b-35" style="display:none;">
+						<input type="checkbox" name="remember" id="remember" class="input-checkbox100" value="1" checked />
+						<label class="label-checkbox100" for="remember"> Remember Me</label>
+					</div>
 
-											<div class="space-6"></div>
 
-											<form method="post">
-												<fieldset>
-													<label class="block clearfix">
-														<span class="block input-icon input-icon-right">
-															<input type="text" id="uname" class="form-control" placeholder="Username" autocomplete="off" autofocus />
-															<i class="ace-icon fa fa-user"></i>
-														</span>
-													</label>
+					<div class="container-login100-form-btn">
+						<button type="button" class="login100-form-btn" id="btn-login" style="background-color:#ed702c; box-shadow:none;" onclick="doLogin()">
+							Login
+						</button>
+					</div>
 
-													<label class="block clearfix">
-														<span class="block input-icon input-icon-right">
-															<input type="password" id="pwd" class="form-control" placeholder="Password" />
-															<i class="ace-icon fa fa-key"></i>
-														</span>
-													</label>
+					<div class="container-login100-form-btn" style="margin-top:30px; min-height:25px;">
+						<p id="error" class="text-center" style="color:red"></p>
+					</div>
 
-													<div class="space"></div>
+				</form>
+			</div>
+		</div>
+	</div>
 
-													<div class="clearfix">
+	<script src="assets/js/main.js"></script>
+	<script>
+    window.addEventListener('load', () => {
+      if(navigator.onLine == false) {
+        $('#btn-login').attr('disabled', 'disabled');
+        $('#error').text("ไม่สามารถเข้าระบบได้ในขณะออฟไลน์");
+      }
+    });
 
-														<label class="inline">
-															<input type="checkbox" name="remember" id="remember" class="ace" value="1" />
-															<span class="lbl"> Remember Me</span>
-														</label>
 
-														<button type="button" id="login_btn" onclick="doLogin()" class="width-35 pull-right btn btn-sm btn-primary">
-															<i class="ace-icon fa fa-key"></i>
-															<span class="bigger-110">Login</span>
-														</button>
-													</div>
+    function bindPwd(el) {
+      $('#pwd').val(el.value);
+    }
 
-													<div class="space-4"></div>
-													<div class="clearfix">
-														<div class="space-4"></div>
-														<div class="space-4"></div>
-														<!-- error message goes here -->
-														<p id="error-label" style="color:red; text-align:center;"></p>
-													</div>
-												</fieldset>
-											</form>
+  	function doLogin(){
+  		var uname = $('#uname').val();
+  		var pwd = $('#pwd').val();
+      var rem = $('#remember').is(':checked') ? 1 : 0;
 
-											<!-- Bypass robot-->
-											<span style="display:none;" id="ipwd"></span>
-										</div><!-- /.widget-main -->
-									</div><!-- /.widget-body -->
-								</div><!-- /.login-box -->
-							</div><!-- /.position-relative -->
-						</div>
-					</div><!-- /.col -->
-				</div><!-- /.row -->
-			</div><!-- /.main-content -->
-		</div><!-- /.main-container -->
+  		if(uname.length == 0){
+  			$('#uname').focus();
+  			return false;
+  		}
 
-		<script src="scripts/login.js" async></script>
-	</body>
+  		if(pwd.length == 0) {
+  			$('#input-pwd').focus();
+  			return false;
+  		}
+
+      let uri = URI + 'validate_credentials';
+      let header = new Headers();
+      let json = JSON.stringify({
+        'uname' : uname,
+        'pwd' : pwd
+      });
+
+      header.append('X-API-KEY', API_KEY);
+      header.append('Authorization', AUTH);
+      header.append('Content-type', 'application/json');
+
+      let options = {
+        method : 'POST',
+        headers : header,
+        body : json
+      };
+
+      fetch(uri, options)
+      .then(response => response.text())
+      .then(result => {
+        if( isJson(result)) {
+          let ds = JSON.parse(result);
+          console.log(ds);
+          if(ds.result == 'success') {
+            window.location.href = "index.html";
+          }
+          else {
+            console.log(ds.result);
+            $('#error').text(ds.result);
+            $('#uname').focus();
+          }
+        }
+      })
+      .catch(error => {
+        console.error('error', error);
+      });
+  	}
+
+	</script>
+</body>
 </html>

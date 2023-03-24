@@ -65,30 +65,56 @@ class User_model extends CI_Model
       return $rs->row();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
   public function get_user_by_uid($uid)
   {
-    $rs = $this->db->where('uid', $uid)->get($this->tb);
+    // $rs = $this->db->where('uid', $uid)->get($this->tb);
+    // if($rs->num_rows() === 1)
+    // {
+    //   return $rs->row();
+    // }
+		//
+    // return FALSE;
+		$this->db
+		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
+		->select('fm.name AS from_warehouse_name, to.name AS to_warehouse_name')
+		->from('user AS u')
+		->join('user_group AS g', 'u.ugroup = g.id', 'left')
+		->join('team AS t', 'u.team_id = t.id', 'left')
+		->join('warehouse AS fm', 'u.fromWhsCode = fm.code', 'left')
+		->join('warehouse AS to', 'u.toWhsCode = to.code', 'left');
+
+    $rs = $this->db->where('u.uid', $uid)->get();
+
     if($rs->num_rows() === 1)
     {
       return $rs->row();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
 	public function get_by_uname($uname)
 	{
-		$rs = $this->db->where('uname', $uname)->get($this->tb);
+		$this->db
+		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
+		->select('fm.name AS from_warehouse_name, to.name AS to_warehouse_name')
+		->from('user AS u')
+		->join('user_group AS g', 'u.ugroup = g.id', 'left')
+		->join('team AS t', 'u.team_id = t.id', 'left')
+		->join('warehouse AS fm', 'u.fromWhsCode = fm.code', 'left')
+		->join('warehouse AS to', 'u.toWhsCode = to.code', 'left');
 
-		if($rs->num_rows() === 1)
-		{
-			return $rs->row();
-		}
+    $rs = $this->db->where('u.uname', $uname)->get();
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
 
 		return NULL;
 	}
@@ -340,6 +366,19 @@ class User_model extends CI_Model
 		$total = 1;
 
 		return $total > 0 ? TRUE : FALSE;
+	}
+
+
+	public function get_oursource_list()
+	{
+		$rs = $this->db->where('ugroup', 3)->get('user');
+
+		if( ! empty($rs))
+		{
+			return $rs->result();
+		}
+
+		return NULL;
 	}
 
 } //---- End class

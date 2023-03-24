@@ -29,7 +29,10 @@
     <script src="assets/js/sweet-alert.js"></script>
     <script src="assets/js/handlebars-v3.js"></script>
 
+    <script src="scripts/template.js"></script>
     <script src="scripts/app.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/api.js" async></script>
     <script src="assets/js/localforage.js"></script>
     <script src="assets/js/html5-qrcode.min.js"></script>
   </head>
@@ -54,6 +57,9 @@
 					<a href="index.html" class="navbar-brand" style="min-width:167px;">
 						<small>Smart TTC</small>
 					</a>
+				</div>
+        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+					<div class="online-status" id="online-status">Online</div>
 				</div>
 				<!-- /section:basics/navbar.dropdown -->
 			</div><!-- /.navbar-container -->
@@ -96,7 +102,7 @@
             style="height:1px;">
           </div>
           <div class="page-content">
-            <input type="hidden" id="scan-type" value="" />
+            <input type="hidden" id="scan-type" value="both" />
             <input type="hidden" id="step" value="1" />
             <div id="cam" class="hide" style="position: absolute; top:0; left:0; height: 100vh; width:100vw; z-index:10;">
               <div id="reader" style="width:100%;"></div>
@@ -151,7 +157,7 @@
                       <div class="divider-hidden"></div>
                       <div class="input-group width-100">
                         <span class="input-group-addon" style="width:75px;">PEA NO</span>
-                        <input type="text" class="form-control input-lg" id="pea-no" value="" />
+                        <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control input-lg" id="pea-no" value="" />
                         <span class="input-group-btn">
                           <button type="button" class="btn btn-primary btn-lg" onclick="peaScan()">แสกน</button>
                         </span>
@@ -159,7 +165,7 @@
                       <div class="divider-hidden"></div>
                       <div class="input-group width-100">
                         <span class="input-group-addon" style="width:75px;">หน่วยไฟ</span>
-                        <input type="number" class="form-control input-lg" id="run-no"  placeholder="ระบุหน่วยไฟที่ใช้ไปบนหน้ามิเตอร์"/>
+                        <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control input-lg" id="run-no"  placeholder="ระบุหน่วยไฟที่ใช้ไปบนหน้ามิเตอร์"/>
                       </div>
                       <div class="divider-hidden"></div>
                       <div class="input-group width-100">
@@ -207,6 +213,7 @@
                 </div>
                 <input type="file" class="hide" id="u-photo" accept="image/jpeg" capture>
                 <input type="hidden" id="u-blob" value=""/>
+                <input type="hidden" id="u-orientation" value="" />
 
                 <div class="col-xs-12 text-center" style="position:fixed; left:0px; right:0px; bottom:65px; z-index:100;">
                   <div class="footer-menu width-100">
@@ -269,6 +276,7 @@
                   </div>
                   <input type="file" class="hide" id="i-photo" accept="image/jpeg" capture>
                   <input type="hidden" id="i-blob" value=""/>
+                  <input type="hidden" id="i-orientation" value="" />
                 </div>
 
                 <div class="col-xs-12 text-center" style="position:fixed; left:0px; right:0px; bottom:65px; z-index:100;">
@@ -280,7 +288,7 @@
 
               <div class="bp-footer">
                 <div class="bp-footer-inner">
-                  <div class="bp-footer-content text-right" style="z-index:100;">
+                  <div class="bp-footer-content text-right">
                     <button type="button" class="btn btn-prev" id="btn-back" onclick="goList()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; กลับ</button>
                     <button type="button" class="btn btn-prev hide" id="btn-prev" onclick="prevStep()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; ก่อนหน้า</button>
                     <button type="button" class="btn btn-success" id="btn-next" onclick="nextStep()">ถัดไป &nbsp; <i class="ace-icon fa fa-arrow-right"></i></button>
@@ -341,8 +349,12 @@
   </div>
   </script>
 
+  <script>
+    function goList() {
+      window.location.href = "transfer.html";
+    }
+  </script>
   <script src="assets/js/exif.js"></script>
-  <script src="scripts/transfer/transfer.js"></script>
   <script src="scripts/transfer/transfer_add.js"></script>
 
     <!-- ace scripts -->
@@ -350,7 +362,5 @@
     <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
     <script src="assets/js/ace/ace.submenu-hover.js"></script>
     <script src="assets/js/jquery.autosize.js"></script>
-    <script src="scripts/template.js"></script>
-    <script src="scripts/main.js"></script>
   </body>
 </html>

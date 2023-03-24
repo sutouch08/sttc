@@ -17,6 +17,7 @@ class Transfer extends PS_Controller
     $this->load->helper('team');
     $this->load->helper('image');
     $this->load->helper('transfer');
+    $this->load->helper('warehouse');
   }
 
 
@@ -24,14 +25,15 @@ class Transfer extends PS_Controller
   {
 		$filter = array(
 			'code' => get_filter('code', 'tr_code', ''),
-      'docNum' => get_filter('docNum', 'tr_docNum', ''),
-      'fromWhCode' => get_filter('fromWhCode', 'tr_fromWhCode', ''),
-      'toWhCode' => get_filter('toWhCode', 'tr_toWhCode', ''),
+      'serial' => get_filter('serial', 'tr_serial', ''),
+      'fromWhCode' => get_filter('fromWhCode', 'tr_fromWhCode', 'all'),
+      'toWhCode' => get_filter('toWhCode', 'tr_toWhCode', 'all'),
       'status' => get_filter('status', 'tr_status', 'all'),
       'from_date' => get_filter('from_date', 'tr_from_date', ''),
       'to_date' => get_filter('to_date', 'tr_to_date', ''),
       'team_id' => get_filter('team_id', 'tr_team_id', 'all'),
-      'user' => get_filter('user', 'tr_user', ''),
+      'user_id' => get_filter('user_id', 'tr_user_id', 'all'),
+      'is_approve' => get_filter('is_approve', 'tr_is_approve', 'all'),
       'order_by' => get_filter('order_by', 'tr_order_by', 'code'),
       'sort_by' => get_filter('sort_by', 'tr_sort_by', 'DESC')
 		);
@@ -62,12 +64,7 @@ class Transfer extends PS_Controller
       'status' => $this->input->post('status')
 		);
 
-    //$filter['create_by'] = $this->_user->id;
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		// $perpage = $this->input->post('perpage');
-    // $offset = $this->input->post('offset');
-    //
     $perpage = $this->input->post('perpage');
     $offset = $this->input->post('offset');
     $rows = $this->transfer_model->count_rows($filter);
@@ -105,12 +102,6 @@ class Transfer extends PS_Controller
     echo json_encode($filter);
   }
 
-
-
-  public function checkin()
-  {
-    $this->load->view('inventory/transfer/check_in');
-  }
 
 
   public function getTransferDetail()
@@ -215,6 +206,8 @@ class Transfer extends PS_Controller
       $cond = $this->input->post('cond');
       $iImage = $this->input->post('iImage');
       $uImage = $this->input->post('uImage');
+      $uOrientation = $this->input->post('uOrientation');
+      $iOrientation = $this->input->post('iOrientation');
       $fromDoc = get_null($this->input->post('fromDoc'));
       $remark = get_null(trim($this->input->post('remark')));
       $usageAge = $this->input->post('usageAge');
@@ -256,13 +249,13 @@ class Transfer extends PS_Controller
       }
       else
       {
-        if($this->createImage($uImage, $u_path ) === FALSE)
+        if($this->createImage($uImage, $u_path, $uOrientation ) === FALSE)
         {
           $sc = FALSE;
           set_error(0, "Create Returnned Image Failed");
         }
 
-        if($this->createImage($iImage, $i_path ) === FALSE)
+        if($this->createImage($iImage, $i_path, $iOrientation ) === FALSE)
         {
           $sc = FALSE;
           set_error(0, "Create Installed Image Failed");
@@ -279,7 +272,57 @@ class Transfer extends PS_Controller
   }
 
 
-  public function createImage($imageObject, $path)
+
+  public function update_item($id)
+  {
+    $sc = TRUE;
+    $peaNo = trim($this->input->post('peaNo'));
+    $powerNo = trim($this->input->post('powerNo'));
+    $mYear = $this->input->post('mYear');
+    $cond = $this->input->post('cond');
+    $useageAge = $this->input->post('useAge');
+
+    if($peaNo != "" && $powerNo != "" && $mYear != "" && $cond != "")
+    {
+      $doc = $this->transfer_model->get($id);
+
+      if(! empty($doc))
+      {
+        if($doc->status == 0 OR $doc->status == 3)
+        {
+          $arr = array(
+            'peaNo' => $peaNo,
+            'powerNo' => $powerNo,
+            'mYear' => $mYear,
+            'cond' => $cond,
+            'usageAge' => $useageAge
+          );
+
+          if( ! $this->transfer_model->update($id, $arr))
+          {
+            $sc = FALSE;
+            $this->error = "Update data failed";
+          }
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "Invalid Document Id";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing required parameters";
+    }
+
+    echo $sc === TRUE ? 'success' : $this->error;
+  }
+
+
+
+  public function createImage($imageObject, $path, $orientation = 1)
   {
     if( ! empty($imageObject))
     {
@@ -294,7 +337,9 @@ class Transfer extends PS_Controller
         $imageData = base64_decode($img[1]);
       }
 
-      $source = imagecreatefromstring($imageData);
+      $image = imagecreatefromstring($imageData);
+      $image_rotate = ($orientation == 3 ? 180 : ($orientation == 6 ? 90 : ($orientation == 8 ? -90 : NULL)));
+      $source = $image_rotate != NULL ? imagerotate($image, $image_rotate, 0) : $image;
       return imagejpeg($source, $path, 100);
     }
 
@@ -703,7 +748,9 @@ class Transfer extends PS_Controller
         "pea_no" => $rs->peaNo,
         "power_no" => $rs->powerNo,
         "mYear" => $rs->mYear,
+        "select_m_year" => select_prev_years($rs->mYear),
         "cond" => condLabel($rs->cond),
+        "select_cond" => select_cond($rs->cond),
         "color" => condLabelColor($rs->usageAge, $rs->cond),
         "usageAge" => $rs->usageAge,
         "u_image_path" => base_url().$rs->returnned_image,
@@ -770,14 +817,15 @@ class Transfer extends PS_Controller
   {
     $filter = array(
 			'tr_code',
-      'tr_docNum',
+      'tr_serial',
       'tr_fromWhCode',
       'tr_toWhCode',
       'tr_status',
       'tr_from_date',
       'tr_to_date',
       'tr_team_id',
-      'tr_user'
+      'tr_user_id',
+      'tr_is_approve'
 		);
 
     return clear_filter($filter);

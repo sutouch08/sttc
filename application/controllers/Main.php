@@ -99,4 +99,33 @@ class Main extends PS_Controller
 		}
   }
 
+
+	public function get_user_data()
+	{
+		$sc = TRUE;
+		$uname = $this->input->post('uname');
+		$ds = array();
+		if( ! empty($uname))
+		{
+			$user = $this->user_model->get_by_uname($uname);
+
+			if( ! empty($user))
+			{
+				$ds = (array) $user;
+			}
+			else
+			{
+				$sc = FALSE;
+				$this->error = "not found";
+			}
+		}
+		else
+		{
+			$sc = FALSE;
+			$this->error = "Missing required parameter : 'uname'";
+		}
+
+		echo $sc === TRUE ? json_encode($ds) : $this->error;
+	}
+
 } //--- end class

@@ -1826,14 +1826,13 @@ input[type=number]::-webkit-outer-spin-button {
 
 .pg-footer .pg-footer-inner .pg-footer-content {
     position: fixed;
+    z-index: 100;
     left: 0px;
     right: 0px;
     bottom: 0px;
     padding: 8px;
     line-height: 20px;
-    background-color:white;
-    border-top: solid 1px #dddddd;
-
+    background-color:lightsalmon;
 }
 
 .bp-footer .bp-footer-inner .bp-footer-content {
@@ -1859,7 +1858,7 @@ input[type=number]::-webkit-outer-spin-button {
   float: left;
   text-align: center;
   vertical-align: middle;
-  padding: 8px;
+  /*padding: 8px;*/
   line-height: 20px;
   /*border-right: solid 1px #dddddd;*/
 }
@@ -2140,4 +2139,11 @@ li {
   background-color:#eeeeee;
   border-color:#cccccc;
   color:#555555;
+}
+
+.online-status {
+  margin-top:10px;
+  margin-right:10px;
+  color:white;
+  font-size:16px;
 }

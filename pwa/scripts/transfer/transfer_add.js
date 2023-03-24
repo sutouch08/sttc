@@ -1,16 +1,29 @@
-$(document).ready(function() {
+window.addEventListener('load', () => {
   if(navigator.onLine) {
-    $.ajax({
-      url:BASE_URL + 'main/getConfig',
-      type:'POST',
-      cache:false,
-      data:{
-        "config_code" : "SCANTYPE"
-      },
-      success:function(rs) {
-        $('#scan-type').val(rs);
-      }
-    });
+    let json = JSON.stringify({"config_code" : "SCANTYPE"});
+    let requestUri = URI + 'getConfig';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        if( ! result == "" && ! result == null) {
+          $('#scan-type').val(result);
+        }
+        else {
+          $('#scan-type').val('both');
+        }
+      })
+      .catch(error => console.error('error', error));
   }
   else {
     $('#scan-type').val('both');
@@ -21,7 +34,8 @@ $(document).ready(function() {
   let thisYear = d.getFullYear();
   // console.log(thisYear);
 
-  let lastYear = thisYear - 30;
+  let lastYear = 30;
+
 
   for(let i = 0; i < lastYear; i++) {
     let year = thisYear - i;
@@ -31,6 +45,8 @@ $(document).ready(function() {
   }
 
   $('#remark').autosize({append:"\n"});
+
+  readerInit();
 });
 
 
@@ -77,11 +93,6 @@ function readerInit() {
     }
   };
 }
-
-window.addEventListener('load', () => {
-  readerInit();
-});
-
 
 
 function saveCameraId() {
@@ -331,7 +342,9 @@ $("#u-photo").change(function(){
       //console.log(img);
     	EXIF.getData(img, function () {
         let orientation = EXIF.getTag(this, "Orientation");
+        //console.log(orientation);
         img.dataset.orientation = orientation;
+        $('#u-orientation').val(orientation);
         //console.log(img.dataset.orientation);
         //swal(img.dataset.orientation);
     	});
@@ -363,59 +376,13 @@ $("#i-photo").change(function(){
     	EXIF.getData(img, function () {
         let orientation = EXIF.getTag(this, "Orientation");
         img.dataset.orientation = orientation;
+        $('#i-orientation').val(orientation);
         //console.log(img.dataset.orientation);
         //swal(img.dataset.orientation);
     	});
     }, 1000);
 	}
 });
-
-
-
-function getDeleteDetail(id, name) {
-  swal({
-    title:'Are you sure ?',
-    text:'ต้องการลบ '+ name +' หรือไม่ ?',
-    type:'warning',
-    showCancelButton: true,
-		confirmButtonColor: '#FA5858',
-		confirmButtonText: 'ยืนยัน',
-		cancelButtonText: 'ยกเลิก',
-		closeOnConfirm: true
-  },
-  function() {
-    $.ajax({
-			url:HOME + 'delete_detail',
-			type:'POST',
-			cache:false,
-			data: {
-				'id' : id
-			},
-			success:function(rs) {
-				if(rs === 'success') {
-          $('#detail-'+id).remove();
-          setTimeout(function() {
-            swal({
-  						title:'Deleted',
-  						type:'success',
-              showConfirmButton:false,
-  						timer:1000
-  					});
-          }, 200);
-				}
-				else {
-          setTimeout(function() {
-            swal({
-              title:'Error!',
-              text:rs,
-              type:'error'
-            });
-          }, 200);
-				}
-  		}
-  	});
-  });
-}
 
 
 function nextStep() {
@@ -590,6 +557,8 @@ function finish() {
   let cond = $('#condition').val(); // สภาพมิเตอร์ 1 = สภาพดี, 2 = ชำรุด
   let uImage = $('#u-blob').val();
   let iImage = $('#i-blob').val();
+  let uOrientation = $('#u-orientation').val();
+  let iOrientation = $('#i-orientation').val();
   let itemCode = $('#item-code').val();
   let itemName = $('#item-name').val();
   let remark = $.trim($('#remark').val());
@@ -669,7 +638,7 @@ function finish() {
 
   //--- save data
   if(navigator.onLine) {
-    let data = {
+    let ds = {
       "itemCode" : itemCode,
       "itemName" : itemName,
       "fromWhsCode" : fromWhsCode,
@@ -684,30 +653,52 @@ function finish() {
       "usageAge" : useAge,
       "uImage" : uImage,
       "iImage" : iImage,
+      "uOrientation" : uOrientation,
+      "iOrientation" : iOrientation,
       "fromDoc" : fromDoc
+    };
+
+    let json = JSON.stringify(ds);
+    let requestUri = URI + 'add_transfer';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
     };
 
     load_in();
 
-    $.ajax({
-      url:BASE_URL + 'inventory/transfer/add',
-      type:'POST',
-      cache:false,
-      data:data,
-      success:function(rs) {
-        load_out();
+    fetch(requestUri, requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        if(isJson(result)) {
+          load_out();
+          let rs = JSON.parse(result);
+          if(rs.status == 'success') {
+            swal({
+              title:'Success',
+              type:'success',
+              timer:1000
+            });
 
-        if(rs == 'success') {
-          swal({
-            title:'Success',
-            type:'success',
-            timer:1000
-          });
-
-          deleteItemStockBySerial(iSerial);
-          setTimeout(() => {
-            window.location.href = "transfer.html";
-          }, 1200);
+            deleteItemStockBySerial(iSerial);
+            setTimeout(() => {
+              window.location.href = "transfer.html";
+            }, 1200);
+          }
+          else {
+            swal({
+              title:'Error!',
+              text:rs.message,
+              type:'error'
+            });
+          }
         }
         else {
           swal({
@@ -716,8 +707,8 @@ function finish() {
             type:'error'
           });
         }
-      }
-    });
+      })
+      .catch(error => console.err('error', error));
   }
   else {
     let ds = [];
@@ -745,6 +736,8 @@ function finish() {
         "usageAge" : useAge,
         "uImage" : uImage,
         "iImage" : iImage,
+        "uOrientation" : uOrientation,
+        "iOrientation" : iOrientation,
         "fromDoc" : fromDoc
       };
 
@@ -799,27 +792,39 @@ function suggest() {
   let label = "";
 
   if(year == 0 || year == "" || cond == "") {
-    $('#suggest-label').html(`<div class="alert alert-normal">กรุณาระบุปีและสภาพมิเตอร์</div>`);
+    if(cond == "" && (year == "" || year == 0)) {
+      $('#suggest-label').html(`<div class="alert alert-normal">กรุณาระบุปีและสภาพมิเตอร์</div>`);
+    }
+    else {
+      if(cond != "" && (year == 0 || year == "")) {
+        $('#suggest-label').html(`<div class="alert alert-normal">กรุณาระบุปีมิเตอร์</div>`);
+      }
+
+      if(cond == "" && (year != 0 && year != "")) {
+        $('#suggest-label').html(`<div class="alert alert-normal">กรุณาระบุสภาพมิเตอร์</div>`);
+      }
+    }
+
     $('#use-age').val(0);
   }
   else {
     let thisYear = new Date().getFullYear();
     let age = thisYear - year;
-    let label = `<div class="alert alert-danger">ใช้งานมาแล้ว ${age} ปี ติดสติ๊กเกอร์สีแดง</div>`;
+    let label = `<div class="alert" style="background-color:red; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี ติดสติ๊กเกอร์สีแดง</div>`;
     $('#use-age').val(age);
 
     if( age < 10 )
     {
       if( cond == 2 && age > 3) {
-        label = `<div class="alert alert-warning">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีส้ม</div>`;
+        label = `<div class="alert" style="background-color:orange; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีส้ม</div>`;
       }
 
       if( cond == 2 && age <= 3) {
-        label = `<div class="alert alert-info">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีน้ำเงิน</div>`;
+        label = `<div class="alert" style="background-color:blue; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีน้ำเงิน</div>`;
       }
 
       if( cond == 1) {
-        label = `<div class="alert alert-success">ใช้งานมาแล้ว ${age} ปี สภาพดี ติดสติ๊กเกอร์สีเขียว</div>`;
+        label = `<div class="alert" style="background-color:green; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี สภาพดี ติดสติ๊กเกอร์สีเขียว</div>`;
       }
     }
 

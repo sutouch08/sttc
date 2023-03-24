@@ -1,7 +1,79 @@
+window.addEventListener('load', () => {
+	let uname = getCookie('uname');
+
+	if(navigator.onLine) {
+		// get data from server
+		let json = JSON.stringify({"uname" : uname});
+		let requestUri = URI + 'user_data';
+		let header = new Headers();
+		header.append('X-API-KEY', API_KEY);
+		header.append('Authorization', AUTH);
+		header.append('Content-type', 'application/json');
+
+		let requestOptions = {
+			method : 'POST',
+			headers : header,
+			body : json
+		};
+
+		fetch(requestUri, requestOptions)
+		.then(response => response.text())
+		.then(result => {
+			if(isJson(result)) {
+				let ds = JSON.parse(result);
+				$('#is-strong-pwd').val(ds.use_strong_pwd);
+				$('#uname').val(ds.uname);
+				$('#dname').val(ds.display_name);
+				$('#cu-pwd').focus();
+			}
+		})
+		.catch(error => {
+				console.error('error', error);
+		});
+	}
+});
+
+
+
+function toggleShowPwd(option) {
+	if(option == 's') {
+		$('.p-hide').addClass('hide');
+		$('.p-show').removeClass('hide');
+	}
+	else {
+		$('.p-show').addClass('hide');
+		$('.p-hide').removeClass('hide');
+	}
+}
+
+$('#cu-pwd').keyup(function(e) {
+	$('#cu-pwd-alt').val($(this).val());
+});
+
+$('#cu-pwd-alt').keyup(function() {
+	$('#cu-pwd').val($(this).val());
+});
+
+$('#pwd').keyup(function() {
+	$('#pwd-alt').val($(this).val());
+});
+
+$('#pwd-alt').keyup(function() {
+	$('#pwd').val($(this).val());
+});
+
+$('#cm-pwd').keyup(function() {
+	$('#cm-pwd-alt').val($(this).val());
+});
+
+$('#cm-pwd-alt').keyup(function() {
+	$('#cm-pwd').val($(this).val());
+});
+
 
 function validatePassword(input)
 {
-	if(USE_STRONG_PWD == 1) {
+	if($('#is-strong-pwd').val() == 1) {
 		var passw = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
 
 		if(input.match(passw))
@@ -16,142 +88,141 @@ function validatePassword(input)
 }
 
 
-
-
-function checkPassword() {
+function changePassword() {
 	const uname = $('#uname').val();
-	const current = $('#current-password');
-	const newPass = $('#new-password');
-	const conPass = $('#confirm-password');
-	const pasErr = $('#error-label');
+	const current = $('#cu-pwd');
+	const newPass = $('#pwd');
+	const conPass = $('#cm-pwd');
+	const cuErr = $('#cu-pwd-error');
+	const pwdErr = $('#pwd-error');
+	const cmErr = $('#cm-pwd-error');
 
 	if(current.val().length === 0) {
 		current.addClass('has-error');
-		pasErr.text("กรุณาใส่รหัสผ่านปัจจุบัน");
+		cuErr.text("กรุณาใส่รหัสผ่านปัจจุบัน");
 
 		current.focus();
 		return false;
 	}
 	else {
 		current.removeClass('has-error');
-		pasErr.text('');
+		cuErr.text('');
 	}
 
 	if(newPass.val().length === 0) {
 		newPass.addClass('has-error');
-		pasErr.text('กรุณากำหนดรหัสผ่าน');
+		pwdErr.text('กรุณากำหนดรหัสผ่าน');
 
 		newPass.focus();
 		return false;
 	}
 	else {
 		newPass.removeClass('has-error');
-		pasErr.text('');
+		pwdErr.text('');
 	}
 
 	//--- check use same as current passsword ?
 	if(newPass.val() === current.val()) {
 		newPass.addClass('has-error');
-		pasErr.text("รหัสใหม่ต้องไม่ซ้ำกับรหัสปัจจุบัน");
+		pwdErr.text("รหัสใหม่ต้องไม่ซ้ำกับรหัสปัจจุบัน");
 
 		return false;
 	}
 	else {
 		newPass.removeClass('has-error');
-		pasErr.text('');
+		pwdErr.text('');
 	}
 
 	//--- check complexity
-	if(!validatePassword(newPass.val())) {
+	if( ! validatePassword(newPass.val())) {
 		newPass.addClass('has-error');
-		pasErr.text('รหัสผ่านต้องมีความยาว 8 - 20 ตัวอักษร และต้องประกอบด้วย ตัวอักษรภาษาอังกฤษ พิมพ์เล็ก พิมพ์ใหญ่ และตัวเลขอย่างน้อย อย่างละตัว');
+		pwdErr.text('รหัสผ่านต้องมีความยาว 8 - 20 ตัวอักษร และต้องประกอบด้วย ตัวอักษรภาษาอังกฤษ พิมพ์เล็ก พิมพ์ใหญ่ และตัวเลขอย่างน้อย อย่างละตัว');
 
 		newPass.focus();
 		return false;
 	}
 	else {
 		newPass.removeClass('has-error');
-		pasErr.text('');
+		pwdErr.text('');
 	}
 
 
 	if(newPass.val() !== conPass.val()) {
 		conPass.addClass('has-error');
-		pasErr.text('ยืนยันรหัสผ่านไม่ตรงกับรหัสผ่านใหม่');
+		cmErr.text('ยืนยันรหัสผ่านไม่ตรงกับรหัสผ่านใหม่');
 
 		conPass.focus();
 		return false;
 	}
 	else {
 		conPass.removeClass('has-error');
-		pasErr.text('');
+		cmErr.text('');
 	}
 
-	$.ajax({
-		url:HOME + 'check_current_password',
-		type:"POST",
-		cache:false,
-		data: {
-			"uname" : uname,
-			"pwd" : current.val()
-		},
-		success:function(rs) {
-			if(rs === 'valid') {
-				$.ajax({
-					url:HOME + 'change',
-					type:'POST',
-					cache:false,
-					data:{
-						'uname' : uname,
-						'pwd' : current.val(),
-						'new_pwd' : newPass.val()
-					},
-					success:function(rs) {
-						var rs = $.trim(rs);
-						if(rs === 'success') {
-							window.location.href = BASE_URL;
+	let requestUri = URI + 'check_current_password';
+	let header = new Headers();
+	header.append('X-API-KEY', API_KEY);
+	header.append('Authorization', AUTH);
+	header.append('Content-type', 'application/json');
+	let json = JSON.stringify({"uname" : uname, "pwd" : current.val()});
+	let requestOptions = {
+		method : 'POST',
+		headers : header,
+		body : json
+	};
+
+	fetch(requestUri, requestOptions)
+	.then(response => response.text())
+	.then(result => {
+		if(isJson(result)) {
+			let ds = JSON.parse(result);
+
+			if(ds.result === 'valid') {
+				let data = JSON.stringify({
+					"uname" : uname,
+					"pwd" : current.val(),
+					"new_pwd" : newPass.val()
+				});
+
+				let uri = URI + 'change_pwd';
+				let options = {
+					method : 'POST',
+					headers : header,
+					body : data
+				};
+
+				fetch(uri, options)
+				.then(res => res.text())
+				.then(rs => {
+					if( isJson(rs)) {
+						cs = JSON.parse(rs);
+						if(cs.result == 'success') {
+							window.location.href = "changed.html";
 						}
 						else {
-							current.addClass('has-error');
-							pasErr.text(rs);
-
-							return false;
+							swal({
+								title:'Error!',
+								text: cs.result,
+								type:'error'
+							});
 						}
 					}
 				})
+				.catch(error => {
+					console.error('error', error);
+				});
 			}
-			else if(rs === 'invalid') {
+			else if(ds.result == 'invalid') {
 				current.addClass('has-error');
-				pasErr.text('รหัสผ่านปัจจุบันไม่ถูกต้อง');
-
-				return false;
+				cuErr.text('รหัสผ่านปัจจุบันไม่ถูกต้อง');
 			}
 			else {
 				current.addClass('has-error');
-				pasErr.text(rs);
-
-				return false;
+				cuErr.text(ds.result);
 			}
 		}
 	})
+	.catch(error => {
+		console.error('error', error);
+	});
 }
-
-
-$('#current-password').keyup(function(e) {
-	if(e.keyCode === 13) {
-		checkPassword();
-	}
-});
-
-
-$('#new-password').keyup(function(e) {
-	if(e.keyCode == 13) {
-		checkPassword();
-	}
-})
-
-$('#confirm-password').keyup(function(e) {
-	if(e.keyCode == 13) {
-		checkPassword();
-	}
-})

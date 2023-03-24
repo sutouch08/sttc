@@ -1,18 +1,30 @@
-$(document).ready(function() {
+window.addEventListener('load', () => {
   let id = localStorage.getItem('transfer_id');
   let isOnline = localStorage.getItem('isOnline');
 
   if(isOnline == 1) {
+    let json = JSON.stringify({"id" : id});
+    let requestUri = URI + 'view_detail';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
     load_in();
 
-    $.ajax({
-      url:BASE_URL + 'inventory/transfer/view_detail/'+id,
-      type:'POST',
-      cache:false,
-      success:function(rs) {
+    fetch(requestUri, requestOptions)
+      .then(response => response.text())
+      .then(result => {
         load_out();
-        if(isJson(rs)) {
-          let ds = JSON.parse(rs);
+        if(isJson(result)) {
+          let ds = JSON.parse(result);
           let condLabel = ds.cond == 1 ? "สภาพดี" : "ชำรุด";
           $('#status').val(ds.status);
           $('#date-add').val(ds.date_add);
@@ -34,14 +46,18 @@ $(document).ready(function() {
           $('#item-name').val(ds.itemName);
           $('#from-wh').val(ds.fromWhsCode);
           $('#i-preview').html('<img id="i-image" src="'+ds.i_image_data+'" class="width-100" alt="Item image" />');
+
+          if(ds.status == 2) {
+            $('#cancel-watermark').removeClass('hide');
+          }
         }
-      }
-    });
-  }
-  else {
-    localforage.getItem("transfers").then((data) => {
-      if(data != null || data != undefined) {
-        let item = data.filter((el) => {
+      })
+      .catch(error => console.error('error', error));
+    }
+    else {
+      localforage.getItem("transfers").then((data) => {
+        if(data != null || data != undefined) {
+          let item = data.filter((el) => {
           return el.iSerial == id;
         });
 
@@ -78,7 +94,6 @@ $(document).ready(function() {
     });
   }
 });
-
 
 
 
@@ -123,20 +138,20 @@ function suggest() {
   }
   else {
 
-    let label = `<div class="alert alert-danger">ใช้งานมาแล้ว ${age} ปี ติดสติ๊กเกอร์สีแดง</div>`;
+    let label = `<div class="alert" style="background-color:red; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี ติดสติ๊กเกอร์สีแดง</div>`;
 
     if( age < 10 )
     {
       if( cond == 2 && age > 3) {
-        label = `<div class="alert alert-warning">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีส้ม</div>`;
+        label = `<div class="alert" style="background-color:orange; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีส้ม</div>`;
       }
 
       if( cond == 2 && age <= 3) {
-        label = `<div class="alert alert-info">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีน้ำเงิน</div>`;
+        label = `<div class="alert" style="background-color:blue; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีน้ำเงิน</div>`;
       }
 
       if( cond == 1) {
-        label = `<div class="alert alert-success">ใช้งานมาแล้ว ${age} ปี สภาพดี ติดสติ๊กเกอร์สีเขียว</div>`;
+        label = `<div class="alert" style="background-color:green; color:white; min-height:100px; font-size:18px;">ใช้งานมาแล้ว ${age} ปี สภาพดี ติดสติ๊กเกอร์สีเขียว</div>`;
       }
     }
 
@@ -149,6 +164,7 @@ function confirmCancle() {
   let id = localStorage.getItem('transfer_id');
   let isOnline = localStorage.getItem('isOnline');
   let code = $('#code').val();
+  let docnum = $('#from-doc').val();
 
   if(id != "" || id != undefined) {
     swal({
@@ -166,37 +182,79 @@ function confirmCancle() {
       if(isOnline == 1) {
         //--- request to server
         load_in();
-        $.ajax({
-          url:BASE_URL + 'inventory/transfer/cancle/'+id,
-          type:'POST',
-          cache:false,
-          success:function(rs) {
-            load_out();
+        let json = JSON.stringify({"id" : id, "user_id" : userId});
+        let requestUri = URI + 'cancle_transfer';
+        let header = new Headers();
+        header.append('X-API-KEY', API_KEY);
+        header.append('Authorization', AUTH);
+        header.append('Content-type', 'application/json');
+        let requestOptions = {
+          method : 'POST',
+          headers : header,
+          body : json
+        };
 
-            if(rs == 'success') {
-              setTimeout(() => {
-                swal({
-                  title:'Success',
-                  type:'success',
-                  timer:1000
-                });
+        fetch(requestUri, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+          load_out();
+          let rs = JSON.parse(result);
+          if(rs.status == 'success') {
 
-                setTimeout(() => {
-                  window.location.reload();
-                }, 1200);
-              }, 200);
-            }
-            else {
+
+            let ds = [];
+            localforage.getItem('inventory').then(items => {
+              if(items != null && items != undefined) {
+                ds = items;
+              }
+
+              let serial = $('#i-serial-code').val();
+              let docnum = $('#from-doc').val();
+
+              let arr = {
+                "docnum" : $('#from-doc').val(),
+                "serial" : $('#i-serial-code').val(),
+                "code" : $('#item-code').val(),
+                "name" : $('#item-name').val(),
+                "whCode" : $('#from-wh').val()
+              };
+
+              arr[serial] = serial;
+              arr[docnum] = docnum;
+
+              ds.push(arr);
+
+              if(ds.length > 0) {
+                localforage.setItem('inventory', ds);
+              }
+            });
+
+            setTimeout(() => {
+              swal({
+                title:'Success',
+                type:'success',
+                timer:1000
+              });
+
               setTimeout(() => {
-                swal({
-                  title:'Error!',
-                  text:rs,
-                  type:'error'
-                });
-              }, 200);
-            }
+                window.location.reload();
+              }, 1200);
+            }, 200);
           }
+          else {
+            setTimeout(() => {
+              swal({
+                title:'Error!',
+                text:rs.message,
+                type:'error'
+              });
+            }, 200);
+          }
+        })
+        .catch(error => {
+          console.error('error', error);
         });
+
       }
       else {
         localforage.getItem("transfers").then((data) => {
@@ -284,4 +342,64 @@ function confirmCancle() {
       }
     });
   }
+}
+
+
+function syncItem() {
+  let json = JSON.stringify({'user_id' : userId});
+  let requestUri = URI + 'sync_user_items';
+  let header = new Headers();
+  header.append('X-API-KEY', API_KEY);
+  header.append('Authorization', AUTH);
+  header.append('Content-type', 'application/json');
+
+  let requestOptions = {
+    method : 'POST',
+    headers : header,
+    body : json,
+    redirect : 'follow'
+  };
+
+  fetch(requestUri, requestOptions)
+  .then(response => response.text())
+  .then(result => {
+    let ds = JSON.parse(result);
+
+    if(ds.data != null || ds.data != "") {
+      let data = [];
+
+      ds.data.forEach((item, i) => {
+        let serial = item.Serial;
+        let docnum = item.DocNum;
+
+        let arr = {
+            "docnum" : item.DocNum,
+            "serial" : item.Serial,
+            "code" : item.ItemCode,
+            "name" : item.ItemName,
+            "whCode" : item.WhsCode
+          };
+
+          arr[serial] = serial;
+          arr[docnum] = docnum;
+
+          data.push(arr);
+      });
+
+      if(data.length == 0) {
+        localforage.removeItem('inventory').then(() => {
+          getItemList();
+        });
+      }
+      else {
+        localforage.setItem('inventory', data).then(() => {
+          getItemList();
+        });
+      }
+    }
+  })
+  .catch((error) => {
+    console.error('error', error);
+  });
+
 }

@@ -82,4 +82,12 @@ function condLabelColor($age, $cond)
 
   return $label;
 }
+
+function select_cond($se = NULL)
+{
+  $sc = '<option value="1" '.is_selected('1', $se).'>สภาพดี</option>';
+  $sc .= '<option value="2" '.is_selected('2', $se).'>ชำรุด</option>';
+
+  return $sc;  
+}
  ?>

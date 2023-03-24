@@ -77,6 +77,18 @@ function isDate(txtDate){
 	}
 
 
+	function getCurrentDate() {
+	  let date = new Date();
+	  let dd = date.getDate();
+	  let mm = date.getMonth()+1;
+	  let yy = date.getFullYear();
+
+	  dd = dd < 10 ? "0"+dd : dd;
+	  mm = mm < 10 ? "0"+mm : mm;
+
+	  return `${dd}-${mm}-${yy}`;
+	}
+
 
 	function removeCommas(str) {
 	    while (str.search(",") >= 0) {
@@ -281,25 +293,6 @@ function parseDiscount(discount_label, price)
 
 	return discLabel;
 }
-
-
-function getSearch() {
-  $('#searchForm').submit();
-}
-
-
-
-
-$('.search-box').keyup(function(e){
-	if(e.keyCode === 13) {
-		getSearch();
-	}
-});
-
-
-$('.filter').change(function() {
-	getSearch();
-})
 
 
 function clearFilter() {

@@ -11,7 +11,7 @@ function _check_login()
     }
     else
     {
-      redirect(base_url().'users/authentication');      
+      redirect(base_url().'users/authentication');
     }
   }
 }
@@ -26,9 +26,28 @@ function select_ugroup($id = '')
   return $ds;
 }
 
+
 function uname($id)
 {
   $ci =& get_instance();
   return $ci->user_model->get_uname($id);
+}
+
+
+function select_outsource($id = NULL)
+{
+  $ds = "";
+  $ci =& get_instance();
+  $users = $ci->user_model->get_oursource_list();
+
+  if( ! empty($users))
+  {
+    foreach($users AS $us)
+    {
+      $ds .= '<option value="'.$us->id.'" '.is_selected($id, $us->id).'>'.$us->uname.' : '.$us->name.'</option>';
+    }
+  }
+
+  return $ds;
 }
  ?>

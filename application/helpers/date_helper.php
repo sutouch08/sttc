@@ -163,6 +163,24 @@ function select_years($se = '')
 }
 
 
+function select_prev_years($se = NULL)
+{
+  $sc = "";
+  $max = 30;
+  $start = 0;
+  $current_year = date('Y');
+
+  while($start <= $max)
+  {
+    $year = $current_year - $start;
+    $sc .= '<option value="'.$year.'" '.is_selected($se, $year).'>'.$year.'</option>';
+    $start++;
+  }
+
+  return $sc;
+}
+
+
 
 function selectHour($se = '')
 {

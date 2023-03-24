@@ -39,6 +39,7 @@ class Authentication extends CI_Controller
 				{
 					$ds = array(
 						'uid' => $rs->uid,
+						'userId' => $rs->id,
 						'uname' => $rs->uname,
 						'displayName' => $rs->name,
 						'ugroup' => $rs->ugroup,
