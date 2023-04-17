@@ -5,18 +5,20 @@ window.addEventListener('load', function() {
 });
 
 function showTab(name) {
-  $('.header-menu').removeClass('focus');
   $('.tab-pane').removeClass('active in');
-  $('#'+name).addClass('focus');
   $('#'+name+'-tab').addClass('active in');
 
   if(name == 'home') {
     $('#sync-li').addClass('hide');
     $('#scan-li').removeClass('hide');
+    $('#home').addClass('hide');
+    $('#detail').removeClass('hide');
   }
   else {
     $('#scan-li').addClass('hide');
     $('#sync-li').removeClass('hide');
+    $('#detail').addClass('hide');
+    $('#home').removeClass('hide');
   }
 }
 
@@ -107,7 +109,15 @@ function startScan() {
         render(source, devices, output);
         showModal('cameras-modal');
   		}
-  	});
+  	})
+    .catch((error) => {
+      console.log('error', error);
+      swal({
+        title:'Oops!',
+        text: error,
+        type:'error'
+      });
+    });
   }
   else {
     if(navigator.onLine) {

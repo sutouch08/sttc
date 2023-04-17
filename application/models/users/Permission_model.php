@@ -20,11 +20,11 @@ class Permission_model extends CI_Model
   }
 
 
-  public function get_permission($menu, $id_profile)
+  public function get_permission($menu, $user_id)
   {
     $rs = $this->db
 		->where('menu', $menu)
-		->where('id_profile', $id_profile)
+		->where('user_id', $user_id)
 		->get('permission');
 
     if($rs->num_rows() > 0)
@@ -43,14 +43,5 @@ class Permission_model extends CI_Model
       return $ds;
     }
   }
-
-
-
-  public function drop_profile_permission($id)
-  {
-    return $this->db->where('id_profile', $id)->delete('permission');
-  }
-
-}
 
  ?>

@@ -101,7 +101,7 @@
 				try{ace.settings.check('main-container' , 'fixed')}catch(e){}
 			</script>
 			<!-- #section:basics/sidebar -->
-			
+
 			<div id="sidebar" class="sidebar responsive <?php echo get_cookie('sidebar_layout'); ?>" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
 				<script type="text/javascript">
 				try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
@@ -119,3 +119,4 @@
 					data-sidebar-hover="true" aria-expanded="false" style="height:1px;">
     			</div>
 					<div class="page-content">
+						<?php 	if( ! $this->pm->can_view){	$this->load->view('deny_page');	}	?>

@@ -44,7 +44,8 @@
 				<option value="all">ทั้งหมด</opton>
 					<option value="0" <?php echo is_selected('0', $status); ?>>รอติดตั้ง</option>
 					<option value="1" <?php echo is_selected('1', $status); ?>>ติดตั้งแล้ว</option>
-					<option value="2" <?php echo is_selected('2', $status); ?>>คืนแล้ว</option>
+					<option value="2" <?php echo is_selected('2', $status); ?>>ส่งคืน</option>
+					<option value="3" <?php echo is_selected('3', $status); ?>>คืนแล้ว</option>
 			</select>
 		</div>
 
@@ -89,11 +90,11 @@
 <?php if(! empty($data))	: ?>
 	<?php $no = $this->uri->segment($this->segment) + 1; ?>
 	<?php foreach($data as $rs) : ?>
-			<?php $color = $rs->status == 1 ? "color: blue;" : ($rs->status == 2 ? "color: green" : ""); ?>
+			<?php $color = $rs->status == 1 ? "color: blue;" : ($rs->status == 3 ? "color: green" : ""); ?>
 				<tr id="row-<?php echo $rs->id; ?>" style="<?php echo $color; ?>">
 					<td class="middle text-center" id="no-<?php echo $rs->id; ?>"><?php echo $no; ?></td>
 					<td class="middle text-center"><?php echo $rs->uname; ?></td>
-					<td class="middle text-center"><?php echo ($rs->status == 2 ? "คืนแล้ว" :($rs->status == 1 ? "ติดตั้งแล้ว" : "รอติดตั้ง")); ?></td>
+					<td class="middle text-center"><?php echo ($rs->status == 3 ? "คืนแล้ว" :($rs->status == 2 ? "ส่งคืน" : ($rs->status == 1 ? "ติดตั้งแล้ว" : "รอติดตั้ง"))); ?></td>
 					<td class="middle text-center"><?php echo $rs->serial; ?></td>
 					<td class="middle"><?php echo $rs->ItemCode; ?></td>
 					<td class="middle"><?php echo $rs->ItemName; ?></td>

@@ -41,57 +41,16 @@
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
 
-		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
+    <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+				<div class="navbar-header">Smart TTC</div>
+        <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
+			</div>
 		</div>
 
-    <!-- /section:basics/navbar.layout -->
     <div class="main-container" id="main-container">
-      <script type="text/javascript">
-        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
-      </script>
-      <!-- #section:basics/sidebar -->
-
-      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
-        <script type="text/javascript">
-        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
-        </script>
-
-        <ul class="nav nav-list">
-          <li class="">
-            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-key"></i>
-              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
-            </a>
-          </li>
-          <li class="">
-            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-arrow-left"></i>
-              <span class="menu-text">ออกจากระบบ</span>
-            </a>
-          </li>
-          </ul>
-      </div>
-      <!-- /section:basics/sidebar -->
       <div class="main-content">
         <div class="main-content-inner">
           <div id="sidebar2"
@@ -109,17 +68,17 @@
             </div>
             <hr/>
             <div class="row">
-              <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+              <div class="col-xs-12 hide">
                 <label>Username</label>
                 <input type="text" class="width-100" id="uname" value="" disabled />
                 <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;"></div>
               </div>
-              <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+              <div class="col-xs-12 hide">
                 <label>Display name</label>
                 <input type="text" class="width-100" id="dname" value="" disabled />
                 <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;"></div>
               </div>
-              <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+              <div class="col-xs-12">
                 <label class="display-block">รหัสผ่านปัจจุบัน</label>
                 <span class="input-icon input-icon-right width-100 p-hide">
                   <input type="password" class="width-100" id="cu-pwd" value=""  />
@@ -132,7 +91,7 @@
                 <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="cu-pwd-error"></div>
               </div>
 
-              <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+              <div class="col-xs-12">
                 <label class="display-block">รหัสผ่านใหม่</label>
                 <span class="input-icon input-icon-right width-100 p-hide">
                   <input type="password" id="pwd" class="width-100">
@@ -145,7 +104,7 @@
               </div>
               <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="pwd-error"></div>
 
-              <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+              <div class="col-xs-12">
                 <label class="display-block">ยืนยันรหัสผ่านใหม่</label>
                 <span class="input-icon input-icon-right width-100 p-hide">
                   <input type="password" id="cm-pwd" class="width-100">
@@ -158,7 +117,7 @@
                 <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="cm-pwd-error"></div>
               </div>
 
-              <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12 text-center">
+              <div class="col-xs-12 text-center">
                 <label class="display-block not-show">x</label>
                 <button type="button" class="btn btn-sm btn-primary btn-100" onclick="changePassword()">เปลี่ยนรหัสผ่าน</button>
               </div>
@@ -171,13 +130,13 @@
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-33 text-center">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
                   </div>
                   <div class="footer-menu width-33 text-center">
-                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
                   </div>
                   <div class="footer-menu width-33 text-center">
-                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i></a></li>
+                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i><span>LOG OUT</span></a></li>
                   </div>
                 </div>
              </div>

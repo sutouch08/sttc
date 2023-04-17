@@ -4,6 +4,8 @@
 		$strongOn = $USE_STRONG_PWD == 1 ? 'btn-primary' : '';
 		$strongOff = $USE_STRONG_PWD == 0 ? 'btn-primary' : '';
 		$disable = $this->_SuperAdmin ? "" : "disabled";
+    $checkboxOn = $RETURN_CHECKBOX == 1 ? 'btn-primary' : '';
+    $checkboxOff = $RETURN_CHECKBOX == 0 ? 'btn-primary' : '';
 ?>
 
   <form id="systemForm" method="post" action="<?php echo $this->home; ?>/update_config">
@@ -22,7 +24,7 @@
     <?php endif; ?>
 
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Strong Password</span></div>
-    <div class="col-lg-5 col-md-9 col-sm-9 col-xs-12">
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
       <div class="btn-group input-medium">
         <button type="button" class="btn btn-sm <?php echo $strongOn; ?>" style="width:50%;" id="btn-strong-on" onClick="toggleStrongPWD(1)">เปิด</button>
         <button type="button" class="btn btn-sm <?php echo $strongOff; ?>" style="width:50%;" id="btn-strong-off" onClick="toggleStrongPWD(0)">ปิด</button>
@@ -48,13 +50,24 @@
     <div class="divider-hidden"></div>
 
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Barcode Format</span></div>
-    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12">
+    <div class="col-lg-9 col-md-3 col-sm-4 col-xs-12">
       <select class="form-control input-sm input-medium" name="SCANTYPE">
         <option value="qrcode" <?php echo is_selected('qrcode', $SCANTYPE); ?>>QR CODE</option>
         <option value="barcode" <?php echo is_selected('barcode', $SCANTYPE); ?>>BARCODE</option>
         <option value="both" <?php echo is_selected('both', $SCANTYPE); ?>>BOTH</option>
       </select>
       <span class="help-block">กำหนดค่าการ Scan QR CODE หรือ BARCODE กรณีเลือก BOTH จะสามารถ Scan ได้ทั้งคู่ แต่จะทำให้ Performance ลดลง</span>
+    </div>
+    <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Return Checkbox</span></div>
+    <div class="col-lg-9 col-md-3 col-sm-4 col-xs-12">
+      <div class="btn-group input-medium">
+        <button type="button" class="btn btn-sm <?php echo $checkboxOn; ?>" style="width:50%;" id="btn-check-on" onClick="toggleReturnCheckbox(1)">เปิด</button>
+        <button type="button" class="btn btn-sm <?php echo $checkboxOff; ?>" style="width:50%;" id="btn-check-off" onClick="toggleReturnCheckbox(0)">ปิด</button>
+      </div>
+      <input type="hidden" name="RETURN_CHECKBOX" id="return-checkbox" value="<?php echo $RETURN_CHECKBOX; ?>" />
+      <span class="help-block">อนุญาติให้ใช้การติ๊ก checkbox เพื่อยืนยันการรับคืนสินค้าใน เอกสาร Return ได้(หลังบ้าน)</span>
     </div>
     <div class="divider-hidden"></div>
 		<div class="divider-hidden"></div>

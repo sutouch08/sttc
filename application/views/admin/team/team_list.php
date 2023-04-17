@@ -7,7 +7,9 @@
   </div>
   <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 padding-5">
   	<p class="pull-right top-p">
+		<?php if($this->pm->can_add) : ?>
       <button type="button" class="btn btn-sm btn-success" onclick="addNew()"><i class="fa fa-plus"></i> Add new</button>
+		<?php endif; ?>
     </p>
   </div>
 </div><!-- End Row -->
@@ -71,8 +73,12 @@
 					<td class="middle text-center"><?php echo thai_date($rs->update_at, FALSE); ?></td>
 					<td class="middle text-center"><?php echo uname($rs->update_by); ?></td>
 					<td class="text-right">
+					<?php if($this->pm->can_edit) : ?>
 						<button type="button" class="btn btn-minier btn-warning" onclick="getEdit('<?php echo $rs->id; ?>')"><i class="fa fa-pencil"></i></button>
+					<?php endif; ?>
+					<?php if($this->pm->can_delete) : ?>
 						<button type="button" class="btn btn-minier btn-danger" onclick="getDelete('<?php echo $rs->id; ?>', '<?php echo $rs->name; ?>')"><i class="fa fa-trash"></i></button>
+					<?php endif; ?>
 					</td>
 				</tr>
 				<?php $no++; ?>

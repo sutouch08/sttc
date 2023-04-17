@@ -66,6 +66,9 @@
 
 				</form>
 			</div>
+      <div class="text-center" style="position:fixed; bottom:10px;">
+        <a href="javascript:goBackend()">ระบบหลังบ้าน</a>
+      </div>
 		</div>
 	</div>
 
@@ -135,6 +138,11 @@
         console.error('error', error);
       });
   	}
+
+
+    function goBackend() {
+      window.location.href = BASE_URL + 'users/authentication';
+    }
 
 	</script>
 </body>

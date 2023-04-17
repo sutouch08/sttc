@@ -34,6 +34,7 @@
     <script src="scripts/app.js" async></script>
     <script src="scripts/main.js" async></script>
     <script src="scripts/api.js" async></script>
+    <script src="assets/js/html5-qrcode.min.js" async></script>
 
   </head>
   <body class="no-skin">
@@ -41,31 +42,14 @@
         <div class="loader"></div>
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
-
-		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
+    <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+				<div class="navbar-header">Smart TTC</div>
+        <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
+			</div>
 		</div>
-
-    <!-- /section:basics/navbar.layout -->
     <div class="main-container" id="main-container">
       <script type="text/javascript">
         try{ace.settings.check('main-container' , 'fixed')}catch(e){}
@@ -102,7 +86,11 @@
             style="height:1px;">
           </div>
           <div class="page-content" id="page-content">
-
+            <input type="hidden" id="scan-type" value="" />
+            <input type="hidden" id="code" value="" />
+            <div id="cam" class="hide" style="position: absolute; top:0; left:0; height: 100vh; width:100vw; z-index:10;">
+              <div id="reader" style="width:100%;"></div>
+            </div>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 text-center">
                 <h3 class="title">Your Information</h3>
@@ -119,14 +107,17 @@
             <div class="pg-footer">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
-                  <div class="footer-menu width-33 text-center">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                  <div class="footer-menu width-25 text-center">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
                   </div>
-                  <div class="footer-menu width-33 text-center">
-                    <li><a href="javascript:change_pwd()"><i class="fa fa-key fa-2x white"></i></a></li>
+                  <div class="footer-menu width-25 text-center">
+                    <li><a href="javascript:change_pwd()"><i class="fa fa-key fa-2x white"></i><span>PASSWORD</span></a></li>
                   </div>
-                  <div class="footer-menu width-33 text-center">
-                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i></a></li>
+                  <div class="footer-menu width-25 text-center">
+                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i><span>LOG OUT</span></a></li>
+                  </div>
+                  <div class="footer-menu width-25">
+                    <li><a harf="#" onclick="changeCameraId()"><i class="fa fa-cog fa-2x white"></i><span>CAMERA</span></a></li>
                   </div>
                 </div>
              </div>
@@ -136,6 +127,42 @@
       </div><!-- main content inner -->
     </div><!-- main content -->
   </div><!-- /.main-container -->
+
+  <div class="modal fade" id="cameras-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:500px; max-width:95%; margin-left:auto; margin-right:auto;">
+     <div class="modal-content">
+         <div class="modal-header">
+         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+         <h4 class="modal-title">Choose Camera</h4>
+         <input type="hidden" id="select-side" value="i" />
+        </div>
+        <div class="modal-body">
+          <div class="row" id="cameras-list" style="padding-left:12px; padding-right:12px;">
+
+          </div>
+          <div class="err-label" id="camera-error"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-default btn-100" onclick="closeModal('cameras-modal')">Close</button>
+  				<button type="button" class="btn btn-sm btn-success btn-100" onclick="saveCameraId()">Choose</button>
+        </div>
+     </div>
+   </div>
+  </div>
+
+  <script id="cameras-list-template" type="text/x-handlebarsTemplate">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    {{#each this}}
+    <div class="radio">
+      <label>
+        <input type="radio" name="camera_id" id="{{id}}" class="ace" maxlength="100"	value="{{id}}" />
+        <span class="lbl">{{label}}</span>
+      </label>
+    </div>
+    {{/each}}
+  </div>
+  </script>
+
 
     <script id="user-template" type="text/x-handlebarsTemplate">
       <table class="table table-bordered border-1">
@@ -221,6 +248,42 @@
             type:'error'
           });
         }
+      }
+
+
+      function saveCameraId() {
+        let camId = $("input[name='camera_id']:checked").val();
+
+        if(camId === undefined || camId == "") {
+          $('#camera-error').text("Please choose camera for use to scan");
+          return false;
+        }
+        else {
+          setCookie('cameraId', camId, 3650);
+          closeModal('cameras-modal');
+        }
+      }
+
+
+      function changeCameraId() {
+        Html5Qrcode.getCameras().then(devices => {
+          if(devices && devices.length) {
+            let source = $('#cameras-list-template').html();
+            let output = $('#cameras-list');
+            let camId = getCookie('cameraId');
+            render(source, devices, output);
+            $('#'+camId).prop('checked', true);
+            showModal('cameras-modal');
+          }
+        })
+        .catch((error) => {
+          console.log('error', error);
+          swal({
+            title:'Oops!',
+            text: error,
+            type:'error'
+          });
+        });
       }
 
     </script>

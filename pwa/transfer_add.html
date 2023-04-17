@@ -41,66 +41,17 @@
         <div class="loader"></div>
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
-
-		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
+    <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+				<div class="navbar-header">NEW JOB</div>
+        <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
+			</div>
 		</div>
-
-    <!-- /section:basics/navbar.layout -->
     <div class="main-container" id="main-container">
-      <script type="text/javascript">
-        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
-      </script>
-      <!-- #section:basics/sidebar -->
-
-      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
-        <script type="text/javascript">
-        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
-        </script>
-
-        <ul class="nav nav-list">
-          <li class="">
-            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-key"></i>
-              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
-            </a>
-          </li>
-          <li class="">
-            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-arrow-left"></i>
-              <span class="menu-text">ออกจากระบบ</span>
-            </a>
-          </li>
-          </ul>
-      </div>
-      <!-- /section:basics/sidebar -->
       <div class="main-content">
         <div class="main-content-inner">
-          <div id="sidebar2"
-            class="sidebar h-sidebar navbar-collapse collapse"
-            data-sidebar="true" data-sidebar-scoll="true"
-            data-sidebar-hover="true" aria-expanded="false"
-            style="height:1px;">
-          </div>
           <div class="page-content">
             <input type="hidden" id="scan-type" value="both" />
             <input type="hidden" id="step" value="1" />
@@ -114,7 +65,7 @@
                   <ul class="steps">
                     <li data-step="1" id="head-step-1" class="active">
                       <span class="step">1</span>
-                      <span class="title">แสกนบาร์โค้ดและเก็บข้อมูลมิเตอร์เก่า</span>
+                      <span class="title">เก็บข้อมูลมิเตอร์เก่า</span>
                     </li>
 
                     <li data-step="2" id="head-step-2" class="">
@@ -124,7 +75,7 @@
 
                     <li data-step="3" id="head-step-3" class="">
                       <span class="step">3</span>
-                      <span class="title">แสกนบาร์โค้ดและติดตั้งมิเตอร์ใหม่</span>
+                      <span class="title">ติดตั้งมิเตอร์ใหม่</span>
                     </li>
 
                     <li data-step="4" id="head-step-4" class="">
@@ -177,12 +128,13 @@
                       <div class="divider-hidden"></div>
                       <div class="input-group width-100">
                         <span class="input-group-addon" style="width:75px;">สภาพ</span>
-                        <select id="condition" class="form-control input-lg" onchange="suggest()">
+                        <select id="condition" class="form-control input-lg" onchange="checkCond()">
                           <option value="">ระบุสภาพมิเตอร์</option>
                           <option value="1">สภาพดี</option>
                           <option value="2">ชำรุด</option>
                         </select>
                       </div>
+                      <div class="margin-top-15 hide" id="damage-label"></div>
 
                       <div class="divider" style="float:none;"></div>
                       <div class="" id="suggest-label">
@@ -289,11 +241,10 @@
               <div class="bp-footer">
                 <div class="bp-footer-inner">
                   <div class="bp-footer-content text-right">
-                    <button type="button" class="btn btn-prev" id="btn-back" onclick="goList()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; กลับ</button>
+                    <button type="button" class="btn btn-prev pull-left" style="margin-top:5px;" onclick="goList()"><i class="ace-icon fa fa-arrow-left"></i> JOB LIST</button>
                     <button type="button" class="btn btn-prev hide" id="btn-prev" onclick="prevStep()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; ก่อนหน้า</button>
                     <button type="button" class="btn btn-success" id="btn-next" onclick="nextStep()">ถัดไป &nbsp; <i class="ace-icon fa fa-arrow-right"></i></button>
                     <button type="button" class="btn btn-success hide" id="btn-finish" onclick="finish()">เสร็จสิ้น</button>
-                    <div class="footer-menu width-10" style="padding-top:15px;"><li onclick="changeCameraId()"><i class="fa fa-ellipsis-v fa-2x"></i></li></div>
                   </div>
                </div><!-- footer inner-->
               </div><!-- /.footer -->
@@ -336,6 +287,26 @@
    </div>
   </div>
 
+  <div class="modal fade" id="damaged-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:500px; max-width:95%; margin-left:auto; margin-right:auto;">
+     <div class="modal-content">
+         <div class="modal-header">
+         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+         <h4 class="modal-title">สาเหตุการชำรุด</h4>
+        </div>
+        <div class="modal-body">
+          <div class="row" id="damaged-list" style="padding-left:12px; padding-right:12px;">
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-default btn-100" onclick="closeModal('damaged-modal')">ปิด</button>
+  				<button type="button" class="btn btn-sm btn-primary btn-100" onclick="updateSuggest()">เลือก</button>
+        </div>
+     </div>
+   </div>
+  </div>
+
   <script id="cameras-list-template" type="text/x-handlebarsTemplate">
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
     {{#each this}}
@@ -343,6 +314,19 @@
       <label>
         <input type="radio" name="camera_id"  class="ace" maxlength="100"	value="{{id}}" />
         <span class="lbl">{{label}}</span>
+      </label>
+    </div>
+    {{/each}}
+  </div>
+  </script>
+
+  <script id="damaged-list-template" type="text/x-handlebarsTemplate">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    {{#each this}}
+    <div class="radio">
+      <label>
+        <input type="radio" name="damage_id"  class="ace chk-dam" maxlength="100"	value="{{id}}" data-name="{{name}}" />
+        <span class="lbl">{{name}}</span>
       </label>
     </div>
     {{/each}}

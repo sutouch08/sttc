@@ -15,11 +15,6 @@ class Users extends PS_Controller{
 		$this->load->model('admin/team_model');
 		$this->load->helper('team');
 		$this->load->helper('warehouse');
-
-		if($this->pm->can_view === FALSE)
-    {
-      $this->deny_page();
-    }
   }
 
 
@@ -40,6 +35,7 @@ class Users extends PS_Controller{
 		$rows = $this->user_model->count_rows($filter);
 
 		$filter['data'] = $this->user_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+		$filter['can_edit_permission'] = $this->can_edit_permission();
 
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
@@ -298,7 +294,7 @@ class Users extends PS_Controller{
 								'active' => $active,
 								'team_id' => $ugroup == 3 ? $team_id : NULL,
 								'fromWhsCode' => $ugroup == 3 ? $fromWhsCode : NULL,
-								'toWhsCode' => $ugroup == 3 ? $toWhsCode : NULL,
+								'toWhsCode' => $ugroup == 3 ? $toWhsCode : NULL,								
 								'update_at' => now(),
 								'update_by' => $this->_user->id
 							);
@@ -586,6 +582,146 @@ class Users extends PS_Controller{
 			echo "exists";
 		}
 	}
+
+
+
+	public function user_permission($user_id)
+	{
+		$this->load->model('menu');
+		$user = $this->user_model->get($user_id);
+
+		if( ! empty($user))
+		{
+			$this->title = 'Permissions - '.$user->uname;
+	    $data['menus'] = array();
+			$data['user'] = $user;
+
+	    $groups = $this->menu->get_active_menu_groups();
+	    if(!empty($groups))
+	    {
+	      foreach($groups as $group)
+	      {
+	        $ds = array(
+	          'group_code' => $group->code,
+	          'group_name' => $group->name,
+	          'menu' => ''
+	        );
+
+	        $menus = $this->menu->get_menus_by_group($group->code);
+
+	        if(!empty($menus))
+	        {
+	          $item = array();
+
+	          foreach($menus as $menu)
+	          {
+							if($menu->valid)
+							{
+								$arr = array(
+		              'menu_code' => $menu->code,
+		              'menu_name' => $menu->name,
+		              'permission' => $this->user_model->get_permission($menu->code, $user_id)
+		            );
+		            array_push($item, $arr);
+							}
+
+	          }
+
+	          $ds['menu'] = $item;
+	        }
+
+	        array_push($data['menus'], $ds);
+	      }
+	    }
+
+	    $this->load->view('users/permission_edit', $data);
+		}
+		else
+		{
+			$this->page_error();
+		}
+	}
+
+
+	public function update_permission()
+	{
+		$sc = TRUE;
+
+		$user_id = $this->input->post('user_id');
+		$perm = json_decode($this->input->post('data'));
+
+		$user = $this->user_model->get($user_id);
+
+		if($this->can_edit_permission($this->_user->id) === TRUE)
+		{
+			if( ! empty($perm))
+			{
+				if($this->user_model->drop_permission($user_id))
+				{
+					foreach($perm as $rs)
+					{
+						if($sc === FALSE) {	break; }
+
+						$arr =array(
+							'user_id' => $user_id,
+							'menu' => $rs->menu,
+							'can_view' => $rs->view,
+							'can_add' => $rs->add,
+							'can_edit' => $rs->edit,
+							'can_delete' => $rs->delete,
+							'can_approve' => $rs->approve
+						);
+
+						if( ! $this->user_model->add_permission($arr))
+						{
+							$sc = FALSE;
+							set_error("insert");
+						}
+					}
+				}
+				else
+				{
+					$sc = FALSE;
+					set_error("delete", "Current Permission");
+				}
+			}
+			else
+			{
+				$sc = FALSE;
+				set_error('required');
+			}
+		}
+		else
+		{
+			$sc = FALSE;
+			set_error('permission');
+		}
+
+		echo $sc === TRUE ? 'success' : $this->error;
+	}
+
+	private function can_edit_permission()
+	{
+
+		if($this->_SuperAdmin)
+		{
+			return TRUE;
+		}
+
+		$pm = $this->user_model->get_permission('SCPERM', $this->_user->id);
+
+		if( ! empty($pm))
+		{
+			if($pm->can_add OR $pm->can_edit)
+			{
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
+
 
 
 	public function clear_filter()

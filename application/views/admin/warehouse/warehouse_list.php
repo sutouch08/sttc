@@ -72,6 +72,7 @@
 			<tbody id="list-table">
 <?php if(!empty($data))	: ?>
 	<?php $no = $this->uri->segment($this->segment) + 1; ?>
+	<?php $active = $this->pm->can_edit ? '' : 'disabled'; ?>
 	<?php foreach($data as $rs) : ?>
 				<tr id="row-<?php echo $rs->id; ?>">
 					<td class="middle text-center no"><?php echo $no; ?></td>
@@ -79,7 +80,7 @@
           <td class="middle"><?php echo $rs->name; ?></td>
 					<td class="middle text-center">
 						<label>
-							<input type="checkbox" class="ace" id="chk-<?php echo $rs->id; ?>" onchange="updateListed(<?php echo $rs->id; ?>)" <?php echo is_checked('1', $rs->listed); ?> />
+							<input type="checkbox" class="ace" id="chk-<?php echo $rs->id; ?>" onchange="updateListed(<?php echo $rs->id; ?>)" <?php echo is_checked('1', $rs->listed); ?> <?php echo $active; ?>/>
 							<span class="lbl"></span>
 						</label>
 					</td>

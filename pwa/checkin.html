@@ -38,139 +38,90 @@
         <div class="loader"></div>
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
-
-		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
-			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
-					<div class="online-status" id="online-status">Online</div>
-				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
-		</div>
-
-    <!-- /section:basics/navbar.layout -->
-    <div class="main-container" id="main-container">
-      <script type="text/javascript">
-        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
-      </script>
-      <!-- #section:basics/sidebar -->
-
-      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
-        <script type="text/javascript">  try{ace.settings.check('sidebar' , 'fixed')}catch(e){} </script>
-        <ul class="nav nav-list">
-          <li class="">
-            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-key"></i>
-              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
-            </a>
-          </li>
-          <li class="">
-            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-arrow-left"></i>
-              <span class="menu-text">ออกจากระบบ</span>
-            </a>
-          </li>
-        </ul>
+    <div id="navbar" class="navbar navbar-default">
+      <div class="navbar-container" id="navbar-container">
+        <div class="navbar-header">CHECK IN</div>
+        <div class="navbar-buttons navbar-header pull-right">
+          <div class="online-status" id="online-status">Online</div>
+        </div>
       </div>
-      <!-- /section:basics/sidebar -->
+    </div>
+    <div class="main-container" id="main-container">
       <div class="main-content">
         <div class="main-content-inner">
-          <div id="sidebar2"
-            class="sidebar h-sidebar navbar-collapse collapse"
-            data-sidebar="true" data-sidebar-scoll="true"
-            data-sidebar-hover="true" aria-expanded="false"
-            style="height:1px;">
-          </div>
           <div class="page-content">
             <input type="hidden" id="scan-type" value="" />
             <input type="hidden" id="code" value="" />
             <div id="cam" class="hide" style="position: absolute; top:0; left:0; height: 100vh; width:100vw; z-index:10;">
               <div id="reader" style="width:100%;"></div>
             </div>
-            <div class="row" style="margin-top:8px; border-bottom:solid 1px #dddddd;">
-              <div class="col-xs-6 header-menu blue focus" id="detail">
-                <li class="top-li" onclick="showTab('detail')"><i class="fa fa-tags fa-2x"></i></li>
-              </div>
-              <div class="col-xs-6 header-menu green" id="home">
-                <li class="top-li foucs" onclick="showTab('home')"><i class="fa fa-qrcode fa-2x"></i></li>
-              </div>
-            </div><!-- End Row -->
             <div class="row">
               <div class="col-xs-12 padding-5">
-            		<div class="row">
-            			<div class="col-xs-12 padding-5">
-            				<div class="tabbable">
-            					<div class="tab-content" style="border: none;">
+                <div class="tabbable">
+                  <div class="tab-content" style="border:none; padding:0; padding-top:15px;">
+                    <div id="home-tab" class="tab-pane">
+                      <div class="row">
+                        <div class="col-xs-12 text-center">
+                          <div class="input-group">
+                            <input type="text" class="form-control input-lg text-center" id="doc-num" placeholder="เลขที่เอกสาร" />
+                            <span class="input-group-btn">
+                              <button type="button" class="btn btn-lg btn-primary" onclick="submitDocument()">Submit</button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <hr/>
+                      <div class="row">
+                        <div class="col-xs-12 padding-5 table-responsive text-center" id="promt-text">
+                          <h1 class="grey">แสกน Barcode เพื่อโหลดข้อมูลสินค้า</h1>
+                        </div>
+                        <div class="col-xs-12 padding-5 table-responsive text-center" id="result"></div>
 
-            						<div id="home-tab" class="tab-pane">
-            							<div class="row">
-            								<div class="col-xs-12 text-center">
-            									<div class="input-group">
-            										<input type="text" class="form-control input-lg text-center" id="doc-num" placeholder="เลขที่เอกสาร" />
-            										<span class="input-group-btn">
-            											<button type="button" class="btn btn-lg btn-primary" onclick="submitDocument()">Submit</button>
-            										</span>
-            									</div>
-            								</div>
-            							</div>
-            							<hr/>
-            							<div class="row">
-            								<div class="col-xs-12 padding-5 table-responsive text-center" id="promt-text">
-            									<h1 class="grey">แสกน Barcode เพื่อโหลดข้อมูลสินค้า</h1>
-            								</div>
-            								<div class="col-xs-12 padding-5 table-responsive text-center" style="max-height:75vh; overflow:auto;" id="result">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center hide" id="btn-save" style="margin-bottom:60px;">
+                          <button type="button" class="btn btn-sm btn-danger btn-100" onclick="clearItem()">เคลียร์</button>
+                          <button class="btn btn-sm btn-success btn-100" onclick="saveItem()">บันทึกลงโทรศัพท์</button>
+                        </div>
+                      </div>
 
-            								</div>
-            								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center hide" id="btn-save" style="margin-bottom:60px;">
-            									<button class="btn btn-sm btn-success btn-100" onclick="saveItem()">บันทึกลงโทรศัพท์</button>
-            								</div>
-            							</div>
+                    </div><!-- home tab -->
 
-            						</div><!-- home tab -->
+                    <div id="detail-tab" class="tab-pane fade active in" style="margin-top:-10px;">
+                      <div class="row">
+                        <div class="col-xs-12 table-responsive" id="doc-table" style="margin-bottom:5px;"></div>
+                        <div class="col-xs-12 table-responsive padding-5" id="detail-table" style="margin-bottom:60px;"></div>
+                      </div><!-- row -->
+                    </div> <!-- detail tab -->
+                  </div> <!-- tab content -->
+                </div> <!-- Tabable-->
+              </div>
+            </div> <!-- row -->
 
-            						<div id="detail-tab" class="tab-pane fade active in" style="margin-top:-10px;">
-            							<div class="row">
-            								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive" id="doc-table" style="max-height:200px; overflow: auto; margin-bottom:5px;">
-            								</div><!-- col-->
-            								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive" id="detail-table" style="max-height:400px; overflow: auto; margin-bottom:20px;">
-            								</div><!-- col-->
-            							</div><!-- row -->
-            						</div> <!-- detail tab -->
-            					</div> <!-- tab content -->
-            				</div> <!-- Tabable-->
-            			</div>
-            	</div>
-            </div>
-          </div> <!-- row -->
+            <div onclick="scrollToTop()"
+              style="width:25px; height:25px; color:white; background-color:#333333ee;
+              font-size:15px; text-align:center; vertical-align: middle; position:fixed;
+              bottom:125px; right:5px; z-index:100;"><i class="fa fa-angle-double-up"></i></div>
+            <div onclick="scrollToButtom()"
+              style="width:25px; height:25px; color:white; background-color:#333333ee;
+              font-size:15px; text-align:center; vertical-align: middle; position:fixed;
+              bottom:80px; right:5px; z-index:100;"><i class="fa fa-angle-double-down"></i></div>
 
             <div class="pg-footer">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                    <li><a href="javascript:home()"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
                   </div>
                   <div class="footer-menu width-60 hide" id="scan-li">
-                    <button type="button" class="btn btn-white btn-primary btn-100 btn-sm" style="border-radius:15px;" id="btn-scan" onclick="startScan()">สแกน</button>
-                    <button type="button" class="btn btn-white btn-danger btn-100 btn-sm hide" style="border-radius:15px;" id="btn-stop" onclick="stopScan()">หยุดสแกน</button>
+                    <li id="btn-scan" class=""><a href="javascript:startScan()"><i class="fa fa-qrcode fa-2x white"></i><span>SCAN</span></a></li>
+                    <li id="btn-stop" class="hide"><a href="javascript:stopScan()"><i class="fa fa-stop-circle fa-2x white"></i><span>STOP</span></a></li>
                   </div>
                   <div class="footer-menu width-60" id="sync-li">
-                    <button type="button" class="btn btn-white btn-primary btn-100 btn-sm" style="border-radius:15px;" onclick="syncItem()">ซิงค์รายการ</button>                    
+                    <li><a href="#" onclick="syncItem()"><i class="fa fa-refresh fa-2x white"></i><span>SYNC ITEMS</span></a></li>
                   </div>
-                  <div class="footer-menu width-20"><li onclick="changeCameraId()"><i class="fa fa-cog fa-2x white"></i></li></div>
+                  <div class="footer-menu width-20">
+                    <li id="home" class=""><a href="#" onclick="showTab('home')"><i class="fa fa-file-o fa-2x white"></i><span>DOCUMENT</span></a></li>
+                    <li id="detail" class="hide"><a href="#" onclick="showTab('detail')"><i class="fa fa-tags fa-2x white"></i><span>ITEMS LIST</span></a></li>
+                  </div>
                 </div>
               </div><!-- footer inner-->
             </div><!-- /.footer -->
@@ -225,95 +176,117 @@
   </script>
 
   <script id="docnum-template" type="text/x-handlebarsTemplate">
-		<div class="col-lg-4 col-md-6 col-sm-6 col-xs-12" style="padding:5px;">
-			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-				<table class="table table-bordered"style="margin-bottom:20px;">
-					<thead>
-						<tr>
-							<th class="min-width-100 text-center">เลขที่</th>
-							<th class="fix-width-100 text-center">จำนวน</th>
-							<th class="fix-width-80 text-center"></th>
-						</tr>
-					</thead>
-					{{#each this}}
-						<tr>
-							<td class="text-center">{{docnum}}</td>
-							<td class="text-center">{{qty}}</td>
-							<td class="text-center">
-								<button type="button" class="btn btn-minier btn-danger" onclick="deleteStockByDocNum('{{docnum}}')">
-									<i class="fa fa-trash"></i>
-								</button>
-							</td>
-						</tr>
-					{{/each}}
-				</table>
-			</div>
-		</div>
+  <table class="table table-striped border-1"style="margin-bottom:20px;">
+    <thead>
+      <tr>
+        <th class="min-width-100 text-center">เลขที่</th>
+        <th class="fix-width-100 text-center">จำนวน</th>
+        <th class="fix-width-80 text-center"></th>
+      </tr>
+    </thead>
+    {{#each this}}
+      <tr>
+        <td class="text-center">{{docnum}}</td>
+        <td class="text-center">{{qty}}</td>
+        <td class="text-center">
+          <button type="button" class="btn btn-minier btn-danger" onclick="deleteStockByDocNum('{{docnum}}')">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    {{/each}}
+  </table>
 	</script>
 
   <script id="stock-template" type="text/x-handlebarsTemplate">
-  	<div class="col-lg-4 col-md-6 col-sm-6 col-xs-12" style="padding:5px;">
-  		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-  			<table class="table table-bordered"style="margin-bottom:20px; min-width:800px;">
-  				<thead>
-  					<tr>
-  						<th class="fix-width-40 text-center">#</th>
-  						<th class="fix-width-100 text-center">docnum</th>
-  						<th class="fix-width-150 text-center">Serial</th>
-  						<th class="fix-wisth-120">Item Code</th>
-  						<th class="min-width-250">Item Name</th>
-  						<th class="fix-width-100 text-center">Warehouse</th>
-  					</tr>
-  				</thead>
-  				{{#each this}}
-  					<tr>
-  						<td class="text-center no"></td>
-  						<td class="text-center">{{docnum}}</td>
-  						<td class="text-center">{{serial}}</td>
-  						<td>{{code}}</td>
-  						<td>{{name}}</td>
-  						<td class="text-center">{{whCode}}</td>
-  					</tr>
-  				{{/each}}
-  			</table>
-  		</div>
-  	</div>
+  <table class="table table-striped border-1">
+    <thead>
+      <tr>
+        <th class="fix-width-40 text-center">#</th>
+        <th class="fix-width-100 text-center">docnum</th>
+        <th class="fix-width-150 text-center">Serial</th>
+        <th class="fix-wisth-120">Item Code</th>
+        <th class="min-width-250">Item Name</th>
+        <th class="fix-width-100 text-center">Warehouse</th>
+      </tr>
+    </thead>
+    {{#each this}}
+      <tr>
+        <td class="text-center no"></td>
+        <td class="text-center">{{docnum}}</td>
+        <td class="text-center">{{serial}}</td>
+        <td>{{code}}</td>
+        <td>{{name}}</td>
+        <td class="text-center">{{whCode}}</td>
+      </tr>
+    {{/each}}
+  </table>
   </script>
 
 
   <script id="template" type="text/x-handlebarsTemplate">
-  	<div class="col-lg-4 col-md-6 col-sm-6 col-xs-12" style="padding:5px;">
-  		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-  			<table class="table table-bordered"style="margin-bottom:20px; min-width:800px;">
-  				<thead>
-  					<tr>
-  						<th class="fix-width-40 text-center">#</th>
-  						<th class="fix-width-100 text-center">DocNum</th>
-  						<th class="fix-width-150 text-center">Serial</th>
-  						<th class="fix-wisth-120">Item Code</th>
-  						<th class="min-width-250">Item Name</th>
-  						<th class="fix-width-100 text-center">Warehouse</th>
-  					</tr>
-  				</thead>
-  				{{#each this}}
-  					<tr>
-  						<td>
-  							{{no}}
-  							<input type="hidden" class="item-data" data-docnum="{{DocNum}}" data-serial="{{Serial}}" data-code="{{ItemCode}}" data-name="{{ItemName}}" data-wh="{{WhsCode}}" />
-  						</td>
-  						<td class="text-center">{{DocNum}}</td>
-  						<td class="text-center">{{Serial}}</td>
-  						<td>{{ItemCode}}</td>
-  						<td>{{ItemName}}</td>
-  						<td class="text-center">{{WhsCode}}</td>
-  					</tr>
-  				{{/each}}
-  			</table>
-  		</div>
-  	</div>
+  <table class="table table-bordered border-1" style="margin-bottom:20px;">
+    <thead>
+      <tr>
+        <th class="fix-width-40 text-center">#</th>
+        <th class="fix-width-100 text-center">DocNum</th>
+        <th class="fix-width-150 text-center">Serial</th>
+        <th class="fix-wisth-120">Item Code</th>
+        <th class="min-width-250">Item Name</th>
+        <th class="fix-width-100 text-center">Warehouse</th>
+      </tr>
+    </thead>
+    {{#each this}}
+      <tr>
+        <td>
+          {{no}}
+          <input type="hidden" class="item-data" data-docnum="{{DocNum}}" data-serial="{{Serial}}" data-code="{{ItemCode}}" data-name="{{ItemName}}" data-wh="{{WhsCode}}" />
+        </td>
+        <td class="text-center">{{DocNum}}</td>
+        <td class="text-center">{{Serial}}</td>
+        <td>{{ItemCode}}</td>
+        <td>{{ItemName}}</td>
+        <td class="text-center">{{WhsCode}}</td>
+      </tr>
+    {{/each}}
+  </table>
   </script>
 
   <script src="scripts/transfer/checkin.js"></script>
+
+  <script>
+    function scrollToTop() {
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function scrollToButtom() {
+      window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+    }
+
+    function clearItem() {
+      $('#result').html('');
+      $('#btn-save').addClass('hide');
+      $('#promt-text').removeClass('hide');
+      scrollToTop();
+    }
+
+    function home() {
+      let html = $('#result').text();
+
+      if(html.length > 0) {
+        swal({
+          title:'Warning',
+          text: 'คุณยังไม่ได้กดบันทึกข้อมูล<br/> กรุณากดบันทึ่ข้อมูลหรือกดเคลียร์ข้อมูลหากไม่ต้องการ',
+          type:'warning',
+          html:true
+        });
+
+        return false;
+      }
+
+      window.location.href = "index.html";
+    }
+  </script>
 
     <!-- ace scripts -->
     <script src="assets/js/ace/ace.sidebar.js"></script>

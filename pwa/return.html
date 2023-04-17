@@ -26,10 +26,10 @@
     <script src="assets/js/ace/ace.js"></script>
     <script src="assets/js/sweet-alert.js"></script>
     <script src="assets/js/handlebars-v3.js"></script>
-    <script src="assets/js/localforage.js" async></script>
+    <script src="assets/js/localforage.js"></script>
 
     <script src="scripts/template.js"></script>
-    <script src="scripts/app.js" async></script>
+    <script src="scripts/app.js"></script>
     <script src="scripts/main.js" async></script>
     <script src="scripts/api.js" async></script>
 
@@ -40,67 +40,21 @@
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
 
-		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
-			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
-					<div class="online-status" id="online-status">Online</div>
-				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
-		</div>
+    <div id="navbar" class="navbar navbar-default">
+      <div class="navbar-container" id="navbar-container">
+        <div class="navbar-header">RETURN LIST</div>
+        <div class="navbar-buttons navbar-header pull-right">
+          <div class="online-status" id="online-status">Online</div>
+        </div>
+      </div>
+    </div>
 
     <!-- /section:basics/navbar.layout -->
     <div class="main-container" id="main-container">
-      <script type="text/javascript">
-        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
-      </script>
-      <!-- #section:basics/sidebar -->
-
-      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
-        <script type="text/javascript">
-        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
-        </script>
-
-        <ul class="nav nav-list">
-          <li class="">
-            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-key"></i>
-              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
-            </a>
-          </li>
-          <li class="">
-            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-arrow-left"></i>
-              <span class="menu-text">ออกจากระบบ</span>
-            </a>
-          </li>
-          </ul>
-      </div>
-      <!-- /section:basics/sidebar -->
       <div class="main-content">
         <div class="main-content-inner">
-          <div id="sidebar2"
-            class="sidebar h-sidebar navbar-collapse collapse"
-            data-sidebar="true" data-sidebar-scoll="true"
-            data-sidebar-hover="true" aria-expanded="false"
-            style="height:1px;">
-          </div>
           <div class="page-content">
-            <div class="row">
+            <div class="" style="width:100%; position:fixed; top:40px; left: 0; padding:8px 8px 0px 8px; background-color:white; z-index:10;">
               <div class="col-xs-6">
                 <label>code</label>
                 <input type="text" class="form-control input-sm search-box" name="code" id="code" value="">
@@ -116,15 +70,17 @@
                 <label>Status</label>
                 <select class="form-control input-sm" name="status" id="status">
                   <option value="all">ทั้งหมด</option>
-                  <option value="-1">Draft</option>
-                  <option value="0">Pending</option>
-                  <option value="1">Recieved</option>
-                  <option value="2">Cancelled</option>
+                  <option value="-1">ดราฟ</option>
+                  <option value="0">รอยืนยัน</option>
+                  <option value="10">รออนุมัติ</option>
+                  <option value="11">สำเร็จ</option>
+                  <option value="2">ยกเลิก</option>
+                  <option value="3">ผิดพลาด</option>
                 </select>
               </div>
               <div class="col-xs-3">
                 <label class="display-block not-show">buton</label>
-                <button type="button" class="btn btn-xs btn-primary btn-block" onclick="getFilterList()"><i class="fa fa-search"></i> Search</button>
+                <button type="button" class="btn btn-xs btn-primary btn-block" onclick="getSearch()"><i class="fa fa-search"></i> Search</button>
               </div>
               <div class="col-xs-3">
                 <label class="display-block not-show">buton</label>
@@ -132,28 +88,43 @@
               </div>
               <input type="hidden" id="perpage" value="20" />
               <input type="hidden" id="offset" value="0" />
-            </div>
-            <div class="row">
-              <div class="col-xs-12 margin-top-10" id="pagination">
+              <input type="hidden" id="limit" value="20" />
+              <input type="hidden" id="show" value="0" />
+              <div class="divider" style="margin-top:5; margin-bottom:5px;"></div>
+            </div>            
+            <div class="row" id="offline-job" style="max-height:70vh; overflow:auto; margin-top:135px;"></div>
+            <div class="row" id="online-job" style="padding-bottom:45px;"></div>
+            <div class="row"><div class="divider-hidden"></div></div>
+
+            <div class="col-xs-12 text-center" id="no-list" style="display:none; position:fixed; bottom:100px; z-index:100;">
+              <div id="no-list-label" style="border-radius: 7px; background-color:#afafaf; width:150px; height:60px; line-height:60px; vertical-align:middle; margin:auto; opacity:0.3;">
+                <div style="font-size:16px; color:white;">No data found</div>
               </div>
             </div>
-            <hr class="margin-top-15">
-            <div class="row" id="online-job" style="max-height:90vh; padding-bottom:30px; overflow: auto;">
 
+            <div class="row">
+              <div class="count-rows">แสดง <span id="show_rows">0</span> รายการ จาก <span id="num_rows">0</span> รายการ</div>
             </div>
+
 
             <div class="row"><div class="divider-hidden"></div></div>
             <div class="pg-footer visible-xs">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-60">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="javascript:goAdd()"><i class="fa fa-plus fa-2x white"></i></a></li>
+                    <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i><span>JOB LIST</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:goAdd()"><i class="fa fa-plus fa-2x white"></i><span>ADD NEW</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="checkin.html"><i class="fa fa-tags fa-2x white"></i><span>ITEMS</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
                   </div>
                 </div>
              </div>
@@ -200,7 +171,41 @@
 
       function goAdd() {
         if(navigator.onLine) {
-          window.location.href = "return_add.html";
+          let json = JSON.stringify({'whsCode' : fWhCode, 'user_id' : userId});
+          let requestUri = URI + 'new_return';
+          let header = new Headers({"X-API-KEY" : API_KEY, "Authorization" : AUTH, "Content-Type" :"application/json" });
+          let requestOptions = {
+            method:'POST',
+            headers:header,
+            body:json
+          };
+
+          fetch(requestUri, requestOptions)
+          .then(response => response.text())
+          .then(result => {
+            let rs = JSON.parse(result);
+
+            if(rs.status == 'success') {
+              localStorage.setItem('return_id', rs.id);
+              window.location.href = "return_edit.html";
+            }
+            else {
+              swal({
+                title:'Error!',
+                text:rs.message,
+                type:'error'
+              });
+            }
+          })
+          .catch(error => console.error('error', error));
+
+        }
+        else {
+          swal({
+            title:'Oops!',
+            text:'Internet ขัดข้องไม่สามารถทำรายการได้',
+            type:'warning'
+          });
         }
       }
     </script>

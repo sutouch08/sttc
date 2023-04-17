@@ -1831,6 +1831,7 @@ input[type=number]::-webkit-outer-spin-button {
     right: 0px;
     bottom: 0px;
     padding: 8px;
+    padding-bottom: 15px;
     line-height: 20px;
     background-color:lightsalmon;
 }
@@ -1861,6 +1862,12 @@ input[type=number]::-webkit-outer-spin-button {
   /*padding: 8px;*/
   line-height: 20px;
   /*border-right: solid 1px #dddddd;*/
+}
+
+.footer-menu span {
+  display:block;
+  font-size: 10px;
+  color:white;
 }
 
 .bp-footer-content .footer-menu:last-child {
@@ -2146,4 +2153,40 @@ li {
   margin-right:10px;
   color:white;
   font-size:16px;
+}
+
+
+.navbar {
+  position: fixed;
+  width: 100%;
+  z-index: 100;
+}
+
+.navbar-header {
+  font-size: 24px;
+  color: white;
+  text-align: center;
+  padding-top: 5px;
+}
+
+.navbar-buttons {
+  position:absolute;
+  top: 0;
+  right: 0;
+}
+
+.main-container {
+  padding-top: 40px;
+}
+
+.count-rows {
+  width:100%;
+  position: fixed;
+  left: 0px;
+  bottom: 65px;
+  height: 25px;
+  background-color:#ffffffaa;
+  font-size:14px;
+  text-align: center;
+  z-index: 100;
 }

@@ -685,6 +685,7 @@ class Transfer extends PS_Controller
   public function view_detail($id)
   {
     $sc = TRUE;
+    $this->load->model('admin/damaged_model');
 
     $rs = $this->transfer_model->get($id);
 
@@ -708,6 +709,8 @@ class Transfer extends PS_Controller
         "powerNo" => $rs->powerNo,
         "mYear" => $rs->mYear,
         "cond" => $rs->cond,
+        "damage_id" => $rs->damage_id,
+        "damage_name" => get_null($this->damaged_model->get_name($rs->damage_id)),
         "usageAge" => $rs->usageAge,
         "status" => $rs->status,
         "fromDoc" => $rs->fromDoc
@@ -727,6 +730,7 @@ class Transfer extends PS_Controller
 
   function get_item($id)
   {
+    $this->load->model('admin/damaged_model');
     $sc = TRUE;
     $ds = array();
     $rs = $this->transfer_model->get($id);
@@ -750,6 +754,8 @@ class Transfer extends PS_Controller
         "mYear" => $rs->mYear,
         "select_m_year" => select_prev_years($rs->mYear),
         "cond" => condLabel($rs->cond),
+        "damage_id" => $rs->damage_id,
+        "damage_name" => get_null($this->damaged_model->get_name($rs->damage_id)),
         "select_cond" => select_cond($rs->cond),
         "color" => condLabelColor($rs->usageAge, $rs->cond),
         "usageAge" => $rs->usageAge,
@@ -829,6 +835,73 @@ class Transfer extends PS_Controller
 		);
 
     return clear_filter($filter);
+  }
+
+
+  public function test_json($id)
+  {
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
+    {
+      $currency = getConfig('CURRENCY');
+      $vat_rate = getConfig('SALE_VAT_RATE');
+      $vat_code = getConfig('SALE_VAT_CODE');
+
+      $ds = array(
+        'U_WEBCODE' => $doc->code,
+        'DocType' => 'I',
+        'CANCELED' => 'N',
+        'DocDate' => sap_date($doc->date_add, TRUE),
+        'DocDueDate' => sap_date($doc->date_add, TRUE),
+        'CardCode' => NULL,
+        'CardName' => NULL,
+        'VatPercent' => 0.000000,
+        'VatSum' => 0.000000,
+        'VatSumFc' => 0.000000,
+        'DiscPrcnt' => 0.000000,
+        'DiscSum' => 0.000000,
+        'DiscSumFC' => 0.000000,
+        'DocCur' => $currency,
+        'DocRate' => 1,
+        'DocTotal' => 0.000000,
+        'DocTotalFC' => 0.000000,
+        'Filler' => $doc->fromWhsCode,
+        'ToWhsCode' => $doc->toWhsCode,
+        'Comments' => $doc->remark,
+        'DocLine' => array(
+            'U_WEBCODE' => $doc->code,
+            'LineNum' => 0,
+            'ItemCode' => $doc->ItemCode,
+            'Dscription' => $doc->ItemName,
+            'Quantity' => $doc->Qty,
+            'unitMsr' => NULL,
+            'PriceBefDi' => 0.000000,
+            'LineTotal' => 0.000000,
+            'ShipDate' => sap_date($doc->date_add, TRUE),
+            'Currency' => $currency,
+            'Rate' => 1,
+            'DiscPrcnt' => 0.000000,
+            'Price' => 0.000000,
+            'TotalFrgn' => 0.000000,
+            'FromWhsCod' => $doc->fromWhsCode,
+            'WhsCode' => $doc->toWhsCode,
+            'FisrtBin' => NULL,
+            'F_FROM_BIN' => NULL,
+            'F_TO_BIN' => NULL,
+            'AllocBinC' => NULL,
+            'TaxStatus' => 'Y',
+            'VatPrcnt' => 0.000000,
+            'VatGroup' => NULL,
+            'PriceAfVAT' => 0.000000,
+            'VatSum' => 0.000000,
+            'TaxType' => 'Y',
+            'SerialNum' => $doc->InstallSerialNum
+        )
+      );
+
+      echo json_encode($ds);
+    }
   }
 } //--- end class
 

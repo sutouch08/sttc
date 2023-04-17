@@ -71,13 +71,6 @@ class User_model extends CI_Model
 
   public function get_user_by_uid($uid)
   {
-    // $rs = $this->db->where('uid', $uid)->get($this->tb);
-    // if($rs->num_rows() === 1)
-    // {
-    //   return $rs->row();
-    // }
-		//
-    // return FALSE;
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
 		->select('fm.name AS from_warehouse_name, to.name AS to_warehouse_name')
@@ -379,6 +372,44 @@ class User_model extends CI_Model
 		}
 
 		return NULL;
+	}
+
+
+	public function get_permission($menu, $user_id)
+	{
+		$pm = array(
+			'can_view' => 0,
+			'can_add' => 0,
+			'can_edit' => 0,
+			'can_delete' => 0,
+			'can_approve' => 0
+		);
+
+		$rs = $this->db->where('menu', $menu)->where('user_id', $user_id)->get('permission');
+
+		if($rs->num_rows() > 0)
+		{
+			$pm = array(
+				'can_view' => $rs->row()->can_view,
+				'can_add' => $rs->row()->can_add,
+				'can_edit' => $rs->row()->can_edit,
+				'can_delete' => $rs->row()->can_delete,
+				'can_approve' => $rs->row()->can_approve
+			);
+		}
+
+		return (object) $pm;
+	}
+
+
+	public function drop_permission($user_id)
+	{
+		return $this->db->where('user_id', $user_id)->delete('permission');
+	}
+
+	public function add_permission(array $ds = array())
+	{
+		return $this->db->insert('permission', $ds);
 	}
 
 } //---- End class

@@ -50,4 +50,63 @@ function select_outsource($id = NULL)
 
   return $ds;
 }
+
+
+function get_permission($menu, $user_id)
+{
+  $CI =& get_instance();
+
+  $user = $CI->user_model->get($user_id);
+
+  if(empty($user))
+  {
+    return reject_permission();
+  }
+
+  //--- If super admin
+  if($user->ugroup == -987654321)
+  {
+    $pm = new stdClass();
+    $pm->can_view = TRUE;
+    $pm->can_add = TRUE;
+    $pm->can_edit = TRUE;
+    $pm->can_delete = TRUE;
+    $pm->can_approve = TRUE;
+  }
+  else
+  {
+    $pm = $CI->user_model->get_permission($menu, $user_id);
+
+    if(empty($pm))
+    {
+      return reject_permission();
+    }
+    else
+    {
+      if(getConfig('CLOSE_SYSTEM') == 2)
+      {
+        $pm = new stdClass();
+        $pm->can_add = FALSE;
+        $pm->can_edit = FALSE;
+        $pm->can_delete = FALSE;
+        $pm->can_approve = FALSE;
+      }
+    }
+  }
+
+  return $pm;
+}
+
+
+function reject_permission()
+{
+  $pm = new stdClass();
+  $pm->can_view = FALSE;
+  $pm->can_add = FALSE;
+  $pm->can_edit = FALSE;
+  $pm->can_delete = FALSE;
+  $pm->can_approve = FALSE;
+
+  return $pm;
+}
  ?>

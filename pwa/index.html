@@ -38,67 +38,20 @@
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
 
-		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
+    <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+				<div class="navbar-header">Smart TTC</div>
+        <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
+			</div>
 		</div>
 
     <!-- /section:basics/navbar.layout -->
     <div class="main-container" id="main-container">
-      <script type="text/javascript">
-        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
-      </script>
-      <!-- #section:basics/sidebar -->
-
-      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
-        <script type="text/javascript">
-        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
-        </script>
-
-        <ul class="nav nav-list">
-          <li class="">
-            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-key"></i>
-              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
-            </a>
-          </li>
-          <li class="">
-            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-arrow-left"></i>
-              <span class="menu-text">ออกจากระบบ</span>
-            </a>
-          </li>
-          </ul>
-      </div>
-      <!-- /section:basics/sidebar -->
       <div class="main-content">
         <div class="main-content-inner">
-          <div id="sidebar2"
-            class="sidebar h-sidebar navbar-collapse collapse"
-            data-sidebar="true" data-sidebar-scoll="true"
-            data-sidebar-hover="true" aria-expanded="false"
-            style="height:1px;">
-          </div>
           <div class="page-content" id="page-content">
-
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 text-center">
                 <h1 id="hello"></h1>
@@ -133,19 +86,19 @@
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i></a></li>
+                    <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i><span>RETURN LIST</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i></a></li>
+                    <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i><span>JOB LIST</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i></a></li>
+                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i><span>NEW JOB</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="checkin.html"><i class="fa fa-check-square-o fa-2x white"></i></a></li>
+                    <li><a href="checkin.html"><i class="fa fa-check-square-o fa-2x white"></i><span>CHECK IN</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i></a></li>
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
                   </div>
                 </div>
              </div>

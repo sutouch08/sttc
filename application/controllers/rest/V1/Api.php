@@ -238,10 +238,6 @@ class Api extends REST_Controller
     $perpage = $data->perpage;
     $offset = $data->offset;
     $rows = $this->transfer_model->count_rows($filter);
-
-    //$init	= pagination_config("javascript:void(0)", $rows, $perpage, $offset);
-    //$this->pagination->initialize($init);
-
     $ds = $this->transfer_model->get_list($filter, $perpage, $offset);
     $dataset = array();
 
@@ -266,7 +262,6 @@ class Api extends REST_Controller
 
     $filter['data'] = $dataset;
     $filter['rows'] = $rows;
-    //$filter['pagination'] = $this->pagination->create_links();
 
     $this->response($filter, 200);
   }
@@ -275,6 +270,7 @@ class Api extends REST_Controller
   public function view_detail_post()
   {
     $this->load->model('inventory/transfer_model');
+    $this->load->model('admin/damaged_model');
     $sc = TRUE;
     $data = json_decode(file_get_contents("php://input"));
 
@@ -301,6 +297,8 @@ class Api extends REST_Controller
           "powerNo" => $rs->powerNo,
           "mYear" => $rs->mYear,
           "cond" => $rs->cond,
+          "damage_id" => $rs->damage_id,
+          "damage_name" => $this->damaged_model->get_name($rs->damage_id),
           "usageAge" => $rs->usageAge,
           "status" => $rs->status,
           "fromDoc" => $rs->fromDoc
@@ -347,6 +345,7 @@ class Api extends REST_Controller
       $powerNo = $data->runNo;
       $mYear = $data->mYear;
       $cond = $data->cond;
+      $damage_id = get_null($data->damage_id);
       $iImage = $data->iImage;
       $uImage = $data->uImage;
       $uOrientation = $data->uOrientation;
@@ -376,13 +375,15 @@ class Api extends REST_Controller
         'powerNo' => $powerNo,
         'mYear' => $mYear,
         'cond' => $cond,
+        'damage_id' => $damage_id,
         'usageAge' => $usageAge,
         'status' => 0,
         'remark' => $remark,
         'team_id' => $this->_user->team_id,
         'create_at' => now(),
         'create_by' => $this->_user->id,
-        'fromDoc' => $fromDoc
+        'fromDoc' => $fromDoc,
+        'orientation' => $iOrientation
       );
 
       if( ! $this->transfer_model->add($arr))
@@ -570,87 +571,6 @@ class Api extends REST_Controller
     $this->response($ds, 200);
   }
 
-  // public function update_user_item_post()
-  // {
-  //   $this->load->model('inventory/transfer_model');
-  //   $this->load->model('admin/warehouse_model');
-  //   $sc = TRUE;
-  //   $ds = array();
-  //   $data = json_decode(file_get_contents('php://input'));
-  //
-  //   if( ! empty($data))
-  //   {
-  //     //--- check item already loaded by someone ?
-  //     if( ! $this->transfer_model->is_loaded($data->docNum))
-  //     {
-  //       $list = $this->transfer_model->getSapTransferSerialDetails($data->docNum);
-  //
-  //       if( ! empty($list))
-  //       {
-  //         $this->db->trans_begin();
-  //
-  //         foreach($list as $rs)
-  //         {
-  //           if($sc === FALSE)
-  //           {
-  //             break;
-  //           }
-  //
-  //           $arr = array(
-  //             'user_id' => get_cookie('userId'),
-  //             'serial' => $rs->Serial,
-  //             'ItemCode' => $rs->ItemCode,
-  //             'ItemName' => $rs->ItemName,
-  //             'DocNum' => $data->docNum,
-  //             'WhsCode' => $rs->WhsCode,
-  //             'status' => 0,
-  //             'date_add' => now(),
-  //             'date_upd' => NULL
-  //           );
-  //
-  //           if( ! $this->transfer_model->add_user_item($arr))
-  //           {
-  //             $sc = FALSE;
-  //             $this->error = "บันทึกรายการเข้าส่วนกลางไม่สำเร็จ";
-  //           }
-  //         }
-  //
-  //         if($sc === TRUE)
-  //         {
-  //           $this->db->trans_commit();
-  //         }
-  //         else
-  //         {
-  //           $this->db->trans_rollback();
-  //         }
-  //       }
-  //       else
-  //       {
-  //         $sc = FALSE;
-  //         $this->error = "ไม่พบรายการสินค้าในเอกสาร {$data->docNum}";
-  //       }
-  //     }
-  //     else
-  //     {
-  //       $sc = FALSE;
-  //       $this->error = "{$data->docNum} ถูกโหลดไปแล้ว";
-  //     }
-  //   }
-  //   else
-  //   {
-  //     $sc = FALSE;
-  //     set_error('required');
-  //   }
-  //
-  //   $ds = array(
-  //     'status' => $sc === TRUE ? 'success' : 'failed',
-  //     'message' => $sc === TRUE ? 'success' : $this->error
-  //   );
-  //
-  //
-  //   $this->response($ds, 200);
-  // }
-
 
 
 
@@ -773,14 +693,14 @@ class Api extends REST_Controller
 
   public function sync_user_items_post()
   {
-    $this->load->model('inventory/transfer_model');
+    $this->load->model('inventory/user_item_model');
     $sc = TRUE;
     $data = json_decode(file_get_contents('php://input'));
     $ds = array();
 
     if( ! empty($data))
     {
-      $details = $this->transfer_model->get_open_user_items($data->user_id);
+      $details = $this->user_item_model->get_open_user_items($data->user_id);
 
       if( ! empty($details))
       {
@@ -815,55 +735,6 @@ class Api extends REST_Controller
     );
 
     $this->response($arr, 200);
-  }
-
-
-  public function get_return_list_post()
-  {
-    $this->load->model('inventory/return_product_model');
-    $this->load->helper('transfer');
-    $sc = TRUE;
-    $data = json_decode(file_get_contents("php://input"));
-
-    $filter = array(
-      'code' => $data->code,
-      'from_date' => $data->fromDate,
-      'to_date' => $data->toDate,
-      'status' => $data->status
-    );
-
-    $perpage = $data->perpage;
-    $offset = $data->offset;
-    $rows = $this->return_product_model->count_rows($filter);
-
-    $init	= pagination_config("#", $rows, $perpage, $offset);
-    $this->pagination->initialize($init);
-
-    $ds = $this->return_product_model->get_list($filter, $perpage, $offset);
-    $dataset = array();
-
-    if( ! empty($ds))
-    {
-      foreach($ds as $rs)
-      {
-        $arr = array(
-          'id' => $rs->id,
-          'date_add' => thai_date($rs->date_add),
-          'code' => $rs->code,
-          'teamName' => $rs->team_name,
-          'statusLabel' => transfer_status_label($rs->status),
-          'remark' => $rs->remark,
-          'uname' => $rs->uname
-        );
-
-        array_push($dataset, $arr);
-      }
-    }
-
-    $filter['data'] = $dataset;
-    $filter['pagination'] = $this->pagination->create_links();
-
-    $this->response($filter, 200);
   }
 
 
@@ -946,9 +817,18 @@ class Api extends REST_Controller
       }
 
       $image = imagecreatefromstring($imageData);
-      $image_rotate = ($orientation == 3 ? 180 : ($orientation == 6 ? 90 : ($orientation == 8 ? -90 : NULL)));
-      $source = $image_rotate != NULL ? imagerotate($image, $image_rotate, 0) : $image;
-      return imagejpeg($source, $path, 100);
+      $image_rotate = ($orientation == 3 ? 180 : ($orientation == 6 ? -90 : ($orientation == 8 ? 90 : NULL)));
+      $image_width = imagesx($image);
+      $image_height = imagesy($image);
+      $ratio = $image_height / $image_width;
+      $new_width = 800;
+      $new_height = $ratio * $new_width;
+      $thumb = imagecreatetruecolor($new_width, $new_height);
+      imagecopyresampled($thumb, $image, 0, 0, 0, 0, $new_width, $new_height, $image_width, $image_height);
+      $source = $image_rotate != NULL ? imagerotate($thumb, $image_rotate, 0) : $thumb;
+      imagejpeg($source, $path, 100);
+      imagedestroy($image);
+      return TRUE;
     }
 
     return FALSE;
@@ -966,6 +846,52 @@ class Api extends REST_Controller
 
 
 
+  public function get_return_list_post()
+  {
+    $this->load->model('inventory/return_product_model');
+    $this->load->helper('return_product');
+    $sc = TRUE;
+    $data = json_decode(file_get_contents("php://input"));
+
+    $filter = array(
+      'code' => $data->code,
+      'from_date' => $data->fromDate,
+      'to_date' => $data->toDate,
+      'status' => $data->status
+    );
+
+    $perpage = $data->perpage;
+    $offset = $data->offset;
+    $rows = $this->return_product_model->count_rows($filter);
+    $ds = $this->return_product_model->get_list($filter, $perpage, $offset);
+    $dataset = array();
+
+    if( ! empty($ds))
+    {
+      foreach($ds as $rs)
+      {
+        $arr = array(
+          'id' => $rs->id,
+          'date_add' => thai_date($rs->date_add),
+          'code' => $rs->code,
+          'teamName' => $rs->team_name,
+          'statusLabel' => return_status_label($rs->status, $rs->is_approve),
+          'remark' => $rs->remark,
+          'uname' => $rs->uname
+        );
+
+        array_push($dataset, $arr);
+      }
+    }
+
+    $filter['data'] = $dataset;
+    $filter['rows'] = $rows;
+
+    $this->response($filter, 200);
+  }
+
+
+
   public function new_return_post()
   {
     $this->load->model('inventory/return_product_model');
@@ -975,26 +901,34 @@ class Api extends REST_Controller
 
     if( ! empty($data))
     {
-      $remark = get_null(trim($data->remark));
-      $date_add = db_date($data->date_add);
-      $code = $this->get_new_return_code($date_add);
+      $id = NULL;
+      $doc = $this->return_product_model->get_return_draft_by_user_id($this->_user->id);
 
-      $arr = array(
-        'code' => $code,
-        'date_add' => $date_add,
-        'whsCode' => $data->whsCode,
-        'create_at' => now(),
-        'create_by' => $this->_user->id,
-        'team_id' => $this->_user->team_id,
-        'remark' => $remark
-      );
-
-      $id = $this->return_product_model->add($arr);
-
-      if( ! $id)
+      if( ! empty($doc))
       {
-        $sc = FALSE;
-        set_error('insert');
+        $id = $doc->id;
+      }
+      else
+      {
+        $date_add = now();
+        $code = $this->get_new_return_code($date_add);
+
+        $arr = array(
+          'code' => $code,
+          'date_add' => $date_add,
+          'whsCode' => $data->whsCode,
+          'create_at' => now(),
+          'create_by' => $this->_user->id,
+          'team_id' => $this->_user->team_id
+        );
+
+        $id = $this->return_product_model->add($arr);
+
+        if( ! $id)
+        {
+          $sc = FALSE;
+          set_error('insert');
+        }
       }
     }
     else
@@ -1013,10 +947,10 @@ class Api extends REST_Controller
   }
 
 
-
   public function get_return_detail_post()
   {
     $this->load->model('inventory/return_product_model');
+    $this->load->helper('return_product');
     $sc = TRUE;
     $data = json_decode(file_get_contents("php://input"));
 
@@ -1026,9 +960,24 @@ class Api extends REST_Controller
 
       if( ! empty($doc))
       {
+        $doc->date_add = thai_date($doc->date_add);
+        $doc->active = $doc->status < 0 ? 1 : 0; //-- ใช้เปิด/ปิด ปุ่ม delete
+        $doc->is_cancle = $doc->status == 2 ? 1 : 0;
+        $doc->statusText = return_status_text($doc->status, $doc->is_approve);
+
+        $details = $this->return_product_model->get_details($data->id);
+
+        if( ! empty($details))
+        {
+          foreach($details as $rs)
+          {
+            $rs->valid = $doc->active == 1 ? 0 : 1;
+          }
+        }
+
         $ds = array(
           'header' => $doc,
-          'details' => $this->return_product_model->get_details($data->id)
+          'details' => $details
         );
 
       }
@@ -1080,7 +1029,8 @@ class Api extends REST_Controller
               'WhsCode' => $data->WhsCode,
               'Qty' => 1,
               'fromDoc' => $data->docNum,
-              'Serial' => $data->serial
+              'Serial' => $data->serial,
+              'user_id' => $this->_user->id
             );
 
             if( ! $this->return_product_model->add_detail($arr))
@@ -1090,9 +1040,21 @@ class Api extends REST_Controller
             }
             else
             {
-              $this->return_product_model->update_user_item($this->_user->id, $data->serial);
+              $this->return_product_model->update_user_item($this->_user->id, $data->serial, $data->docNum, 2);
 
               $details = $this->return_product_model->get_details($data->return_id);
+
+              $active = $doc->status < 0 ? 1 : 0; //-- ใช้เปิด/ปิด ปุ่ม delete
+
+              $details = $this->return_product_model->get_details($data->return_id);
+
+              if( ! empty($details))
+              {
+                foreach($details as $rs)
+                {
+                  $rs->valid = $active == 1 ? 0 : intval($rs->valid);
+                }
+              }
             }
           }
           else
@@ -1129,5 +1091,263 @@ class Api extends REST_Controller
   }
 
 
+  public function remove_return_row_post()
+  {
+    $this->load->model('inventory/return_product_model');
+    $this->load->model('inventory/user_item_model');
+
+    $sc = TRUE;
+
+    $data = json_decode(file_get_contents('php://input'));
+
+    if( ! empty($data))
+    {
+
+      $row = $this->return_product_model->get_detail($data->id);
+
+      if( ! empty($row))
+      {
+        $this->db->trans_begin();
+
+        if($this->return_product_model->delete_detail($data->id))
+        {
+          //--- set status to 0
+          if( ! $this->return_product_model->update_user_item($row->user_id, $row->Serial, $row->fromDoc, 0))
+          {
+            $sc = FALSE;
+            $this->error = "Update user item status failed";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "Delete failed";
+        }
+
+        if($sc === TRUE)
+        {
+          $this->db->trans_commit();
+        }
+        else
+        {
+          $this->db->trans_rollback();
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "Item not found";
+      }
+
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing Required Parameter : user_id";
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'Success' : $this->error
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+  public function save_return_post()
+  {
+    $this->load->model('inventory/return_product_model');
+    $sc = TRUE;
+    $data = json_decode(file_get_contents('php://input'));
+
+    if( ! empty($data))
+    {
+      $doc = $this->return_product_model->get($data->id);
+
+      if( ! empty($doc))
+      {
+        if($doc->status == -1)
+        {
+          $arr = array(
+            'status' => 0,
+            'remark' => get_null(trim($data->remark)),
+            'update_by' => $this->_user->id,
+            'update_at' => now()
+          );
+
+          if( ! $this->return_product_model->update($data->id, $arr))
+          {
+            $sc = FALSE;
+            $this->error = "บันทึกไม่สำเร็จ";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "สถานะเอกสารไม่ถูกต้อง";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "เลขที่เอกสารไม่ถูกต้อง";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing Required Parameter";
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'Success' : $this->error
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+  public function unsave_return_post()
+  {
+    $this->load->model('inventory/return_product_model');
+    $sc = TRUE;
+    $data = json_decode(file_get_contents('php://input'));
+
+    if( ! empty($data))
+    {
+      $doc = $this->return_product_model->get($data->id);
+
+      if( ! empty($doc))
+      {
+        if($doc->status == 0)
+        {
+          $arr = array(
+            'status' => -1,
+            'update_by' => $this->_user->id,
+            'update_at' => now()
+          );
+
+          if( ! $this->return_product_model->update($data->id, $arr))
+          {
+            $sc = FALSE;
+            $this->error = "เปลี่ยนสถานะไม่สำเร็จ";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "สถานะเอกสารไม่ถูกต้อง";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "เลขที่เอกสารไม่ถูกต้อง";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing Required Parameter";
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'Success' : $this->error
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+  public function cancle_return_post()
+  {
+    $this->load->model('inventory/return_product_model');
+    $sc = TRUE;
+    $data = json_decode(file_get_contents('php://input'));
+
+    if( ! empty($data))
+    {
+      $doc = $this->return_product_model->get($data->id);
+
+      if( ! empty($doc))
+      {
+        if($doc->status != 2 && $doc->status !=1)
+        {
+          $arr = array(
+            'status' => 2,
+            'is_cancle' => 1,
+            'cancle_by' => $this->_user->id,
+            'cancle_at' => now(),
+            'update_by' => $this->_user->id,
+            'update_at' => now()
+          );
+
+          if( ! $this->return_product_model->update($data->id, $arr))
+          {
+            $sc = FALSE;
+            $this->error = "เปลี่ยนสถานะไม่สำเร็จ";
+          }
+          else
+          {
+            $details = $this->return_product_model->get_details($data->id);
+
+            if( ! empty($details))
+            {
+              $arr = array('valid' => 2);
+
+              $this->return_product_model->update_details($data->id, $arr);
+
+              foreach($details as $rs)
+              {
+                $this->return_product_model->update_user_item($rs->user_id, $rs->Serial, $rs->fromDoc, 0);
+              }
+            }
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "สถานะเอกสารไม่ถูกต้อง";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "เลขที่เอกสารไม่ถูกต้อง";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing Required Parameter";
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'Success' : $this->error
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+  public function get_damaged_list_post()
+  {
+    $this->load->model('admin/damaged_model');
+    $sc = TRUE;
+    $ds = array();
+
+    $list = $this->damaged_model->get_all_active();
+
+    $arr = array(
+      'status' => 'success',
+      'data' => $list
+    );
+
+    $this->response($arr, 200);
+  }
 } //--- end class
 ?>

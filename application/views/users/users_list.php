@@ -71,7 +71,7 @@
 			<thead>
 				<tr>
 					<th class="fix-width-60 middle text-center">#</th>
-					<th class="fix-width-120 max-width-120"></th>
+					<th class="fix-width-150 max-width-120"></th>
 					<th class="fix-width-100 middle">User name</th>
 					<th class="min-width-200 middle">ชื่อพนักงาน</th>
 					<th class="fix-width-150 middle">User Group</th>
@@ -87,8 +87,11 @@
 	<?php foreach($data as $rs) : ?>
 				<tr>
 					<td class="middle text-center"><?php echo $no; ?></td>
-					<td class="middle text-right">
+					<td class="middle">
 						<button type="button" class="btn btn-minier btn-info" title="Details" onclick="viewDetail('<?php echo $rs->id; ?>')"><i class="fa fa-eye"></i></button>
+						<?php if($rs->ugroup == 1 && $can_edit_permission) : ?>
+							<button type="button" class="btn btn-minier btn-primary" title="Permission" onclick="getPermission('<?php echo $rs->id; ?>')"><i class="fa fa-lock"></i></button>
+						<?php endif; ?>
 						<?php if($this->pm->can_add OR $this->pm->can_edit) : ?>
 							<button type="button" class="btn btn-minier btn-purple" title="Reset password" onclick="getReset('<?php echo $rs->id; ?>')"><i class="fa fa-key"></i></button>
 						<?php endif; ?>

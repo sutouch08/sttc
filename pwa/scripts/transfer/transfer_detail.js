@@ -39,6 +39,12 @@ window.addEventListener('load', () => {
           $('#from-doc').val(ds.fromDoc);
           $('#u-preview').html('<img id="u-image" src="'+ds.u_image_data+'" class="width-100" alt="Item image" />');
 
+          if(ds.cond == 2 && ds.damage_name) {
+            let label = `<div class="alert alert-info" style="font-size:18px;">${ds.damage_name}</div>`;
+            $('#damage-label').html(label);
+            $('#damage-label').removeClass('hide');
+          }
+
           suggest();
 
           $('#i-serial-code').val(ds.iSerial);
@@ -342,64 +348,4 @@ function confirmCancle() {
       }
     });
   }
-}
-
-
-function syncItem() {
-  let json = JSON.stringify({'user_id' : userId});
-  let requestUri = URI + 'sync_user_items';
-  let header = new Headers();
-  header.append('X-API-KEY', API_KEY);
-  header.append('Authorization', AUTH);
-  header.append('Content-type', 'application/json');
-
-  let requestOptions = {
-    method : 'POST',
-    headers : header,
-    body : json,
-    redirect : 'follow'
-  };
-
-  fetch(requestUri, requestOptions)
-  .then(response => response.text())
-  .then(result => {
-    let ds = JSON.parse(result);
-
-    if(ds.data != null || ds.data != "") {
-      let data = [];
-
-      ds.data.forEach((item, i) => {
-        let serial = item.Serial;
-        let docnum = item.DocNum;
-
-        let arr = {
-            "docnum" : item.DocNum,
-            "serial" : item.Serial,
-            "code" : item.ItemCode,
-            "name" : item.ItemName,
-            "whCode" : item.WhsCode
-          };
-
-          arr[serial] = serial;
-          arr[docnum] = docnum;
-
-          data.push(arr);
-      });
-
-      if(data.length == 0) {
-        localforage.removeItem('inventory').then(() => {
-          getItemList();
-        });
-      }
-      else {
-        localforage.setItem('inventory', data).then(() => {
-          getItemList();
-        });
-      }
-    }
-  })
-  .catch((error) => {
-    console.error('error', error);
-  });
-
 }

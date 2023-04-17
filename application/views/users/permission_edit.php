@@ -14,13 +14,6 @@
 </div><!-- End Row -->
 <hr class=""/>
 <div class="row">
-	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-		<div class="alert alert-info">
-			<p style="font-size:18px;">Permission Assignment - <?php echo $data->name; ?></p>
-		</div>
-	</div>
-</div>
-<div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
 		<table class="table table-striped table-bordered table-hover" style="min-width:600px;">
 			<thead>
@@ -38,26 +31,42 @@
 	<?php foreach($menus as $groups) : ?>
 	<?php 	$g_code = $groups['group_code']; ?>
 				<tr class="font-size-14" style="background-color:#428bca73;">
-					<td class="width-50 middle"><?php echo $groups['group_name']; ?></td>
+					<td class="width-40 middle"><?php echo $groups['group_name']; ?></td>
 					<td class="width-10 middle text-center">
-						<input id="view-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupViewCheck($(this), '<?php echo $g_code; ?>')" />
-						<span class="lbl">&nbsp;View</span>
+						<label>
+							<input id="view-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupViewCheck($(this), '<?php echo $g_code; ?>')" />
+							<span class="lbl">&nbsp;View</span>
+						</label>
 					</td>
 					<td class="width-10 middle text-center">
-						<input id="add-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupAddCheck($(this), '<?php echo $g_code; ?>' )">
-						<span class="lbl">&nbsp;Add</span>
+						<label>
+							<input id="add-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupAddCheck($(this), '<?php echo $g_code; ?>' )">
+							<span class="lbl">&nbsp;Add</span>
+						</label>
 					</td>
 					<td class="width-10 middle text-center">
-						<input id="edit-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupEditCheck($(this), '<?php echo $g_code; ?>' )">
-						<span class="lbl">&nbsp;Edit</span>
+						<label>
+							<input id="edit-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupEditCheck($(this), '<?php echo $g_code; ?>' )">
+							<span class="lbl">&nbsp;Edit</span>
+						</label>
 					</td>
 					<td class="width-10 middle text-center">
-						<input id="delete-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupDeleteCheck($(this), '<?php echo $g_code; ?>' )">
-						<span class="lbl">&nbsp;Delete</span>
+						<label>
+							<input id="delete-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupDeleteCheck($(this), '<?php echo $g_code; ?>' )">
+							<span class="lbl">&nbsp;Delete</span>
+						</label>
 					</td>
 					<td class="width-10 middle text-center">
-						<input id="all-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupAllCheck($(this), '<?php echo $g_code; ?>' )">
-						<span class="lbl">&nbsp;All</span>
+						<label>
+							<input id="approve-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupApproveCheck($(this), '<?php echo $g_code; ?>' )">
+							<span class="lbl">&nbsp;Approve</span>
+						</label>
+					</td>
+					<td class="width-10 middle text-center">
+						<label>
+							<input id="all-group-<?php echo $g_code; ?>" type="checkbox" class="ace" onchange="groupAllCheck($(this), '<?php echo $g_code; ?>' )">
+							<span class="lbl">&nbsp;All</span>
+						</label>
 					</td>
 				</tr>
 
@@ -87,6 +96,10 @@
 								<span class="lbl"></span>
 							</td>
 							<td class="middle text-center">
+								<input id="approve-<?php echo $code; ?>" name="approve[<?php echo $code; ?>]" type="checkbox" class="ace approve-<?php echo $g_code.' '.$code; ?>" <?php echo is_checked($pm->can_approve, 1); ?>>
+								<span class="lbl"></span>
+							</td>
+							<td class="middle text-center">
 								<input id="all-<?php echo $code; ?>" type="checkbox" class="ace all all-<?php echo $g_code; ?>" onchange="allCheck($(this), '<?php echo $code; ?>')">
 								<span class="lbl"></span>
 							</td>
@@ -98,16 +111,11 @@
 			</tbody>
 		</table>
 
-		<input type="hidden" name="id" id="id" value="<?php echo $data->id; ?>" />
+		<input type="hidden" name="user_id" id="user_id" value="<?php echo $user->id; ?>" />
 	</div>
 	<div class="divider-hidden"></div>
-	<div class="divider-hidden visible-xs"></div>
-	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-		<?php if($this->pm->can_add OR $this->pm->can_edit) : ?>
-					<button type="button" class="btn btn-xs btn-success btn-100" onclick="savePermission()">Save</button>
-		<?php endif; ?>
-	</div>
+	<div class="divider-hidden visible-xs"></div>	
 </div>
 
-<script src="<?php echo base_url(); ?>scripts/users/permission.js?v=<?php echo date('Ymd'); ?>"></script>
+<script src="<?php echo base_url(); ?>scripts/users/users.js?v=<?php echo date('Ymd'); ?>"></script>
 <?php $this->load->view('include/footer'); ?>

@@ -1,23 +1,24 @@
 {
-  "background_color" : "white",
+  "name" : "Smart TTC",
+  "short_name" : "Smart TTC",
   "description" : "Get the job done!",
-  "display" : "fullscreen",
+  "theme_color" : "#fff",
+  "background_color" : "#fff",
+  "display" : "Standalone",
+  "orientation" : "portrait",
+  "start_url" : "index.html",
   "icons" : [
     {
-      "src" : "icon/icon.png",
+      "src" : "icon/sttc-icon-192.png",
       "sizes" : "192x192",
       "type" : "image/png",
       "purpose" : "any maskable"
     },
     {
-      "src" : "icon/icon512.png",
+      "src" : "icon/sttc-icon-512.png",
       "sizes" : "512x512",
       "type" : "image/png",
       "purpose" : "any maskable"
     }
-  ],
-  "name" : "Smart TTC",
-  "short_name" : "STTC",
-  "theme_color" : "salmon",
-  "start_url" : "index.html"
+  ]
 }

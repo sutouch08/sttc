@@ -31,30 +31,8 @@ class PS_Controller extends CI_Controller
     $this->_Lead = $this->_user->ugroup == 2 ? TRUE : FALSE;
     $this->_Outsource = $this->_user->ugroup == 3 ? TRUE : FALSE;
 
-    if($this->_SuperAdmin OR $this->_Admin)
-    {
-      $pm = array(
-        'can_view' => TRUE,
-        'can_add' => TRUE,
-        'can_edit' => TRUE,
-        'can_delete' => TRUE
-      );
 
-      $this->pm = (object) $pm;
-    }
-    else
-    {
-      $pm = array(
-        'can_view' => FALSE,
-        'can_add' => FALSE,
-        'can_edit' => FALSE,
-        'can_delete' => FALSE
-      );
-
-      $this->pm = (object) $pm;
-    }
-
-    $this->ms = $this->load->database('ms', TRUE);
+    //$this->ms = $this->load->database('ms', TRUE);
 
     if($this->close_system == 1 && $this->_SuperAdmin === FALSE)
     {
@@ -71,6 +49,7 @@ class PS_Controller extends CI_Controller
 			redirect(base_url().'change_password/f');
 		}
 
+    $this->pm = get_permission($this->menu_code, $this->_user->id);
   }
 
 

@@ -244,11 +244,15 @@
        </div>
 
 			<div class="modal-footer">
+			<?php if($this->pm->can_approve) : ?>
 				<button type="button" class="btn btn-sm btn-success pull-right hide" id="btn-approve" onclick="doApprove()">อนุมัติ</button>
+			<?php endif; ?>
 				<button type="button" class="btn btn-sm btn-primary pull-right hide" id="btn-temp" onclick="sendToSAP()">Send To Temp</button>
+			<?php if($this->pm->can_edit) : ?>
 				<button type="button" class="btn btn-sm btn-warning pull-left" id="btn-edit" onclick="getEdit()" >
 					<i class="fa fa-pencil"></i> แก้ไข
 				</button>
+			<?php endif; ?>
 			</div>
 		</div>
 	</div>
@@ -274,8 +278,11 @@
 				<tr><td class="bold">PEA No.</td><td class="">{{pea_no}}</td></tr>
 				<tr><td class="bold">หน่วยไฟ</td><td class="">{{power_no}}</td></tr>
 				<tr><td class="bold">ปีบนมิเตอร์</td><td class="">{{mYear}}</td></tr>
-				<tr><td class="bold">สภาพมิเตอร์</td><td class="">{{cond}}</td></tr>
 				<tr><td class="bold">อายุใช้งาน</td><td class="">{{usageAge}} ปี</td></tr>
+				<tr><td class="bold">สภาพมิเตอร์</td><td class="">{{cond}}</td></tr>
+				{{#if damage_name}}
+				<tr><td class="bold">สาเหตุการชำรุด</td><td class="">{{damage_name}}</td></tr>
+				{{/if}}
 				<tr><td class="bold">สติ๊กเกอร์</td><td class="">{{{color}}}</td></tr>
 				<tr>
 					<td colspan="2" class="text-center">

@@ -69,7 +69,7 @@ class User_item_model extends CI_Model
     }
 
 
-    $rs = $this->db->order_by('item.date_add', 'DESC')->order_by('item.DocNum', 'ASC')->limit($perpage, $offset)->get();
+    $rs = $this->db->order_by('item.date_add', 'DESC')->order_by('item.DocNum', 'ASC')->order_by('item.serial', 'ASC')->limit($perpage, $offset)->get();
 
     if($rs->num_rows() > 0)
     {
@@ -160,6 +160,31 @@ class User_item_model extends CI_Model
 
     return FALSE;
   }
-}
+
+
+  public function get_open_user_items($user_id)
+  {
+    $rs = $this->db->where('user_id', $user_id)->where('status', 0)->get($this->tb);
+
+    if( $rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
+
+  public function update_row($id, $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      return $this->db->where('id', $id)->update($this->tb, $ds);
+    }
+
+    return FALSE;
+  }
+
+} //--- end class
 
  ?>

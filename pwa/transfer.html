@@ -26,10 +26,10 @@
     <script src="assets/js/ace/ace.js"></script>
     <script src="assets/js/sweet-alert.js"></script>
     <script src="assets/js/handlebars-v3.js"></script>
-    <script src="assets/js/localforage.js" async></script>
+    <script src="assets/js/localforage.js"></script>
 
     <script src="scripts/template.js"></script>
-    <script src="scripts/app.js" async></script>
+    <script src="scripts/app.js"></script>
     <script src="scripts/main.js" async></script>
     <script src="scripts/api.js" async></script>
 
@@ -40,67 +40,23 @@
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
 
-		<!-- #section:basics/navbar.layout -->
+
 		<div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
-				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-					<span class="sr-only">Toggle sidebar</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-
-				<div class="navbar-header pull-left">
-					<a href="index.html" class="navbar-brand" style="min-width:167px;">
-						<small>Smart TTC</small>
-					</a>
-				</div>
-        <div class="navbar-buttons navbar-header pull-right" role="navigation">
+				<div class="navbar-header">JOB LIST</div>
+        <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
-				<!-- /section:basics/navbar.dropdown -->
-			</div><!-- /.navbar-container -->
+			</div>
 		</div>
 
     <!-- /section:basics/navbar.layout -->
-    <div class="main-container" id="main-container">
-      <script type="text/javascript">
-        try{ace.settings.check('main-container' , 'fixed')}catch(e){}
-      </script>
-      <!-- #section:basics/sidebar -->
-
-      <div id="sidebar" class="sidebar responsive" style="height:95vh; background-color:#f8f8f8dd;" data-sidebar="true" data-sidebar-scoll="true" data-sidebar-hover="true">
-        <script type="text/javascript">
-        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
-        </script>
-
-        <ul class="nav nav-list">
-          <li class="">
-            <a href="javascript:changeUserPwd()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-key"></i>
-              <span class="menu-text">เปลี่ยนรหัสผ่าน</span>
-            </a>
-          </li>
-          <li class="">
-            <a href="javascript:logout()" style="background-color:#f8f8f8dd;">
-              <i class="menu-icon fa fa-arrow-left"></i>
-              <span class="menu-text">ออกจากระบบ</span>
-            </a>
-          </li>
-          </ul>
-      </div>
+    <div class="main-container" id="main-container" >
       <!-- /section:basics/sidebar -->
       <div class="main-content">
         <div class="main-content-inner">
-          <div id="sidebar2"
-            class="sidebar h-sidebar navbar-collapse collapse"
-            data-sidebar="true" data-sidebar-scoll="true"
-            data-sidebar-hover="true" aria-expanded="false"
-            style="height:1px;">
-          </div>
           <div class="page-content">
-            <div class="row">
+            <div class="" style="width:100%; position:fixed; top:40px; left: 0; padding:8px 8px 0px 8px; background-color:white; z-index:10;">
               <div class="col-xs-4">
                 <label>เลขที่</label>
                 <input type="text" class="form-control input-sm search-box" name="code" id="code" value="">
@@ -136,35 +92,43 @@
               </div>
               <input type="hidden" id="perpage" value="20" />
               <input type="hidden" id="offset" value="0" />
+              <input type="hidden" id="limit" value="20" />
+              <input type="hidden" id="show" value="0" />
+              <div class="divider" style="margin-top:5; margin-bottom:5px;"></div>
             </div>
-            <div class="row">
-              <div class="col-xs-12 text-center margin-top-10">
-                ทั้งหมด <span id="num_rows">0</span> รายการ แสดง <span id="show_rows">0</span> รายการ
-              </div>
-            </div>
-            <hr class="margin-bottom-15">
-            <div class="row" id="offline-job" style="max-height:70vh; overflow:auto;"></div>
-            <div class="row" id="online-job" style="max-height:65vh; overflow: auto; padding-bottom:30px;"></div>
+            <div class="row" id="offline-job" style="max-height:70vh; overflow:auto; margin-top:135px;"></div>
+            <div class="row" id="online-job" style="padding-bottom:45px;"></div>
             <div class="row"><div class="divider-hidden"></div></div>
 
-            <div class="col-xs-12 text-center" id="no-list" style="display:none; position:fixed; bottom:80px; z-index:100;">
-              <div id="no-list-label" style="border-radius: 10px; background-color:#afafaf; width:150px; height:60px; line-height:60px; vertical-align:middle; margin:auto; opacity:0.3;">
+            <div class="col-xs-12 text-center" id="no-list" style="display:none; position:fixed; bottom:100px; z-index:100;">
+              <div id="no-list-label" style="border-radius: 7px; background-color:#afafaf; width:150px; height:60px; line-height:60px; vertical-align:middle; margin:auto; opacity:0.3;">
                 <div style="font-size:16px; color:white;">No data found</div>
               </div>
             </div>
 
+            <div class="row">
+              <div class="count-rows">
+                  แสดง <span id="show_rows">0</span> รายการ จาก <span id="num_rows">0</span> รายการ
+              </div>
+            </div>
 
             <div class="pg-footer">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i></a></li>
-                  </div>
-                  <div class="footer-menu width-60">
-                    <button type="button" class="btn btn-white btn-default btn-sm btn-100" style="border-radius:7px;" id="btn-load-more" onclick="loadMore()">--Load More--</button>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i></a></li>
+                    <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i><span>RETURN</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i><span>ADD NEW</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="checkin.html"><i class="fa fa-tags fa-2x white"></i><span>ITEMS</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
                   </div>
                 </div>
              </div>
@@ -182,9 +146,6 @@
           <table class="doc-table">
             <tr><td class="td-label">วันที่ : {{date_add}}</td><td class="td-label">สถานะ : {{{statusLabel}}} </td></tr>
             <tr><td colspan="2" class="td-label">ซีเรียล : {{serial}}</td></tr>
-            {{#if remark}}
-            <tr><td colspan="2" class="td-label hide-text">หมายเหตุ : {{remark}}</td></tr>
-            {{/if}}
         </table>
         </div>
       </div>
@@ -201,10 +162,7 @@
           <tr>
             <td class="td-label">Date : {{date_add}}</td>
             <td class="td-label">Status : <span class="label label-lg label-purple">Draft</span> </td>
-          </tr>
-          <tr>
-            <td colspan="2" class="td-label hide-text">remark : {{remark}}</td>
-          </tr>
+          </tr>          
         </table>
       </div>
     </div>

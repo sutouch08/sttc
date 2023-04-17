@@ -32,10 +32,12 @@ window.addEventListener('load', () => {
   $('#fromDate').val(from);
   $('#toDate').val(to);
   $('#status').val((status == "" ? "all" : status));
-  //$('#perpage').val(perpage);
-  //$('#offset').val((offset == "" ? 0 : offset));
 
-  loadPage();
+   //load_in();
+
+   setTimeout(() => {
+     loadPage();
+   }, 200);
 });
 
 
@@ -73,6 +75,7 @@ async function getFilterList() {
   setCookie('trStatus', status);
 
   if(navigator.onLine) {
+    load_in();
     let requestUri = URI + 'get_transfer_list';
     let header = new Headers();
     header.append('X-API-KEY', API_KEY);
@@ -99,6 +102,7 @@ async function getFilterList() {
     fetch(requestUri, requestOptions)
     .then(response => response.text())
     .then(result => {
+      load_out();
       if(isJson(result)) {
         let ds = JSON.parse(result);
         $('#code').val(ds.code);
@@ -107,6 +111,7 @@ async function getFilterList() {
         $('#toDate').val(ds.to_date);
         $('#status').val(ds.status);
         $('#num_rows').text(addCommas(ds.rows));
+        $('#limit').val(ds.rows);
 
         if(ds.data.length) {
           let source = $('#online-template').html();
@@ -119,6 +124,7 @@ async function getFilterList() {
           rows = parseDefault(parseInt(rows), 0);
           rows = rows + ds.data.length;
           $('#show_rows').text(addCommas(rows));
+          $('#show').val(rows);
         }
         else {
           console.log('nodata');
@@ -136,6 +142,7 @@ async function getFilterList() {
     .catch(error => console.log('error', error));
   }
   else {
+    load_out();
     noData();
   }
 }
@@ -144,10 +151,10 @@ async function getFilterList() {
 function noData() {
   $('#no-list').css('display', 'block');
   $('#no-list-label').animate({opacity:0.9},500);
-  console.log('animate in');
+
   setTimeout(() => {
     $('#no-list-label').animate({opacity:0}, 500);
-    console.log('animate out');
+
     setTimeout(() => {
       $('#no-list').css('display', 'none');
     }, 500);
@@ -286,3 +293,34 @@ function getSearch() {
 function loadMore() {
   getFilterList();
 }
+
+
+var throttleTimer;
+const throttle = (callback, time) => {
+  if (throttleTimer) return;
+  throttleTimer = true;
+  setTimeout(() => {
+    callback();
+    throttleTimer = false;
+  }, time);
+};
+
+
+function morePage() {
+  throttle(() => {
+    const endOfPage = window.innerHeight + window.pageYOffset >= document.body.offsetHeight;
+    if(endOfPage) {
+      let limit = parseDefault(parseInt($('#limit').val()), 0);
+      let show = parseDefault(parseInt($('#show').val()), 0)
+
+      if(show < limit) {
+        getFilterList();
+      }
+    }
+  }, 1000);
+};
+
+
+window.addEventListener('scroll', () => {
+  morePage();
+});

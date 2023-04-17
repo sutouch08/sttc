@@ -47,6 +47,7 @@ window.addEventListener('load', () => {
   $('#remark').autosize({append:"\n"});
 
   readerInit();
+  damageListInit();
 });
 
 
@@ -132,6 +133,14 @@ function changeCameraId() {
       render(source, devices, output);
       showModal('cameras-modal');
     }
+  })
+  .catch((error) => {
+    console.log('error', error);
+    swal({
+      title:'Oops!',
+      text: error,
+      type:'error'
+    });
   });
 }
 
@@ -149,6 +158,14 @@ function peaScan() {
         render(source, devices, output);
         showModal('cameras-modal');
       }
+    })
+    .catch((error) => {
+      console.log('error', error);
+      swal({
+        title:'Oops!',
+        text: error,
+        type:'error'
+      });
     });
   }
   else
@@ -180,7 +197,15 @@ function startScan(side) {
         render(source, devices, output);
         showModal('cameras-modal');
   		}
-  	});
+  	})
+    .catch((error) => {
+      console.log('error', error);
+      swal({
+        title:'Oops!',
+        text: error,
+        type:'error'
+      });
+    });
   }
   else
   {
@@ -339,14 +364,9 @@ $("#u-photo").change(function(){
 
     setTimeout(() => {
       var img = document.getElementById("u-image");
-      //console.log(img);
     	EXIF.getData(img, function () {
         let orientation = EXIF.getTag(this, "Orientation");
-        //console.log(orientation);
-        img.dataset.orientation = orientation;
         $('#u-orientation').val(orientation);
-        //console.log(img.dataset.orientation);
-        //swal(img.dataset.orientation);
     	});
     }, 1000);
 	}
@@ -372,13 +392,9 @@ $("#i-photo").change(function(){
 
     setTimeout(() => {
       let img = document.getElementById("i-image");
-      //console.log(img);
     	EXIF.getData(img, function () {
         let orientation = EXIF.getTag(this, "Orientation");
-        img.dataset.orientation = orientation;
         $('#i-orientation').val(orientation);
-        //console.log(img.dataset.orientation);
-        //swal(img.dataset.orientation);
     	});
     }, 1000);
 	}
@@ -423,6 +439,7 @@ function step_1_2() {
   let runNo = $('#run-no').val(); // หน่วยไฟที่ใช้ บนหน้าปัดมิเตอร์
   let mYear = $('#year-no').val(); // ปีที่ผลิตมิเตอร์
   let cond = $('#condition').val(); // สภาพมิเตอร์ 1 = สภาพดี, 2 = ชำรุด
+  let damage = $("input[name='damage_id']:checked").val();
 
   if(serial.length < 5) {
     swal({
@@ -471,6 +488,11 @@ function step_1_2() {
       type:'warning'
     });
 
+    return false;
+  }
+
+  if(cond == 2 && damage == undefined) {
+    selectDamage();
     return false;
   }
 
@@ -555,6 +577,7 @@ function finish() {
   let mYear = $('#year-no').val(); // ปีที่ผลิตมิเตอร์
   let useAge = $('#use-age').val();
   let cond = $('#condition').val(); // สภาพมิเตอร์ 1 = สภาพดี, 2 = ชำรุด
+  let damage_id = $("input[name='damage_id']:checked").val();
   let uImage = $('#u-blob').val();
   let iImage = $('#i-blob').val();
   let uOrientation = $('#u-orientation').val();
@@ -616,6 +639,19 @@ function finish() {
     return false;
   }
 
+  if(cond == 2 && (damage_id == undefined || damage_id == '')) {
+    swal({
+      title:'ข้อผิดพลาด',
+      text:'กรุณาระบุสาเหตุการชำรุด',
+      type:'warning'
+    }, function() {
+      selectDamage();
+    });
+
+    return false;
+  }
+
+
   if(iImage.length == "" || uImage.length == "") {
     swal({
       title:'ข้อผิดพลาด',
@@ -636,6 +672,7 @@ function finish() {
     return false;
   }
 
+
   //--- save data
   if(navigator.onLine) {
     let ds = {
@@ -650,6 +687,7 @@ function finish() {
       "runNo" : runNo,
       "mYear" : mYear,
       "cond" : cond,
+      "damage_id" : damage_id,
       "usageAge" : useAge,
       "uImage" : uImage,
       "iImage" : iImage,
@@ -733,6 +771,7 @@ function finish() {
         "runNo" : runNo,
         "mYear" : mYear,
         "cond" : cond,
+        "damage_id" : damage_id,
         "usageAge" : useAge,
         "uImage" : uImage,
         "iImage" : iImage,
@@ -785,6 +824,51 @@ function prevStep() {
   }
 }
 
+function selectDamage() {
+  $('#damaged-modal').modal('show');
+}
+
+function closeDamageOption() {
+  $('#damaged-modal').modal('hide');
+}
+
+
+function updateSuggest() {
+  let dam = $("input[name='damage_id']:checked");
+  console.log(dam);
+
+  if(dam.val() === undefined) {
+    return false;
+  }
+
+
+  if(dam.val() !== undefined) {
+    closeDamageOption();
+    let name = dam.data('name');
+    let label = `<div class="alert alert-info" style="font-size:18px;">${name}</div>`;
+    $('#damage-label').html(label);
+    $('#damage-label').removeClass('hide');
+  }
+}
+
+
+
+function checkCond() {
+  let cond = $('#condition').val();
+  if(cond == 2) {
+    selectDamage();
+  }
+  else {
+    $('.chk-dam').each(function() {
+      $(this).prop('checked', false);
+    });
+
+    $('#damage-label').addClass('hide');
+  }
+
+  suggest();
+}
+
 
 function suggest() {
   let year = parseDefault(parseInt($('#year-no').val()), 0);
@@ -793,11 +877,11 @@ function suggest() {
 
   if(year == 0 || year == "" || cond == "") {
     if(cond == "" && (year == "" || year == 0)) {
-      $('#suggest-label').html(`<div class="alert alert-normal">กรุณาระบุปีและสภาพมิเตอร์</div>`);
+      $('#saveCamest-label').html(`<div class="alert alert-normal">กรุณาระบุปีและสภาพมิเตอร์</div>`);
     }
     else {
       if(cond != "" && (year == 0 || year == "")) {
-        $('#suggest-label').html(`<div class="alert alert-normal">กรุณาระบุปีมิเตอร์</div>`);
+        $('#saveCamest-label').html(`<div class="alert alert-normal">กรุณาระบุปีมิเตอร์</div>`);
       }
 
       if(cond == "" && (year != 0 && year != "")) {
@@ -915,4 +999,46 @@ function deleteItemStockBySerial(serial) {
       }
     }
   })
+}
+
+
+function damageListInit() {
+  if(navigator.onLine) {
+    let json = JSON.stringify({"user" : 0});
+    let requestUri = URI + 'get_damaged_list';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then((result) => {
+      let ds = JSON.parse(result);
+      let data = ds.data;
+      let source = $('#damaged-list-template').html();
+      let output = $('#damaged-list');
+      render(source, data, output);
+
+      localforage.setItem('damageList', data);
+    })
+    .catch((error) => console.log('error', error));
+  }
+  else {
+    localforage.getItem('damageList')
+    .then((data) => {
+      if(data != null || data != undefined) {
+        let source = $('#damaged-list-template').html();
+        let output = $('#damaged-list');
+        render(source, data, output);
+      }
+    })
+  }
 }
