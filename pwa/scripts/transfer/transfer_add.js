@@ -1,33 +1,5 @@
 window.addEventListener('load', () => {
-  if(navigator.onLine) {
-    let json = JSON.stringify({"config_code" : "SCANTYPE"});
-    let requestUri = URI + 'getConfig';
-    let header = new Headers();
-    header.append('X-API-KEY', API_KEY);
-    header.append('Authorization', AUTH);
-    header.append('Content-type', 'application/json');
-    let requestOptions = {
-      method : 'POST',
-      headers : header,
-      body : json,
-      redirect : 'follow'
-    };
-
-    fetch(requestUri, requestOptions)
-      .then(response => response.text())
-      .then(result => {
-        if( ! result == "" && ! result == null) {
-          $('#scan-type').val(result);
-        }
-        else {
-          $('#scan-type').val('both');
-        }
-      })
-      .catch(error => console.error('error', error));
-  }
-  else {
-    $('#scan-type').val('both');
-  }
+  updateScanType();
 
   let d = new Date();
 
@@ -46,10 +18,48 @@ window.addEventListener('load', () => {
 
   $('#remark').autosize({append:"\n"});
 
-  readerInit();
   damageListInit();
 });
 
+
+function updateScanType() {
+  if(navigator.onLine) {
+    let json = JSON.stringify({"config_code" : "SCANTYPE"});
+    let requestUri = URI + 'getConfig';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      let ds = JSON.parse(result);
+      $('#scan-type').val(ds);
+      localStorage.setItem('scanType', ds);
+    })
+    .then(() => {
+      readerInit();
+    })
+  }
+  else {
+    let ds = localStorage.getItem('scanType');
+
+    if(ds == "qrcode" || ds == "barcode" || ds == "both")
+    {
+      $('#scan-type').val(ds);
+    }
+
+    readerInit();
+  }
+}
 
 
 var scanner;
@@ -173,6 +183,7 @@ function peaScan() {
     $('#cam').removeClass('hide');
     $('#btn-u-scan').addClass('hide');
     $('#btn-pea-stop').removeClass('hide');
+    $('#space').addClass('hide');
 
     scanner.start({deviceId: {exact: camId}}, config, (decodedText, decodedResult) => {
       stopScan('pea');
@@ -222,6 +233,7 @@ function startScan(side) {
     else {
       $('#cam').removeClass('hide');
       $('#btn-'+side+'-stop').removeClass('hide');
+      $('#space').addClass('hide');
 
       scanner.start({deviceId: {exact: camId}}, config, (decodedText, decodedResult) => {
         stopScan(side);
@@ -285,6 +297,7 @@ function stopScan(side) {
     $('#btn-i-stop').addClass('hide');
     $('#btn-u-stop').addClass('hide');
     $('#btn-pea-stop').addClass('hide');
+    $('#space').removeClass('hide');
 	});
 }
 
@@ -427,8 +440,9 @@ function step_1() {
   $('#head-step-2').removeClass('active');
   $('#head-step-3').removeClass('active');
   $('#head-step-4').removeClass('active');
-  $('#btn-back').removeClass('hide');
-  $('#btn-prev').addClass('hide');
+  $('#space').removeClass('hide');
+  $('.middle-btn').addClass('hide');
+  $('#btn-prev').addClass('not-show');
   $('#btn-next').removeClass('hide');
   $('#btn-finish').addClass('hide');
 }
@@ -441,6 +455,11 @@ function step_1_2() {
   let cond = $('#condition').val(); // สภาพมิเตอร์ 1 = สภาพดี, 2 = ชำรุด
   let damage = $("input[name='damage_id']:checked").val();
 
+  let peaNoMinLength = parseDefault(parseInt($('#peaNo-minLength').val()), 4);
+  let peaNoMaxLength = parseDefault(parseInt($('#peaNo-maxLength').val()), 10);
+  let powerNoMinLength = parseDefault(parseInt($('#powerNo-minLength').val()), 5);
+  let powerNoMaxLength = parseDefault(parseInt($('#powerNo-maxLength').val()), 5);
+
   if(serial.length < 5) {
     swal({
       title:'ข้อผิดพลาด',
@@ -451,7 +470,7 @@ function step_1_2() {
     return false;
   }
 
-  if(peaNo.length != 10) {
+  if(peaNo.length < peaNoMinLength || peaNo.length > peaNoMaxLength) {
     swal({
       title:'ข้อผิดพลาด',
       text:'PEA No. ไม่ถูกต้อง',
@@ -461,7 +480,7 @@ function step_1_2() {
     return false;
   }
 
-  if(runNo.length != 5) {
+  if(runNo.length < powerNoMinLength || runNo.length > powerNoMaxLength) {
     swal({
       title:'ข้อผิดพลาด',
       text:'หน่วยไฟไม่ถูกต้อง',
@@ -496,7 +515,83 @@ function step_1_2() {
     return false;
   }
 
-  step_2();
+  //---- ตรวจสอบกับข้อมูล Pea_no
+
+  if(navigator.onLine) {
+    let json = JSON.stringify({"pea_no" : peaNo});
+    let requestUri = URI + 'verify_pea_no';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
+
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
+
+    load_in();
+
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+      if(isJson(result)) {
+        load_out();
+        let rs = JSON.parse(result);
+        if(rs.status == 'success') {
+          //--- 1 == OK, 0 = not found
+          $('#peaNo-verify').val(rs.isVerify);
+
+          if(rs.isVerify == 1) {
+            step_2();
+          }
+          else {
+            swal({
+              title:'ไม่พบ PEA NO',
+              text:'ไม่พบ PEA NO ในระบบ PEA NO คุณอาจจะใส่ผิด กรุณาตรวจสอบ',
+              type:'warning',
+              showCancelButton:true,
+              confirmButtonColor:'#ffb752',
+              confirmButtonText:'ดำเนินการต่อ',
+              cancelButtonText:'กลับไปตรวจสอบ',
+              closeOnConfirm:true
+            },
+            function() {
+              step_2();
+            });
+          }
+        }
+        else {
+          swal({
+            title:'Error!',
+            text:rs.message,
+            type:'error'
+          });
+        }
+      }
+      else {
+        swal({
+          title:'Error!',
+          text:result,
+          type:'error',
+          html:true
+        });
+      }
+    })
+    .catch(error => {
+      swal({
+        title:'Error!',
+        text:error,
+        type:'error',
+        html:true
+      });
+    });
+  }
+  else {
+    step_2();
+  }
 }
 
 
@@ -509,8 +604,10 @@ function step_2() {
   $('#head-step-3').removeClass('active');
   $('#head-step-4').removeClass('active');
 
-  $('#btn-back').addClass('hide');
-  $('#btn-prev').removeClass('hide');
+  $('#space').addClass('hide');
+  $('.middle-btn').addClass('hide');
+  $('#u-cam-btn').removeClass('hide');
+  $('#btn-prev').removeClass('not-show');
   $('#btn-next').removeClass('hide');
   $('#btn-finish').addClass('hide');
 }
@@ -535,8 +632,9 @@ function step_3() {
   $('#head-step-3').addClass('active');
   $('#head-step-4').removeClass('active');
 
-  $('#btn-back').addClass('hide');
-  $('#btn-prev').removeClass('hide');
+  $('#space').removeClass('hide');
+  $('.middle-btn').addClass('hide');
+  $('#btn-prev').removeClass('not-show');
   $('#btn-next').removeClass('hide');
   $('#btn-finish').addClass('hide');
 }
@@ -562,12 +660,14 @@ function step_4() {
   $('.body-step').addClass('hide');
   $('#step-4').removeClass('hide');
   $('#head-step-4').addClass('active');
-  $('#btn-back').addClass('hide');
-  $('#btn-prev').removeClass('hide');
+
+  $('#space').addClass('hide');
+  $('.middle-btn').addClass('hide');
+  $('#i-cam-btn').removeClass('hide');
+  $('#btn-prev').removeClass('not-show');
   $('#btn-next').addClass('hide');
   $('#btn-finish').removeClass('hide');
 }
-
 
 function finish() {
   let uSerial = $('#u-serial').val(); //serial
@@ -589,6 +689,14 @@ function finish() {
   let toWhsCode = tWhCode; //-- from cookie
   let fromDoc = $('#from-doc').val();
 
+  let peaNoMinLength = parseDefault(parseInt($('#peaNo-minLength').val()), 4);
+  let peaNoMaxLength = parseDefault(parseInt($('#peaNo-maxLength').val()), 10);
+  let powerNoMinLength = parseDefault(parseInt($('#powerNo-minLength').val()), 5);
+  let powerNoMaxLength = parseDefault(parseInt($('#powerNo-maxLength').val()), 5);
+
+  let isVerify = parseDefault(parseInt($('#peaNo-verify').val()), 0);
+
+
   if(uSerial.length < 5 || iSerial.length < 5) {
     swal({
       title:'ข้อผิดพลาด',
@@ -599,7 +707,7 @@ function finish() {
     return false;
   }
 
-  if(peaNo.length != 10) {
+  if(peaNo.length < peaNoMinLength || peaNo.length > peaNoMaxLength) {
     swal({
       title:'ข้อผิดพลาด',
       text:'PEA No. ไม่ถูกต้อง',
@@ -609,7 +717,7 @@ function finish() {
     return false;
   }
 
-  if(runNo.length != 5) {
+  if(runNo.length < powerNoMinLength || runNo.length > powerNoMaxLength) {
     swal({
       title:'ข้อผิดพลาด',
       text:'หน่วยไฟไม่ถูกต้อง',
@@ -618,6 +726,7 @@ function finish() {
 
     return false;
   }
+
 
   if(mYear == "") {
     swal({
@@ -672,6 +781,53 @@ function finish() {
     return false;
   }
 
+  if(isVerify == 0) {
+    swal({
+      title:'ไม่พบ PEA NO',
+      text:'ไม่พบ PEA NO ในระบบ ต้องการดำเนินการต่อหรือไม่ ?',
+      type:'warning',
+      showCancelButton:true,
+      confirmButtonColor:'#ffb752',
+      confirmButtonText:'ยืนยัน',
+      cancelButtonText:'ยกเลิก',
+      closeOnConfirm:true
+    },
+    function() {
+      save();
+    });
+  }
+  else {
+    save();
+  }
+}
+
+function save() {
+  let uSerial = $('#u-serial').val(); //serial
+  let iSerial = $('#i-serial').val();
+  let peaNo = $('#pea-no').val(); // PEA NO
+  let runNo = $('#run-no').val(); // หน่วยไฟที่ใช้ บนหน้าปัดมิเตอร์
+  let mYear = $('#year-no').val(); // ปีที่ผลิตมิเตอร์
+  let useAge = $('#use-age').val();
+  let cond = $('#condition').val(); // สภาพมิเตอร์ 1 = สภาพดี, 2 = ชำรุด
+  let damage_id = $("input[name='damage_id']:checked").val();
+  let uImage = $('#u-blob').val();
+  let iImage = $('#i-blob').val();
+  let uOrientation = $('#u-orientation').val();
+  let iOrientation = $('#i-orientation').val();
+  let itemCode = $('#item-code').val();
+  let itemName = $('#item-name').val();
+  let remark = $.trim($('#remark').val());
+  let fromWhsCode = $('#fromWhsCode').val();
+  let toWhsCode = tWhCode; //-- from cookie
+  let fromDoc = $('#from-doc').val();
+
+  let peaNoMinLength = parseDefault(parseInt($('#peaNo-minLength').val()), 4);
+  let peaNoMaxLength = parseDefault(parseInt($('#peaNo-maxLength').val()), 10);
+  let powerNoMinLength = parseDefault(parseInt($('#powerNo-minLength').val()), 5);
+  let powerNoMaxLength = parseDefault(parseInt($('#powerNo-maxLength').val()), 5);
+
+  let isVerify = parseDefault(parseInt($('#peaNo-verify').val()), 0);
+
 
   //--- save data
   if(navigator.onLine) {
@@ -693,7 +849,8 @@ function finish() {
       "iImage" : iImage,
       "uOrientation" : uOrientation,
       "iOrientation" : iOrientation,
-      "fromDoc" : fromDoc
+      "fromDoc" : fromDoc,
+      "pea_verify" : isVerify
     };
 
     let json = JSON.stringify(ds);
@@ -741,12 +898,19 @@ function finish() {
         else {
           swal({
             title:'Error!',
-            text:rs,
+            text:result,
             type:'error'
           });
         }
       })
-      .catch(error => console.err('error', error));
+      .catch(error => {
+        swal({
+          title:'Error!',
+          text:error,
+          type:'error',
+          html:true
+        });
+      });
   }
   else {
     let ds = [];
@@ -777,7 +941,8 @@ function finish() {
         "iImage" : iImage,
         "uOrientation" : uOrientation,
         "iOrientation" : iOrientation,
-        "fromDoc" : fromDoc
+        "fromDoc" : fromDoc,
+        "pea_verify" : isVerify
       };
 
       ds.push(arr);

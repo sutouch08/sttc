@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>STTC Web App</title>
     <meta name="description" content="" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta name="theme-color" content="salmon" />
     <link rel="manifest" href="manifest.json" />
     <link rel="shortcut icon" href="assets/img/favicon.png">
@@ -234,16 +234,30 @@
                 </div>
               </div><!-- step 4 -->
 
-              <div class="bp-footer">
-                <div class="bp-footer-inner">
-                  <div class="bp-footer-content text-right" style="z-index:100;">
-                    <button type="button" class="btn btn-prev" id="btn-back" onclick="goList()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; กลับ</button>
-                    <button type="button" class="btn btn-prev hide" id="btn-prev" onclick="prevStep()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; ก่อนหน้า</button>
-                    <button type="button" class="btn btn-success" id="btn-next" onclick="nextStep()">ถัดไป &nbsp; <i class="ace-icon fa fa-arrow-right"></i></button>
-                    <button type="button" class="btn btn-danger hide" id="btn-cancle" onclick="confirmCancle()"><i class="fa fa-times"></i> &nbsp; ยกเลิก</button>
+              <div class="pg-footer">
+                <div class="pg-footer-inner">
+                  <div class="pg-footer-content text-right">
+                    <div class="footer-menu width-20">
+                      <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i><span>JOB LIST</span></a></li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li class="not-show">&nbsp;</li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li class="not-show">&nbsp;</li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li id="btn-prev" class="not-show"><a href="javascript:prevStep()"><i class="fa fa-arrow-left fa-2x white"></i><span>ก่อนหน้า</span></a></li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li id="btn-prev2" class="hide"><a href="javascript:prevStep()"><i class="fa fa-arrow-left fa-2x white"></i><span>ก่อนหน้า</span></a></li>
+                      <li id="btn-next" class=""><a href="javascript:nextStep()"><i class="fa fa-arrow-right fa-2x white"></i><span>ถัดไป</span></a></li>
+                      <li id="btn-cancle" class="hide"><a href="javascript:confirmCancle()"><i class="fa fa-times fa-2x white"></i><span>ยกเลิก</span></a></li>
+                    </div>
                   </div>
-               </div><!-- footer inner-->
+                </div><!-- footer inner-->
               </div><!-- /.footer -->
+
             </div> <!-- row -->
 
           </div> <!-- pang content -->
@@ -251,12 +265,6 @@
     </div><!-- main content -->
   </div><!-- /.main-container -->
 
-
-  <script>
-    function goList() {
-      window.location.href = "transfer.html";
-    }
-  </script>
   <script src="scripts/transfer/transfer_detail.js"></script>
 
     <!-- ace scripts -->

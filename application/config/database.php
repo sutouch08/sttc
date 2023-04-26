@@ -122,13 +122,13 @@ $db['ms'] = array(
 // $db['mc'] = array(
 // 	'dsn'	=> '',
 // 	'hostname' => 'localhost',
-// 	'username' => 'wrx_admin',
+// 	'username' => 'wrx_adminx',
 // 	'password' => 'W@rr1X$p0rt',
 // 	'database' => 'SHOTemp',
 // 	'dbdriver' => 'sqlsrv',
 // 	'dbprefix' => '',
 // 	'pconnect' => FALSE,
-// 	'db_debug' => (ENVIRONMENT !== 'production'),
+// 	'db_debug' => FALSE, //(ENVIRONMENT !== 'production'),
 // 	'cache_on' => FALSE,
 // 	'cachedir' => '',
 // 	'char_set' => 'utf8',
@@ -137,6 +137,7 @@ $db['ms'] = array(
 // 	'encrypt' => FALSE,
 // 	'compress' => FALSE,
 // 	'stricton' => FALSE,
+// 	'options' => array(PDO::ATTR_TIMEOUT => 10),
 // 	'failover' => array(),
 // 	'save_queries' => TRUE
 // );

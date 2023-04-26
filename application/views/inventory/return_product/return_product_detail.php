@@ -12,6 +12,9 @@
 			<?php if($doc->status == 1 && $doc->is_approve == 0 && $this->pm->can_approve) : ?>
 				<button type="button" class="btn btn-xs btn-success top-btn" onclick="approve()"><i class="fa fa-check-circle"></i> &nbsp; อนุมัติ</button>
 			<?php endif; ?>
+			<?php if($doc->status == 3) : ?>
+				<button type="button" class="btn btn-xs btn-primary top-btn" onclick="sendToSAP()"><i class="fa fa-send"></i> &nbsp; Send to SAP</button>
+			<?php endif; ?>
 			<?php if($doc->status != 2 && $this->pm->can_delete) : ?>
 				<button type="button" class="btn btn-xs btn-danger top-btn" onclick="cancle()"><i class="fa fa-times"></i> ยกเลิก</button>
 			<?php endif; ?>
@@ -119,6 +122,11 @@ if($doc->status == 0)
 if($doc->status == 2)
 {
 	$this->load->view('cancle_watermark');
+}
+
+if($doc->status == 3)
+{
+	$this->load->view('failed_watermark');
 }
 ?>
 <div class="row">

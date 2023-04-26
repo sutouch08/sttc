@@ -245,7 +245,7 @@ class Return_product extends PS_Controller
               {
                 $sc = FALSE;
                 $ex = 0;
-                $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ";
+                $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ : {$this->error}";
               }
             }
           }
@@ -284,6 +284,7 @@ class Return_product extends PS_Controller
 
   public function cancle_return()
   {
+    $this->ms = $this->load->database('ms', TRUE);
     $sc = TRUE;
     $id = $this->input->post('id');
 
@@ -394,6 +395,50 @@ class Return_product extends PS_Controller
 
     return $sc;
   }
+
+
+  public function send_to_sap()
+  {
+    $sc = TRUE;
+    $id = $this->input->post('id');
+
+    if( ! empty($id))
+    {
+      $doc = $this->return_product_model->get($id);
+
+      if( ! empty($doc))
+      {
+        if($doc->status == 3)
+        {
+          $this->load->library('api');
+
+          if( ! $this->api->exportReturn($id))
+          {
+            $sc = FALSE;
+            $this->error = "ส่งข้อมูลไป SAP ไม่สำเร็จ : {$this->error}";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "Invalid Document Status";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "Invalid Document No";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing required parameter";
+    }
+
+    echo $sc === TRUE ? 'success' : $this->error;
+  }
+
 
   public function get_new_code($date = NULL)
   {
@@ -536,7 +581,7 @@ class Return_product extends PS_Controller
       echo json_encode($ds);
     }
   }
-  
+
 } //--- end class
 
  ?>

@@ -11,6 +11,9 @@ class PS_Controller extends CI_Controller
   public $_Lead = FALSE;
   public $_Outsource = FALSE;
 	public $ms;
+  public $mc;
+  public $e = NULL;
+  public $error;
 
 
   public function __construct()
@@ -30,7 +33,6 @@ class PS_Controller extends CI_Controller
 		$this->_Admin = $this->_user->ugroup == 1 ? TRUE : FALSE;
     $this->_Lead = $this->_user->ugroup == 2 ? TRUE : FALSE;
     $this->_Outsource = $this->_user->ugroup == 3 ? TRUE : FALSE;
-
 
     //$this->ms = $this->load->database('ms', TRUE);
 

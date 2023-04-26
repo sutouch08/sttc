@@ -110,12 +110,16 @@ function nextStep() {
   $('#step-2').removeClass('hide');
   $('#head-step-2').addClass('active');
   $('#head-step-1').removeClass('active');
-  $('#btn-prev').removeClass('hide');
   $('#btn-next').addClass('hide');
-  $('#btn-back').addClass('hide');
 
   if(status == 0) {
     $('#btn-cancle').removeClass('hide');
+    $('#btn-prev').removeClass('not-show');
+    $('#btn-prev2').addClass('hide');
+  }
+  else {
+    $('#btn-prev2').removeClass('hide');
+    $('#btn-prev').addClass('not-show');
   }
 }
 
@@ -126,9 +130,9 @@ function prevStep() {
   $('#step-1').removeClass('hide');
   $('#head-step-1').addClass('active');
   $('#head-step-2').removeClass('active');
-  $('#btn-prev').addClass('hide');
+  $('#btn-prev').addClass('not-show');
+  $('#btn-prev2').addClass('hide');
   $('#btn-next').removeClass('hide');
-  $('#btn-back').removeClass('hide');
   $('#btn-cancle').addClass('hide');
 }
 

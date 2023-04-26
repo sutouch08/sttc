@@ -183,6 +183,7 @@ async function updateOfflineList() {
               "runNo" : ds.runNo,
               "mYear" : ds.mYear,
               "cond" : ds.cond,
+              "damage_id" : ds.damage_id,
               "usageAge" : ds.usageAge,
               "uImage" : ds.uImage,
               "iImage" : ds.iImage,
@@ -250,7 +251,7 @@ function deleteOfflineTransfer(serial) {
       let items = data.filter((el) => {
         return el.iSerial != serial;
       });
-
+      console.log(items);
       if(items.length == 0) {
         localforage.removeItem('transfers');
       }

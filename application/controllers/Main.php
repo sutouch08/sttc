@@ -48,57 +48,6 @@ class Main extends PS_Controller
 		echo getConfig($code);
 	}
 
-	public function testApi()
-  {
-		$curl = curl_init();
-
-		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'bec.electric.co.th:1995/api/GetQuotaStock',
-		  CURLOPT_RETURNTRANSFER => true,
-		  CURLOPT_ENCODING => '',
-		  CURLOPT_MAXREDIRS => 10,
-		  CURLOPT_TIMEOUT_MS => 200,
-		  CURLOPT_FOLLOWLOCATION => true,
-		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		  CURLOPT_CUSTOMREQUEST => 'GET',
-		  CURLOPT_POSTFIELDS =>'{
-		    "ItemCode": "FG-BEL0489",
-		    "WhsCode": [
-		        "BC-G",
-		        "L4-G",
-		        "L4-P",
-		        "L5-G",
-		        "L8-G"
-		    ],
-		    "QuotaNo": "B20G"
-		}',
-		  CURLOPT_HTTPHEADER => array(
-		    'Content-Type: application/json'
-		  ),
-		));
-
-		$response = curl_exec($curl);
-
-		if($response === FALSE)
-		{
-			$err_code = curl_errno($curl);
-			$response = "Error: {$err_code} ".curl_error($curl);
-		}
-
-		curl_close($curl);
-
-		$rs = json_decode($response);
-
-		if(! empty($rs))
-		{
-			print_r($rs);
-		}
-		else
-		{
-			echo $response;
-		}
-  }
-
 
 	public function get_user_data()
 	{

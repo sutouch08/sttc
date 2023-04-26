@@ -88,6 +88,25 @@ function select_cond($se = NULL)
   $sc = '<option value="1" '.is_selected('1', $se).'>สภาพดี</option>';
   $sc .= '<option value="2" '.is_selected('2', $se).'>ชำรุด</option>';
 
-  return $sc;  
+  return $sc;
+}
+
+
+function select_damage($id = NULL)
+{
+  $ds = "";
+  $ci =& get_instance();
+  $ci->load->model('admin/damaged_model');
+  $res = $ci->damaged_model->get_all_active();
+
+  if( ! empty($res))
+  {
+    foreach($res as $rs)
+    {
+      $ds .= '<option value="'.$rs->id.'" '.is_selected($rs->id, $id).'>'.$rs->name.'</option>';
+    }
+  }
+
+  return $ds;
 }
  ?>

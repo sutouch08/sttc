@@ -12,7 +12,19 @@ if('serviceWorker' in navigator) {
 
 function logout() {
   if(navigator.onLine) {
-    doLogout();
+    swal({
+      title:'ออกจากระบบ',
+      text:"ต้องการลงชื่อออกจากระบบหรือไม่ ?",
+      type:'warning',
+      html:true,
+      showCancelButton: true,
+  		confirmButtonColor: '#FA5858',
+  		confirmButtonText: 'ยืนยัน',
+  		cancelButtonText: 'ยกเลิก',
+  		closeOnConfirm: true
+    }, () => {
+      doLogout();
+    });    
   }
   else {
     swal({

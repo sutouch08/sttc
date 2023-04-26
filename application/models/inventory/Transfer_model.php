@@ -95,6 +95,17 @@ class Transfer_model extends CI_Model
       ->group_end();
     }
 
+
+    if(isset($ds['peaNo']) && $ds['peaNo'] != "" && $ds['peaNo'] != NULL)
+    {
+      $this->db->like('peaNo', $ds['peaNo']);
+    }
+
+    if(isset($ds['pea_verify']) && $ds['pea_verify'] != 'all')
+    {
+      $this->db->where('pea_verify', $ds['pea_verify']);
+    }
+
     if(isset($ds['fromWhCode']) && $ds['fromWhCode'] != 'all')
     {
       $this->db->where('tr.fromWhsCode', $ds['fromWhCode']);
@@ -196,6 +207,18 @@ class Transfer_model extends CI_Model
       ->or_like('ReturnnedSerialNum', $ds['serial'])
       ->group_end();
     }
+
+
+    if(isset($ds['peaNo']) && $ds['peaNo'] != "" && $ds['peaNo'] != NULL)
+    {
+      $this->db->like('peaNo', $ds['peaNo']);
+    }
+
+    if(isset($ds['pea_verify']) && $ds['pea_verify'] != 'all')
+    {
+      $this->db->where('pea_verify', $ds['pea_verify']);
+    }
+
 
     if(isset($ds['fromWhCode']) && $ds['fromWhCode'] != 'all')
     {
@@ -402,17 +425,24 @@ class Transfer_model extends CI_Model
 
   public function getInstallItemDataBySerial($serial, $whsCode)
   {
-    $rs = $this->ms
-    ->select('I.ItemCode, I.ItemName')
-    ->select('S.DistNumber AS Serial')
-    ->select('Q.WhsCode, Q.Quantity, Q.CommitQty')
-    ->from('OSRQ AS Q')
-    ->join('OSRN AS S', 'Q.SysNumber = S.SysNumber AND Q.ItemCode = S.ItemCode', 'left')
-    ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
-    ->where('S.DistNumber', $serial)
-    ->where('Q.WhsCode', $whsCode)
-    ->where('Q.Quantity >', 0, FALSE)
-    ->get();
+    $qr  = "SELECT I.ItemCode, I.ItemName, S.DistNumber AS Serial, Q.WhsCode, Q.Quantity, Q.CommitQty ";
+    $qr .= "FROM OSRQ AS Q ";
+    $qr .= "LEFT JOIN OSRN AS S ON Q.SysNumber = S.SysNumber AND Q.ItemCode = S.ItemCode ";
+    $qr .= "LEFT JOIN OITM AS I ON S.ItemCode = I.ItemCode ";
+    $qr .= "WHERE S.DistNumber = {$serial} AND Q.WhsCode = '{$whsCode}' AND Q.Quantity > 0";
+
+    $rs = $this->ms->query($qr);
+    // $rs = $this->ms
+    // ->select('I.ItemCode, I.ItemName')
+    // ->select('S.DistNumber AS Serial')
+    // ->select('Q.WhsCode, Q.Quantity, Q.CommitQty')
+    // ->from('OSRQ AS Q')
+    // ->join('OSRN AS S', 'Q.SysNumber = S.SysNumber AND Q.ItemCode = S.ItemCode', 'left')
+    // ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
+    // ->where('S.DistNumber', $serial)
+    // ->where('Q.WhsCode', $whsCode)
+    // ->where('Q.Quantity >', 0, FALSE)
+    // ->get();
 
     if($rs->num_rows() === 1)
     {
@@ -423,34 +453,22 @@ class Transfer_model extends CI_Model
   }
 
 
-  public function getReturnItemDataBySerial($serial)
-  {
-    $rs = $this->ms
-    ->select('I.ItemCode, I.ItemName')
-    ->select('S.DistNumber AS Serial')
-    ->from('OSRN AS S')
-    ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
-    ->where('S.DistNumber', $serial)
-    ->get();
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return NULL;
-  }
 
 
   public function getItemBySerial($serial)
   {
-    $rs = $this->ms
-    ->select('I.ItemCode, I.ItemName')
-    ->select('S.DistNumber AS Serial')
-    ->from('OSRN AS S')
-    ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
-    ->where('S.DistNumber', $serial)
-    ->get();
+    $qr = "SELECT I.ItemCode, I.ItemName, S.DistNumber AS Serial ";
+    $qr .= "FROM OSRN AS S LEFT JOIN OITM AS I ON S.ItemCode = I.ItemCode ";
+    $qr .= "WHERE S.DistNumber = '{$serial}'";
+
+    $rs = $this->ms->query($qr);
+    // $rs = $this->ms
+    // ->select('I.ItemCode, I.ItemName')
+    // ->select('S.DistNumber AS Serial')
+    // ->from('OSRN AS S')
+    // ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
+    // ->where('S.DistNumber', $serial)
+    // ->get();
 
     if($rs->num_rows() === 1)
     {
@@ -463,10 +481,7 @@ class Transfer_model extends CI_Model
 
   public function getSapDoc($docNum)
   {
-    $rs = $this->ms
-    ->select('DocEntry, DocNum, Filler')
-    ->where('DocNum', $docNum)
-    ->get('OWTR');
+    $rs = $this->ms->query("SELECT DocEntry, DocNum, Filler, toWhsCode FROM OWTR WHERE DocNum = '{$docNum}'");
 
     if($rs->num_rows() === 1)
     {
@@ -479,18 +494,30 @@ class Transfer_model extends CI_Model
 
   public function getSapTransferSerialDetails($docNum)
   {
-    $rs = $this->db->get('demo_item');
-    // $rs = $this->ms
-    // ->select('S.DistNumber AS Serial, D.ItemCode, D.ItemName, D.WhsCode')
-    // ->from('SRI1 AS D')
-    // ->join('OSRN AS S', 'D.SysSerial = S.SysNumber AND D.ItemCode = S.ItemCode', 'left')
-    // ->where('D.BaseNum', $docNum)
-    // ->where('D.Direction', 0)
-    // ->get();
+    //$rs = $this->db->get('demo_item');
+    $qr = "SELECT S.DistNumber AS Serial, D.ItemCode, D.ItemName, D.WhsCode ";
+    $qr .= "FROM SRI1 AS D ";
+    $qr .= "LEFT JOIN OSRN AS S ON D.SysSerial = S.SysNumber AND D.ItemCode = S.ItemCode ";
+    $qr .= "WHERE D.BaseNum = '{$docNum}' AND D.Direction = 0";
+
+    $rs = $this->ms->query($qr);
 
     if($rs->num_rows() > 0)
     {
       return $rs->result();
+    }
+
+    return NULL;
+  }
+
+
+  public function get_pea_data($pea_no)
+  {
+    $rs = $this->db->where('pea_no', $pea_no)->get('pea_data');
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->row();
     }
 
     return NULL;

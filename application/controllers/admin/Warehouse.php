@@ -67,6 +67,7 @@ class Warehouse extends PS_Controller {
 
 	public function syncData()
 	{
+				
 		$data = $this->warehouse_model->getSyncData();
 
 		if( ! empty($data))

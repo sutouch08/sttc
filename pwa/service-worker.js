@@ -1,36 +1,34 @@
 // the cache version gets updated every time there is a new deployment
-const version = 1;
+const version = 1.1;
 const cacheName = `cacheName-${version}`;
 
 // these are the routes we are going to cache for offline support
 let cacheFiles = [
-  '/sttc/pwa',
-  '/sttc/pwa/index.html',
-  '/sttc/pwa/login.html',
-  '/sttc/pwa/transfer.html',
-  '/sttc/pwa/transfer_add.html',
-  '/sttc/pwa/transfer_edit.html',
-  '/sttc/pwa/scripts/app.js',
-  '/sttc/pwa/scripts/login.js',
-  '/sttc/pwa/scripts/transfer/transfer.js',
-  '/sttc/pwa/scripts/transfer/transfer_list.js',
-  '/sttc/pwa/scripts/transfer/transfer_add.js',
-  '/sttc/pwa/scripts/transfer/transfer_edit.js',
-  '/sttc/pwa/assets/js/ace-extra.js',
-  '/sttc/pwa/assets/js/jquery.min.js',
-  '/sttc/pwa/assets/js/jquery-ui-1.10.4.custom.min.js',
-  '/sttc/pwa/assets/js/bootstrap.js',
-  '/sttc/pwa/assets/js/ace.js',
-  '/sttc/pwa/assets/js/sweet-alert.js',
-  '/sttc/pwa/assets/js/handlebars-v3.js',
-  '/sttc/pwa/assets/css/bootstrap.css',
-  '/sttc/pwa/assets/css/font-awesome.css',
-  '/sttc/pwa/assets/css/ace-fonts.css',
-  '/sttc/pwa/assets/fonts/OpenSans-300.wof',
-  '/sttc/pwa/assets/css/ace.css',
-  '/sttc/pwa/assets/css/jquery-ui-1.10.4.custom.min.css',
-  '/sttc/pwa/assets/css/template.css',
-  '/sttc/pwa/assets/css/sweet-alert.css'
+  '/pwa',
+  '/pwa/index.html',
+  '/pwa/login.html',
+  '/pwa/transfer.html',
+  '/pwa/transfer_add.html',
+  '/pwa/transfer_detail.html',
+  '/pwa/scripts/app.js',
+  '/pwa/scripts/transfer/transfer.js',
+  '/pwa/scripts/transfer/transfer_list.js',
+  '/pwa/scripts/transfer/transfer_add.js',
+  '/pwa/assets/js/ace-extra.js',
+  '/pwa/assets/js/jquery.min.js',
+  '/pwa/assets/js/jquery-ui-1.10.4.custom.min.js',
+  '/pwa/assets/js/bootstrap.js',
+  '/pwa/assets/js/ace.js',
+  '/pwa/assets/js/sweet-alert.js',
+  '/pwa/assets/js/handlebars-v3.js',
+  '/pwa/assets/css/bootstrap.css',
+  '/pwa/assets/css/font-awesome.css',
+  '/pwa/assets/css/ace-fonts.css',
+  '/pwa/assets/fonts/OpenSans-300.wof',
+  '/pwa/assets/css/ace.css',
+  '/pwa/assets/css/jquery-ui-1.10.4.custom.min.css',
+  '/pwa/assets/css/template.css',
+  '/pwa/assets/css/sweet-alert.css'
 ];
 
 

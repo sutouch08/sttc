@@ -3,7 +3,7 @@ class Api
 {
   private $url;
   protected $ci;
-	public $error;
+	//public $error;
   private $timeout = 0; //--- timeout in seconds;
 
   public function __construct()
@@ -50,12 +50,12 @@ class Api
 			}
 			else
 			{
-				$this->error = $rs->error;
+				$this->ci->error = $rs->error;
 			}
 		}
     else
     {
-      $this->error = "no data";
+      $this->ci->error = "no data";
     }
 
     return FALSE;
@@ -65,6 +65,7 @@ class Api
 	public function exportTransfer($id)
 	{
     $this->ci->load->model('inventory/transfer_model');
+    $this->ci->load->model('logs_model');
 
 		$testMode = getConfig('TEST_MODE') ? TRUE : FALSE;
 
@@ -89,10 +90,6 @@ class Api
 
 		if(! empty($doc))
 		{
-      $currency = getConfig('CURRENCY');
-      $vat_rate = getConfig('SALE_VAT_RATE');
-      $vat_code = getConfig('SALE_VAT_CODE');
-
       $ds = array(
         'U_WEBCODE' => $doc->code,
         'DocType' => 'I',
@@ -107,7 +104,7 @@ class Api
         'DiscPrcnt' => 0.000000,
         'DiscSum' => 0.000000,
         'DiscSumFC' => 0.000000,
-        'DocCur' => $currency,
+        'DocCur' => NULL,
         'DocRate' => 1,
         'DocTotal' => 0.000000,
         'DocTotalFC' => 0.000000,
@@ -124,7 +121,7 @@ class Api
           'PriceBefDi' => 0.000000,
           'LineTotal' => 0.000000,
           'ShipDate' => sap_date($doc->date_add, TRUE),
-          'Currency' => $currency,
+          'Currency' => NULL,
           'Rate' => 1,
           'DiscPrcnt' => 0.000000,
           'Price' => 0.000000,
@@ -154,16 +151,40 @@ class Api
 
 			$url = $url."transfer";
 
+      $json = json_encode($ds);
+
+      if($logJson)
+      {
+        $logs = array(
+          'code' => $doc->code,
+          'status' => 'send',
+          'json' => $json
+        );
+
+        $this->ci->logs_model->log_transfer($logs);
+      }
+
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_URL, $url);
 			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
       curl_setopt($curl, CURLOPT_TIMEOUT, 0);
-			curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($ds));
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 			curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
 
 			$response = curl_exec($curl);
+
+      if($logJson)
+      {
+        $logs = array(
+          'code' => $doc->code,
+          'status' => 'result',
+          'json' => $response
+        );
+
+        $this->ci->logs_model->log_transfer($logs);
+      }
 
       if($response === FALSE)
       {
@@ -180,33 +201,41 @@ class Api
 				{
 					$arr = array(
 						'status' => 1,
-						'docEntry' => $rs->DocEntry,
-						'docNum' => $rs->DocNum
+						'docEntry' => $rs->docEntry,
+						'docNum' => $rs->docNum
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
 
 				}
+        elseif($rs->status == 'exists')
+        {
+          $arr = array(
+						'status' => 1,
+						'docEntry' => $rs->docEntry,
+						'docNum' => $rs->docNum
+					);
+
+					$this->ci->transfer_model->update($id, $arr);
+        }
 				else
 				{
 					$arr = array(
 						'status' => 3,
-						'message' => $rs->error
+						'message' => $rs->message
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
 
 					$sc = FALSE;
-					$this->error = $rs->error;
+					$this->ci->error = $rs->message;
 
 					if($logJson)
 					{
-						$this->ci->load->model('rest/logs_model');
-
 						$logs = array(
 							'code' => $doc->code,
 							'status' => 'error',
-							'json' => json_encode($ds)
+							'json' => $rs->message
 						);
 
 						$this->ci->logs_model->log_transfer($logs);
@@ -216,7 +245,7 @@ class Api
 			else
 			{
 				$sc = FALSE;
-				$this->error = "Export failed : {$response}";
+				$this->ci->error = "Export failed : {$response}";
 
 				$arr = array(
 					'status' => 3,
@@ -229,7 +258,7 @@ class Api
 		else
 		{
 			$sc = FALSE;
-			$this->error = "No data found";
+			$this->ci->error = "No data found";
 		}
 
 		return $sc;
@@ -239,6 +268,7 @@ class Api
   public function exportReturn($id)
 	{
     $this->ci->load->model('inventory/return_product_model');
+    $this->ci->load->model('logs_model');
 
 		$testMode = getConfig('TEST_MODE') ? TRUE : FALSE;
 
@@ -262,9 +292,6 @@ class Api
 
 		if(! empty($doc) && ! empty($details))
 		{
-      $currency = getConfig('CURRENCY');
-      $vat_rate = getConfig('SALE_VAT_RATE');
-      $vat_code = getConfig('SALE_VAT_CODE');
 
       $ds = array(
         'U_WEBCODE' => $doc->code,
@@ -280,7 +307,7 @@ class Api
         'DiscPrcnt' => 0.000000,
         'DiscSum' => 0.000000,
         'DiscSumFC' => 0.000000,
-        'DocCur' => $currency,
+        'DocCur' => NULL,
         'DocRate' => 1,
         'DocTotal' => 0.000000,
         'DocTotalFC' => 0.000000,
@@ -291,6 +318,7 @@ class Api
       );
 
       $lineNum = 0;
+
       foreach($details as $rs)
       {
         $arr =  array(
@@ -303,7 +331,7 @@ class Api
           'PriceBefDi' => 0.000000,
           'LineTotal' => 0.000000,
           'ShipDate' => sap_date($doc->date_add, TRUE),
-          'Currency' => $currency,
+          'Currency' => NULL,
           'Rate' => 1,
           'DiscPrcnt' => 0.000000,
           'Price' => 0.000000,
@@ -336,16 +364,40 @@ class Api
 
 			$url = $url."return";
 
+      $json = json_encode($ds);
+
+      if($logJson)
+      {
+        $logs = array(
+          'code' => $doc->code,
+          'status' => 'send',
+          'json' => $json
+        );
+
+        $this->ci->logs_model->log_transfer($logs);
+      }
+
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_URL, $url);
 			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
       curl_setopt($curl, CURLOPT_TIMEOUT, 0);
-			curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($ds));
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 			curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
 
 			$response = curl_exec($curl);
+
+      if($logJson)
+      {
+        $logs = array(
+          'code' => $doc->code,
+          'status' => 'result',
+          'json' => $response
+        );
+
+        $this->ci->logs_model->log_transfer($logs);
+      }
 
       if($response === FALSE)
       {
@@ -362,33 +414,41 @@ class Api
 				{
 					$arr = array(
 						'status' => 1,
-						'docEntry' => $rs->DocEntry,
-						'docNum' => $rs->DocNum
+						'docEntry' => $rs->docEntry,
+						'docNum' => $rs->docNum
 					);
 
-					$this->ci->transfer_model->update($id, $arr);
+					$this->ci->return_product_model->update($id, $arr);
 
 				}
+        elseif($rs->status == 'exists')
+        {
+          $arr = array(
+						'status' => 1,
+						'docEntry' => $rs->docEntry,
+						'docNum' => $rs->docNum
+					);
+
+					$this->ci->return_product_model->update($id, $arr);
+        }
 				else
 				{
 					$arr = array(
 						'status' => 3,
-						'message' => $rs->error
+						'message' => $rs->message
 					);
 
-					$this->ci->transfer_model->update($id, $arr);
+					$this->ci->return_product_model->update($id, $arr);
 
 					$sc = FALSE;
-					$this->error = $rs->error;
+					$this->ci->error = $rs->message;
 
-					if($logJson)
+          if($logJson)
 					{
-						$this->ci->load->model('rest/logs_model');
-
 						$logs = array(
 							'code' => $doc->code,
 							'status' => 'error',
-							'json' => json_encode($ds)
+							'json' => $rs->message
 						);
 
 						$this->ci->logs_model->log_transfer($logs);
@@ -398,20 +458,20 @@ class Api
 			else
 			{
 				$sc = FALSE;
-				$this->error = "Export failed : {$response}";
+				$this->ci->error = "Export failed : {$response}";
 
 				$arr = array(
 					'status' => 3,
 					'message' => $response
 				);
 
-				$this->ci->transfer_model->update($id, $arr);
+				$this->ci->return_product_model->update($id, $arr);
 			}
 		}
 		else
 		{
 			$sc = FALSE;
-			$this->error = "No data found";
+			$this->ci->error = "No data found";
 		}
 
 		return $sc;

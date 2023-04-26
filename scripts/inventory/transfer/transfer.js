@@ -42,6 +42,8 @@ function edit(id) {
 
         render(source, data, output);
 
+        $('#damage').val(data.damage_id);
+
         $('#editModal').modal('show');
       }
       else {
@@ -76,6 +78,8 @@ function getEdit()
         let output = $('#edit-detail');
 
         render(source, data, output);
+
+        $('#damage').val(data.damage_id);
 
         $('#editModal').modal('show');
       }
@@ -117,25 +121,19 @@ function preview(id) {
 
         render(source, data, output);
 
+        $('#btn-approve').addClass('hide');
+        $('#btn-edit').addClass('hide');
+        $('#btn-temp').addClass('hide');
+
         if(data.status == 0 && data.is_approve == 0) {
           $('#btn-approve').removeClass('hide');
-        }
-
-        if(data.status == 1 || data.is_approve > 0) {
-          $('#btn-approve').addClass('hide');
-          $('#btn-edit').addClass('hide');
-        }
-        else {
           $('#btn-edit').removeClass('hide');
         }
 
-        if(data.status > 0 && data.is_approve == 1) {
+        if(data.status == 1 || data.is_approve == 1 || data.status == 3) {
           $('#btn-temp').removeClass('hide');
         }
-        else {
-          $('#btn-temp').addClass('hide');
-        }
-
+    
         $('#previewModal').modal('show');
       }
       else {
@@ -178,8 +176,13 @@ function doApprove() {
           setTimeout(() => {
             window.location.reload();
           }, 1200);
-
-          //updateRow(id, no);
+        }
+        else {
+          swal({
+            title:'Error!',
+            text: rs,
+            type:'error'
+          });
         }
       }
     });
@@ -271,8 +274,12 @@ function updateItem() {
   let mYear = $('#mYear').val();
   let cond = $('#condition').val();
   let useAge = $('#useAge').val();
+  let damage_id = $('#damage').val();
+  let peaNoMinLength = parseDefault(parseInt($('#peaNo-minLength').val()), 4);
+  let peaNoMaxLength = parseDefault(parseInt($('#peaNo-maxLength').val()), 10);
+  let powerNoMinLength = parseDefault(parseInt($('#powerNo-minLength').val()), 5);
+  let powerNoMaxLength = parseDefault(parseInt($('#powerNo-maxLength').val()), 5);
 
-  //$('#editModal').modal('hide');
 
   setTimeout(() => {
     if(id == "" || id == 0) {
@@ -285,7 +292,7 @@ function updateItem() {
       return false;
     }
 
-    if(peaNo.length != 10) {
+    if(peaNo.length < peaNoMinLength || peaNo.length > peaNoMaxLength) {
       swal({
         title:'Oops!',
         text:"PEA NO ไม่ถูกต้อง",
@@ -295,7 +302,7 @@ function updateItem() {
       return false;
     }
 
-    if(powerNo.length != 5) {
+    if(powerNo.length < powerNoMinLength || powerNo.length > powerNoMaxLength) {
       swal({
         title:'Opps!',
         text:"หน่วยไฟไม่ถูกต้อง",
@@ -335,7 +342,18 @@ function updateItem() {
       return false;
     }
 
+    if(cond == 2 && damage_id == "") {
+      swal({
+        title:'Opps!',
+        text:"กรุณาระบุสาเหตุการชำรุด",
+        type:'error'
+      });
+
+      return false;
+    }
+
     $('#editModal').modal('hide');
+
     load_in();
 
     $.ajax({
@@ -347,7 +365,8 @@ function updateItem() {
         'powerNo' : powerNo,
         'mYear' : mYear,
         'cond' : cond,
-        'useAge' : useAge
+        'useAge' : useAge,
+        'damage_id' : damage_id
       },
       success:function(rs) {
         load_out();
@@ -358,6 +377,10 @@ function updateItem() {
             type:'success',
             timer:1000
           });
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
         }
         else {
           swal({
@@ -374,4 +397,48 @@ function updateItem() {
 
   }, 200);
 
+}
+
+
+function sendToSAP() {
+  let id = $('#transfer-id').val();
+
+  $('#previewModal').modal('hide');
+
+  setTimeout(() => {
+    load_in();
+
+    $.ajax({
+      url:HOME + 'send_to_sap',
+      type:'POST',
+      cache:false,
+      data:{
+        'id' : id
+      },
+      success:function(rs) {
+        load_out();
+
+        if(rs == 'success') {
+          swal({
+            title:'Success',
+            type:'success',
+            timer:1000
+          });
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
+        }
+        else {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          }, () => {
+            $('#previewModal').modal('show');
+          });
+        }
+      }
+    });
+  }, 500);
 }

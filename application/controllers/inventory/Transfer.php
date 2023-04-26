@@ -7,6 +7,7 @@ class Transfer extends PS_Controller
 	public $menu_group_code = 'OP';
 	public $title = 'Transfer';
 	public $segment = 4;
+  public $error;
 
   public function __construct()
   {
@@ -26,6 +27,7 @@ class Transfer extends PS_Controller
 		$filter = array(
 			'code' => get_filter('code', 'tr_code', ''),
       'serial' => get_filter('serial', 'tr_serial', ''),
+      'peaNo' => get_filter('peaNo', 'tr_peaNo', ''),
       'fromWhCode' => get_filter('fromWhCode', 'tr_fromWhCode', 'all'),
       'toWhCode' => get_filter('toWhCode', 'tr_toWhCode', 'all'),
       'status' => get_filter('status', 'tr_status', 'all'),
@@ -34,6 +36,7 @@ class Transfer extends PS_Controller
       'team_id' => get_filter('team_id', 'tr_team_id', 'all'),
       'user_id' => get_filter('user_id', 'tr_user_id', 'all'),
       'is_approve' => get_filter('is_approve', 'tr_is_approve', 'all'),
+      'pea_verify' => get_filter('pea_verify', 'tr_pea_verify', 'all'),
       'order_by' => get_filter('order_by', 'tr_order_by', 'code'),
       'sort_by' => get_filter('sort_by', 'tr_sort_by', 'DESC')
 		);
@@ -104,75 +107,77 @@ class Transfer extends PS_Controller
 
 
 
-  public function getTransferDetail()
-  {
-    $sc = TRUE;
-    $ds = array();
-    $docNum = $this->input->get('docNum');
-
-    if( ! empty($docNum))
-    {
-      $warehouse = $this->warehouse_model->get_user_from_warehouse($this->_user->id);
-      $uWh = array();
-
-      if(! empty($warehouse))
-      {
-        foreach($warehouse as $wh)
-        {
-          $uWh[] = $wh->code;
-        }
-
-        //$doc = $this->transfer_model->getSapDoc($docNum, $uWh);
-        $doc = array('docEntry' => 2066);
-
-        if( ! empty($doc))
-        {
-          $details = $this->transfer_model->getSapTransferSerialDetails($docNum);
-
-          if( ! empty($details))
-          {
-            $no = 1;
-            foreach($details as $rs)
-            {
-              $arr = array(
-                'no' => $no,
-                'DocNum' => $docNum,
-                'Serial' => $rs->Serial,
-                'ItemCode' => $rs->ItemCode,
-                'ItemName' => $rs->ItemName,
-                'WhsCode' => $rs->WhsCode
-              );
-
-              array_push($ds, $arr);
-              $no++;
-            }
-          }
-          else
-          {
-            $sc = FALSE;
-            set_error(0, "ไม่พบรายการสินค้าในเอกสาร {$docNum}");
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          set_error(0, "ไม่พบเอกสาร {$docNum}");
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        set_error(0, "คุณยังไม่ได้ผูกคลังสินค้า");
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error('required');
-    }
-
-    $this->_json_response($sc, $ds);
-  }
+  // public function getTransferDetail()
+  // {
+  //   $this->load->database('ms', TRUE);
+  //
+  //   $sc = TRUE;
+  //   $ds = array();
+  //   $docNum = $this->input->get('docNum');
+  //
+  //   if( ! empty($docNum))
+  //   {
+  //     $warehouse = $this->warehouse_model->get_user_from_warehouse($this->_user->id);
+  //     $uWh = array();
+  //
+  //     if(! empty($warehouse))
+  //     {
+  //       foreach($warehouse as $wh)
+  //       {
+  //         $uWh[] = $wh->code;
+  //       }
+  //
+  //       $doc = $this->transfer_model->getSapDoc($docNum, $uWh);
+  //       //$doc = array('docEntry' => 2066);
+  //
+  //       if( ! empty($doc))
+  //       {
+  //         $details = $this->transfer_model->getSapTransferSerialDetails($docNum);
+  //
+  //         if( ! empty($details))
+  //         {
+  //           $no = 1;
+  //           foreach($details as $rs)
+  //           {
+  //             $arr = array(
+  //               'no' => $no,
+  //               'DocNum' => $docNum,
+  //               'Serial' => $rs->Serial,
+  //               'ItemCode' => $rs->ItemCode,
+  //               'ItemName' => $rs->ItemName,
+  //               'WhsCode' => $rs->WhsCode
+  //             );
+  //
+  //             array_push($ds, $arr);
+  //             $no++;
+  //           }
+  //         }
+  //         else
+  //         {
+  //           $sc = FALSE;
+  //           set_error(0, "ไม่พบรายการสินค้าในเอกสาร {$docNum}");
+  //         }
+  //       }
+  //       else
+  //       {
+  //         $sc = FALSE;
+  //         set_error(0, "ไม่พบเอกสาร {$docNum}");
+  //       }
+  //     }
+  //     else
+  //     {
+  //       $sc = FALSE;
+  //       set_error(0, "คุณยังไม่ได้ผูกคลังสินค้า");
+  //     }
+  //   }
+  //   else
+  //   {
+  //     $sc = FALSE;
+  //     set_error('required');
+  //   }
+  //
+  //   $this->_json_response($sc, $ds);
+  // }
 
 
 
@@ -281,6 +286,7 @@ class Transfer extends PS_Controller
     $mYear = $this->input->post('mYear');
     $cond = $this->input->post('cond');
     $useageAge = $this->input->post('useAge');
+    $damage_id = get_null($this->input->post('damage_id'));
 
     if($peaNo != "" && $powerNo != "" && $mYear != "" && $cond != "")
     {
@@ -290,12 +296,16 @@ class Transfer extends PS_Controller
       {
         if($doc->status == 0 OR $doc->status == 3)
         {
+          $pea = $this->transfer_model->get_pea_data($peaNo);
+
           $arr = array(
             'peaNo' => $peaNo,
             'powerNo' => $powerNo,
             'mYear' => $mYear,
             'cond' => $cond,
-            'usageAge' => $useageAge
+            'usageAge' => $useageAge,
+            'damage_id' => $damage_id,
+            'pea_verify' => empty($pea) ? 0 : 1
           );
 
           if( ! $this->transfer_model->update($id, $arr))
@@ -569,13 +579,69 @@ class Transfer extends PS_Controller
           }
           else
           {
+            $this->load->database('ms', TRUE);
             $this->load->library('api');
 
             if( ! $this->api->exportTransfer($id))
             {
               $sc = FALSE;
-              set_error(0, "อนัมัติเอกสารสำเร็จแต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง");
+              set_error(0, "อนัมัติเอกสารสำเร็จแต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง : {$this->error}");
             }
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+
+          if($doc->status == 1)
+          {
+            set_error(0, "Document already saved");
+          }
+
+          if($doc->status == 2)
+          {
+            set_error(0, "Document already cancelled");
+          }
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        set_error(0, "Invalid document id");
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error("required");
+    }
+
+    $this->_response($sc);
+  }
+
+
+
+  function send_to_sap()
+  {
+    $sc = TRUE;
+
+    $id = $this->input->post('id');
+
+    if($id)
+    {
+      $doc = $this->transfer_model->get($id);
+
+      if( ! empty($doc))
+      {
+        if($doc->status == 3 && $doc->isApprove == 1)
+        {
+          $this->load->database('ms', TRUE);
+          $this->load->library('api');
+
+          if( ! $this->api->exportTransfer($id))
+          {
+            $sc = FALSE;
+            set_error(0, "ส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง : {$this->error}");
           }
         }
         else
@@ -737,6 +803,7 @@ class Transfer extends PS_Controller
 
     if( ! empty($rs))
     {
+      $verifyLabel = $rs->pea_verify == 1 ? '<span class="green" style="margin-left:15px;"><i class="fa fa-check-circle fa-lg green"></i> Verified</span>' : '<span class="red" style="margin-left:15px;"><i class="fa fa-times-circle fa-lg red"></i> Not Verified</span>';
       $ds = array(
         "id" => $rs->id,
         "code" => $rs->code,
@@ -754,6 +821,7 @@ class Transfer extends PS_Controller
         "mYear" => $rs->mYear,
         "select_m_year" => select_prev_years($rs->mYear),
         "cond" => condLabel($rs->cond),
+        "cond_id" => $rs->cond,
         "damage_id" => $rs->damage_id,
         "damage_name" => get_null($this->damaged_model->get_name($rs->damage_id)),
         "select_cond" => select_cond($rs->cond),
@@ -762,7 +830,9 @@ class Transfer extends PS_Controller
         "u_image_path" => base_url().$rs->returnned_image,
         "status" => $rs->status,
         "is_approve" => $rs->isApprove,
-        "approver" => $rs->approver
+        "approver" => $rs->approver,
+        "isVerify" => $rs->pea_verify,
+        "verifyLabel" => $verifyLabel
       );
     }
     else
@@ -824,6 +894,7 @@ class Transfer extends PS_Controller
     $filter = array(
 			'tr_code',
       'tr_serial',
+      'tr_peaNo',
       'tr_fromWhCode',
       'tr_toWhCode',
       'tr_status',
@@ -831,7 +902,8 @@ class Transfer extends PS_Controller
       'tr_to_date',
       'tr_team_id',
       'tr_user_id',
-      'tr_is_approve'
+      'tr_is_approve',
+      'tr_pea_verify'
 		);
 
     return clear_filter($filter);

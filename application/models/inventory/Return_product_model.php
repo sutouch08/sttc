@@ -391,17 +391,13 @@ class Return_product_model extends CI_Model
 
   public function getSapDocNum($code)
   {
-    // $rs = $this->ms
-    // ->select('DocNum')
-    // ->where('U_WEBCODE', $code)
-    // ->where('CANCELED', 'N')
-    // ->where('DocStatus', 'O')
-    // ->get('OWTR');
-    //
-    // if($rs->num_rows() > 0)
-    // {
-    //   return $rs->row()->DocNum;
-    // }
+    $qr = "SELECT DocNum FROM OWTR WHERE U_WEBCODE = '{$code}' AND CANCELED = 'N' AND DocStatus = 'O'";
+    $rs = $this->ms->query($qr);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->row()->DocNum;
+    }
 
     return NULL;
   }

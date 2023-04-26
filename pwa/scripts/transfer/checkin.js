@@ -252,7 +252,8 @@ function getTransferDetail(docnum) {
               swal({
                 title:'Error!',
                 text:ds.message,
-                type:'error'
+                type:'error',
+                html:true
               });
             }
           }
@@ -260,11 +261,19 @@ function getTransferDetail(docnum) {
             swal({
               title:'Error!',
               text:result,
-              type:'error'
+              type:'error',
+              html:true
             });
           }
         })
-        .catch(error => console.log('error', error));
+        .catch(error => {
+          swal({
+            title:'Error Excention!',
+            text:error,
+            type:'error',
+            html:true
+          });
+        });
     }
     else {
       swal({

@@ -227,6 +227,45 @@ function approve() {
 }
 
 
+function sendToSAP() {
+  let id = $('#return_id').val();
+
+  load_in();
+
+  $.ajax({
+    url:HOME + 'send_to_sap',
+    type:'POST',
+    cache: false,
+    data: {
+      "id" : id
+    },
+    success:function(rs) {
+      load_out();
+
+      if(rs == 'success') {
+        swal({
+          title:'Success',
+          type:'success',
+          timer:1000
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      }
+      else {
+        swal({
+          title:'Error!',
+          text: rs,
+          type:'error'
+        },() => {
+          window.location.reload();
+        });
+      }
+    }
+  });
+}
+
 function cancle()
 {
   let id = $('#return_id').val();

@@ -170,9 +170,10 @@ class Warehouse_model extends CI_Model
 
   public function getSyncData()
   {
-    $rs = $this->ms
-    ->select('WhsCode AS code, WhsName AS name, Inactive')
-    ->get("OWHS");
+    $this->ms = $this->load->database('ms', TRUE);
+    
+    $qr = "SELECT WhsCode AS code, WhsName AS name, Inactive FROM OWHS";
+    $rs = $this->ms->query($qr);
 
     if($rs->num_rows() > 0)
     {

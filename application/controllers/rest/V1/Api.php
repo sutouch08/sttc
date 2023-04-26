@@ -353,6 +353,7 @@ class Api extends REST_Controller
       $fromDoc = get_null($data->fromDoc);
       $remark = get_null(trim($data->remark));
       $usageAge = $data->usageAge;
+      $pea_verify = empty($data->pea_verify) ? $this->verify_pea_no($peaNo) : $data->pea_verify;
 
       $i_path = $this->config->item('image_path')."installed/{$iSerial}.jpg";
       $u_path = $this->config->item('image_path')."returnned/{$uSerial}.jpg";
@@ -383,7 +384,8 @@ class Api extends REST_Controller
         'create_at' => now(),
         'create_by' => $this->_user->id,
         'fromDoc' => $fromDoc,
-        'orientation' => $iOrientation
+        'orientation' => $iOrientation,
+        'pea_verify' => $pea_verify
       );
 
       if( ! $this->transfer_model->add($arr))
@@ -494,6 +496,7 @@ class Api extends REST_Controller
 
   public function update_user_item_post()
   {
+    $this->ms = $this->load->database('ms', TRUE);
     $this->load->model('inventory/transfer_model');
     $this->load->model('inventory/user_item_model');
     $this->load->model('admin/warehouse_model');
@@ -607,6 +610,7 @@ class Api extends REST_Controller
 
   public function get_transfer_details_post()
   {
+    $this->ms = $this->load->database('ms', TRUE);
     $this->load->model('inventory/transfer_model');
     $this->load->model('admin/warehouse_model');
 
@@ -617,14 +621,13 @@ class Api extends REST_Controller
 
     if( ! empty($data))
     {
-      //$doc = $this->transfer_model->getSapDoc($data->docNum);
-      $doc = array('docEntry' => 2066);
+      $doc = $this->transfer_model->getSapDoc($data->docNum);
+      //$doc = array('docEntry' => 2066);
 
       if( ! empty($doc))
       {
-        //if($doc->Filler == $this->_user->fromWhsCode)
-
-        if($data->docNum)
+        //if($data->docNum)
+        if($doc->toWhsCode == $this->_user->fromWhsCode)
         {
           //-- check exists data loaded
           if( ! $this->transfer_model->is_loaded($data->docNum) OR $data->reload == 'Y')
@@ -653,7 +656,7 @@ class Api extends REST_Controller
             else
             {
               $sc = FALSE;
-              set_error(0, "ไม่พบรายการสินค้าในเอกสาร {$docNum}");
+              set_error(0, "ไม่พบรายการสินค้าในเอกสาร {$data->docNum}");
             }
           }
           else
@@ -753,6 +756,21 @@ class Api extends REST_Controller
   }
 
 
+  public function verify_pea_no($pea_no)
+  {
+    $this->load->model('inventory/transfer_model');
+
+    $pea = $this->transfer_model->get_pea_data($pea_no);
+
+    if( ! empty($pea))
+    {
+      return 1;
+    }
+
+    return 0;
+  }
+
+
   public function get_new_transfer_code($date = NULL)
   {
     $date = empty($date) ? date('Y-m-d') : $date;
@@ -822,7 +840,7 @@ class Api extends REST_Controller
       $image_height = imagesy($image);
       $ratio = $image_height / $image_width;
       $new_width = 800;
-      $new_height = $ratio * $new_width;
+      $new_height = intval($ratio * $new_width);
       $thumb = imagecreatetruecolor($new_width, $new_height);
       imagecopyresampled($thumb, $image, 0, 0, 0, 0, $new_width, $new_height, $image_width, $image_height);
       $source = $image_rotate != NULL ? imagerotate($thumb, $image_rotate, 0) : $thumb;
@@ -1345,6 +1363,40 @@ class Api extends REST_Controller
     $arr = array(
       'status' => 'success',
       'data' => $list
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+  public function verify_pea_no_post()
+  {
+    $this->load->model('inventory/transfer_model');
+
+    $sc = TRUE;
+    $exists = 0;
+
+    $data = json_decode(file_get_contents('php://input'));
+
+    if( ! empty($data))
+    {
+      $peaData = $this->transfer_model->get_pea_data($data->pea_no);
+
+      if( ! empty($peaData))
+      {
+        $exists = 1;
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Missing Required Parameter";
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'isVerify' => $exists
     );
 
     $this->response($arr, 200);

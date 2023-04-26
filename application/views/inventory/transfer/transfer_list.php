@@ -20,6 +20,11 @@
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+			<label>PEA No.</label>
+			<input type="text" class="form-control input-sm search-box" name="peaNo" value="<?php echo $peaNo; ?>" />
+		</div>
+
+		<div class="col-lg-2 col-md-2-harf col-sm-2-harf col-xs-6 margin-bottom-5">
 			<label>พนักงาน</label>
 			<select class="form-control input-sm" name="user_id" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
@@ -27,7 +32,7 @@
 			</select>
 		</div>
 
-		<div class="col-lg-2 col-md-2 col-sm-3 col-xs-6 margin-bottom-5">
+		<div class="col-lg-2 col-md-3-harf col-sm-3-harf col-xs-6 margin-bottom-5">
 			<label>คลังต้นทาง</label>
 			<select class="form-control input-sm" name="fromWhCode" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
@@ -35,7 +40,7 @@
 			</select>
 		</div>
 
-		<div class="col-lg-2 col-md-2 col-sm-3 col-xs-6 margin-bottom-5">
+		<div class="col-lg-2 col-md-3-harf col-sm-3-harf col-xs-6 margin-bottom-5">
 			<label>คลังปลายทาง</label>
 			<select class="form-control input-sm" name="toWhCode" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
@@ -43,7 +48,7 @@
 			</select>
 		</div>
 
-		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+		<div class="col-lg-2 col-md-2-harf col-sm-2-harf col-xs-6 margin-bottom-5">
 			<label>เขต/พื้นที่</label>
 			<select class="form-control input-sm" name="team_id" onchange="getSearch()">
 				<option value="all">ทั้งหมด</opton>
@@ -60,7 +65,7 @@
 			</select>
 		</div>
 
-		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
+		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
 			<label>Status</label>
 			<select class="form-control input-sm" name="status" onchange="getSearch()">
 				<option value="all">ทั้งหมด</opton>
@@ -68,6 +73,15 @@
 					<option value="1" <?php echo is_selected('1', $status); ?>>Success</option>
 					<option value="2" <?php echo is_selected('2', $status); ?>>Cancelled</option>
 					<option value="3" <?php echo is_selected('3', $status); ?>>Failed</option>
+				</select>
+		</div>
+
+		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+			<label>PEA Data</label>
+			<select class="form-control input-sm" name="pea_verify" onchange="getSearch()">
+				<option value="all">ทั้งหมด</opton>
+					<option value="0" <?php echo is_selected('0', $pea_verify); ?>>ไม่มี</option>
+					<option value="1" <?php echo is_selected('1', $pea_verify); ?>>มี</option>
 				</select>
 		</div>
 
@@ -93,15 +107,16 @@
 <?php echo $this->pagination->create_links(); ?>
 <div class="row">
 	<div class="col-lg-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1400px;;">
+		<table class="table table-hover border-1" style="min-width:1500px;;">
 			<thead>
 				<tr>
 					<th class="fix-width-60 middle text-center">#</th>
 					<th class="fix-width-120 middle text-center" style="min-width:120px; max-width:120px;"></th>
-					<th class="fix-width-60 middle text-center">สถานะ</th>
+					<th class="fix-width-80 middle text-center">สถานะ</th>
 					<th class="fix-width-100 middle text-center" style="min-width:100px; max-width:100px;">วันที่</th>
 					<th class="fix-width-120 middle" style="min-width:120px; max-width:120px;">เลขที่</th>
 					<th class="fix-width-150 middle" style="min-width:150px; max-width:150px;">Serial</th>
+					<th class="fix-width-150 middle" style="min-width:150px; max-width:150px;">PEA No</th>
 					<th class="fix-width-100 middle">ผู้ทำรายการ</th>
 					<th class="fix-width-200 middle">คลังต้นทาง</th>
           <th class="fix-width-200 middle">คลังปลายทาง</th>
@@ -114,6 +129,8 @@
 <?php if(! empty($data))	: ?>
 	<?php $no = $this->uri->segment($this->segment) + 1; ?>
 	<?php foreach($data as $rs) : ?>
+		<?php $color = $rs->pea_verify == 0 ? 'color:red' : ''; ?>
+		<?php $verifyLabel = $rs->pea_verify == 1 ? '' : '<span><i class="fa fa-times-circle fa-lg red"></i></span>'; ?>
 				<tr id="row-<?php echo $rs->id; ?>">
 					<td class="middle text-center" id="no-<?php echo $rs->id; ?>"><?php echo $no; ?></td>
 					<td class="middle">
@@ -122,10 +139,21 @@
 							<button type="button" class="btn btn-mini btn-warning" onclick="edit(<?php echo $rs->id; ?>)"><i class="fa fa-pencil"></i></button>
 						<?php endif; ?>
 					</td>
-					<td class="middle text-center"><?php echo transfer_status_label($rs->status); ?></td>
+					<td class="middle text-center">
+						<?php if($rs->status == 0) : ?>
+							<span class="blue">รออนุมัติ</span>
+						<?php elseif($rs->status == 1) : ?>
+							<span class="green">สำเร็จ</span>
+						<?php elseif($rs->status == 2) : ?>
+							<span class="orange">ยกเลิก</span>
+						<?php elseif($rs->status == 3) : ?>
+							<button type="button" class="btn btn-xs btn-danger" onclick="showErrorMessage('<?php echo $rs->message; ?>')">Failed</button>
+						<?php endif; ?>
+					</td>
 					<td class="middle text-center"><?php echo thai_date($rs->date_add, FALSE); ?></td>
 					<td class="middle"><?php echo $rs->code; ?></td>
 					<td class="middle"><?php echo $rs->InstallSerialNum; ?></td>
+					<td class="middle"><?php echo $rs->peaNo; ?> <?php echo $verifyLabel; ?></td>
 					<td class="middle"><?php echo $rs->uname; ?></td>
 					<td class="middle"><?php echo $rs->fromWhsCode.' : '.$rs->fromWhsName; ?></td>
           <td class="middle"><?php echo $rs->toWhsCode .' : '.$rs->toWhsName; ?></td>
@@ -140,6 +168,10 @@
 		</table>
 
 		<input type="hidden" name="edit-id" value="">
+		<input type="hidden" id="peaNo-minLength" value="4" />
+		<input type="hidden" id="peaNo-maxLength" value="10" />
+		<input type="hidden" id="powerNo-minLength" value="5" />
+		<input type="hidden" id="powerNo-maxLength" value="5" />
 	</div>
 </div>
 
@@ -175,7 +207,7 @@
 				<td colspan="2" class="text-center">
 					<div class="width-100 padding-0">
 						<div class="text-center"
-						style="position:absolute; color:#2842cf; background-color:#2196f36b; padding:10px; font-size:20px; width:94%;">
+						style="position:absolute; color:white; background-color:#2c2c2c6b; padding:10px; font-size:20px; width:94%;">
 						มิเตอร์ที่เก็บคืน
 						</div>
 						<img src="{{u_image_path}}" style="width:100%;" />
@@ -185,7 +217,7 @@
 				<tr><td colspan="2" class="text-center bold">มิเตอร์เก่า</td></tr>
 	      <tr><td class="width-30 bold">Serial</td><td class="width-70">{{u_serial}}</td></tr>
 				<tr><td class="bold">PEA No.</td><td class=""><input type="text" class="form-control" id="peaNo" value="{{pea_no}}" /></td></tr>
-				<tr><td class="bold">หน่วยไฟ</td><td class=""><input type="number" class="form-cotnrol" id="powerNo" value="{{power_no}}" /></td></tr>
+				<tr><td class="bold">หน่วยไฟ</td><td class=""><input type="number" pattern="[0-9]*" inputmode="numeric" class="form-cotnrol" id="powerNo" value="{{power_no}}" /></td></tr>
 				<tr>
 					<td class="bold">ปีบนมิเตอร์</td><td class="">
 						<select id="mYear" class="form-control" onchange="suggest()">
@@ -194,6 +226,7 @@
 						</select>
 					</td>
 				</tr>
+				<tr><td class="bold">อายุใช้งาน</td><td class="" id="use-age">{{usageAge}} ปี</td></tr>
 				<tr>
 					<td class="bold">สภาพมิเตอร์</td>
 					<td class="">
@@ -203,13 +236,21 @@
 						</select>
 					</td>
 				</tr>
-				<tr><td class="bold">อายุใช้งาน</td><td class="" id="use-age">{{usageAge}} ปี</td></tr>
+				<tr>
+					<td class="bold">สาเหตุการชำรุด</td>
+					<td class="">
+						<select id="damage" class="form-control">
+							<option value="">-</option>
+							<?php echo select_damage(); ?>
+						</select>
+					</td>
+				</tr>
 				<tr><td class="bold">สติ๊กเกอร์</td><td class="" id="suggest-label">{{{color}}}</td></tr>
 				<tr>
 					<td colspan="2" class="text-center">
 						<div class="width-100">
 							<div class="text-center"
-							style="position:absolute; color:#2842cf; background-color:#44eb0e6b; padding:10px; font-size:20px; width:94%">
+							style="position:absolute; color:white; background-color:#2c2c2c6b; padding:10px; font-size:20px; width:94%">
 							มิเตอร์ที่ติดตั้ง
 							</div>
 							<img src="{{i_image_path}}" style="width:100%;" />
@@ -247,13 +288,31 @@
 			<?php if($this->pm->can_approve) : ?>
 				<button type="button" class="btn btn-sm btn-success pull-right hide" id="btn-approve" onclick="doApprove()">อนุมัติ</button>
 			<?php endif; ?>
-				<button type="button" class="btn btn-sm btn-primary pull-right hide" id="btn-temp" onclick="sendToSAP()">Send To Temp</button>
+				<button type="button" class="btn btn-sm btn-primary pull-right hide" id="btn-temp" onclick="sendToSAP()">Send To SAP</button>
 			<?php if($this->pm->can_edit) : ?>
-				<button type="button" class="btn btn-sm btn-warning pull-left" id="btn-edit" onclick="getEdit()" >
+				<button type="button" class="btn btn-sm btn-warning pull-left hide" id="btn-edit" onclick="getEdit()" >
 					<i class="fa fa-pencil"></i> แก้ไข
 				</button>
 			<?php endif; ?>
 			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog" style="width:500px; max-width:95%; margin-left:auto; margin-right:auto;">
+    <div class="modal-content">
+        <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Failed</h4>
+       </div>
+       <div class="modal-body">
+         <div class="row" style="max-height:75vh; overflow:auto;">
+					 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center" id="error-message">
+
+					 </div>
+         </div>
+       </div>
 		</div>
 	</div>
 </div>
@@ -266,7 +325,7 @@
 					<td colspan="2" class="text-center">
 						<div class="width-100 padding-0">
 							<div class="text-center"
-							style="position:absolute; color:#2842cf; background-color:#2196f36b; padding:10px; font-size:20px; width:94%;">
+							style="position:absolute; color:white; background-color:#2c2c2c6b; padding:10px; font-size:20px; width:94%;">
 							มิเตอร์ที่เก็บคืน
 							</div>
 							<img src="{{u_image_path}}" style="width:100%;" />
@@ -275,7 +334,7 @@
 				</tr>
 				<tr><td colspan="2" class="text-center bold">มิเตอร์เก่า</td></tr>
 	      <tr><td class="width-30 bold">Serial</td><td class="width-70">{{u_serial}}</td></tr>
-				<tr><td class="bold">PEA No.</td><td class="">{{pea_no}}</td></tr>
+				<tr><td class="bold">PEA No.</td><td class="">{{pea_no}}  {{{verifyLabel}}}</td></tr>
 				<tr><td class="bold">หน่วยไฟ</td><td class="">{{power_no}}</td></tr>
 				<tr><td class="bold">ปีบนมิเตอร์</td><td class="">{{mYear}}</td></tr>
 				<tr><td class="bold">อายุใช้งาน</td><td class="">{{usageAge}} ปี</td></tr>
@@ -288,7 +347,7 @@
 					<td colspan="2" class="text-center">
 						<div class="width-100">
 							<div class="text-center"
-							style="position:absolute; color:#2842cf; background-color:#44eb0e6b; padding:10px; font-size:20px; width:94%">
+							style="position:absolute; color:white; background-color:#2c2c2c6b; padding:10px; font-size:20px; width:94%">
 							มิเตอร์ที่ติดตั้ง
 							</div>
 							<img src="{{i_image_path}}" style="width:100%;" />
@@ -321,6 +380,14 @@
 	<td class="middle">{{toWhs}}</td>
 	<td class="middle">{{teamName}}</td>
 	<td class="middle">{{docNum}}</td>
+</script>
+
+<script>
+	function showErrorMessage(msg) {
+		$('#error-message').text(msg);
+
+		$('#errorMessageModal').modal('show');
+	}
 </script>
 
 <script src="<?php echo base_url(); ?>scripts/inventory/transfer/transfer.js?v=<?php echo date('Ymd'); ?>"></script>

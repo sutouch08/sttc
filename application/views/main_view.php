@@ -7,6 +7,9 @@
 		<div class="divider"></div>
 	</div>
 	<div class="row">
+		<?php if( ! empty($this->e)) : ?>
+			<div class="alert alert-danger"><?php echo $this->e; ?></div>
+		<?php endif; ?>
 		<?php if($this->_Outsource) : ?>
 			<script>
 				$(document).ready(function() {
@@ -15,5 +18,5 @@
 			</script>
 
 		<?php endif; ?>
-	</div>	
+	</div>
 <?php $this->load->view('include/footer'); ?>
