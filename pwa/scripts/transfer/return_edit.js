@@ -70,28 +70,22 @@ function readerInit() {
     Html5QrcodeSupportedFormats.EAN_13,
     Html5QrcodeSupportedFormats.CODE_39,
     Html5QrcodeSupportedFormats.CODE_93,
-    Html5QrcodeSupportedFormats.CODE_128
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.UPD_A,
+    Html5QrcodeSupportedFormats.UPC_E,
+    Html5QrcodeSupportedFormats.ITF,
+    Html5QrcodeSupportedFormats.AZTEC
   ];
 
   let qrWidth = 250;
   let qrHeight = 250;
 
   if( scan_type == 'barcode') {
-    formatToSupport = [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.CODE_93,
-      Html5QrcodeSupportedFormats.CODE_128
-    ];
-
     qrWidth = 350;
     qrHeight = 100;
   }
 
-  if( scan_type == 'qrcode') {
-    formatToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
-  }
-
+  
   scanner = new Html5Qrcode("reader", {formatsToSupport: formatToSupport});
   config = {
     fps: 60,

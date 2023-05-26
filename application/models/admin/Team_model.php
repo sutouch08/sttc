@@ -66,6 +66,23 @@ class Team_model extends CI_Model
   }
 
 
+  public function get_outsource_by_team($team_id)
+  {
+    $rs = $this->db
+    ->select('id, uname, name, team_id, ugroup')
+    ->where('ugroup', 3)
+    ->where('team_id', $team_id)
+    ->get('user');
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
+
 
   public function add_user_team(array $ds = array())
   {

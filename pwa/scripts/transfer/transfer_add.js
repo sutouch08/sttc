@@ -73,35 +73,30 @@ function readerInit() {
     Html5QrcodeSupportedFormats.EAN_13,
     Html5QrcodeSupportedFormats.CODE_39,
     Html5QrcodeSupportedFormats.CODE_93,
-    Html5QrcodeSupportedFormats.CODE_128
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.UPD_A,
+    Html5QrcodeSupportedFormats.UPC_E,
+    Html5QrcodeSupportedFormats.ITF,
+    Html5QrcodeSupportedFormats.AZTEC
   ];
 
   let qrWidth = 250;
   let qrHeight = 250;
 
   if( scan_type == 'barcode') {
-    formatToSupport = [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.CODE_93,
-      Html5QrcodeSupportedFormats.CODE_128
-    ];
-
     qrWidth = 350;
     qrHeight = 100;
   }
 
-  if( scan_type == 'qrcode') {
-    formatToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
-  }
-
   scanner = new Html5Qrcode("reader", {formatsToSupport: formatToSupport});
+  //scanner = new Html5Qrcode("reader");
   config = {
     fps: 60,
     qrbox: {width: qrWidth, height: qrHeight},
     experimentalFeatures: {
       useBarCodeDetectorIfSupported: true
     }
+
   };
 }
 
@@ -114,7 +109,7 @@ function saveCameraId() {
     return false;
   }
   else {
-    setCookie('cameraId', camId, 365);
+    localStorage.setItem('cameraId', camId);
     closeModal('cameras-modal');
     let side = $('#select-side').val();
 
@@ -134,13 +129,17 @@ function saveCameraId() {
 
 
 function changeCameraId() {
+  load_in();
   Html5Qrcode.getCameras().then(devices => {
+    load_out();
     if(devices && devices.length) {
       $('#select-side').val('');
       let source = $('#cameras-list-template').html();
       let output = $('#cameras-list');
-
+      let camId = localStorage.getItem('cameraId');
       render(source, devices, output);
+      $('#'+camId).prop('checked', true);
+
       showModal('cameras-modal');
     }
   })
@@ -154,9 +153,22 @@ function changeCameraId() {
   });
 }
 
+function saveCameraId() {
+  let camId = $("input[name='camera_id']:checked").val();
+
+  if(camId === undefined || camId == "") {
+    $('#camera-error').text("Please choose camera for use to scan");
+    return false;
+  }
+  else {
+    localStorage.setItem('cameraId', camId);
+    closeModal('cameras-modal');
+  }
+}
+
 
 function peaScan() {
-  let camId = getCookie('cameraId');
+  let camId = localStorage.getItem('cameraId');
 
   if(camId == "" || camId == undefined) {
     $('#select-side').val('pea');
@@ -196,7 +208,7 @@ function peaScan() {
 
 
 function startScan(side) {
-  let camId = getCookie('cameraId');
+  let camId = localStorage.getItem('cameraId');
 
   if(camId == "" || camId == undefined) {
     $('#select-side').val(side);

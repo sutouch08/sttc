@@ -116,18 +116,19 @@
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
                   </div>
-                  <div class="footer-menu width-20">
+                  <div class="footer-menu width-20 hide">
                     <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i><span>RETURN</span></a></li>
                   </div>
-                  <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i><span>ADD NEW</span></a></li>
+                  <div class="footer-menu width-60">
+                    <li id="i-install" class="hide"><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i><span>ติดตั้งมิเตอร์</span></a></li>
+                    <li id="n-install" class=""><a href="javascript:noDataAlert()"><i class="fa fa-plus fa-2x white"></i><span>ติดตั้งมิเตอร์</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="checkin.html"><i class="fa fa-tags fa-2x white"></i><span>ITEMS</span></a></li>
+                    <li><a href="checkin.html"><i class="fa fa-tags fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
                   </div>
-                  <div class="footer-menu width-20">
+                  <div class="footer-menu width-20 hide">
                     <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
                   </div>
                 </div>
@@ -162,7 +163,7 @@
           <tr>
             <td class="td-label">Date : {{date_add}}</td>
             <td class="td-label">Status : <span class="label label-lg label-purple">Draft</span> </td>
-          </tr>          
+          </tr>
         </table>
       </div>
     </div>

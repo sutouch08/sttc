@@ -494,8 +494,8 @@ class Transfer_model extends CI_Model
 
   public function getSapTransferSerialDetails($docNum)
   {
-    //$rs = $this->db->get('demo_item');
-    $qr = "SELECT S.DistNumber AS Serial, D.ItemCode, D.ItemName, D.WhsCode ";
+    // $rs = $this->db->get('demo_item');
+    $qr = "SELECT S.DistNumber AS Serial, S.MnfSerial AS PeaNo, D.ItemCode, D.ItemName, D.WhsCode ";
     $qr .= "FROM SRI1 AS D ";
     $qr .= "LEFT JOIN OSRN AS S ON D.SysSerial = S.SysNumber AND D.ItemCode = S.ItemCode ";
     $qr .= "WHERE D.BaseNum = '{$docNum}' AND D.Direction = 0";

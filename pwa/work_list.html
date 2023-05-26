@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>STTC Web App</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="theme-color" content="salmon" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="shortcut icon" href="assets/img/favicon.png">
+    <link rel="apple-touch-icon" href="icon/icon.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.css" />
+    <link rel="stylesheet" href="assets/css/font-awesome.css" />
+    <link rel="stylesheet" href="assets/css/ace-fonts.css" />
+    <link rel="stylesheet" href="assets/css/ace.css" class="ace-main-stylesheet" id="main-ace-style" />
+    <link rel="stylesheet" href="assets/css/ace-skins.css" />
+    <link rel="stylesheet" href="assets/css/jquery-ui-1.10.4.custom.min.css " />
+    <link rel="stylesheet" href="assets/css/template.css"/>
+    <link rel="stylesheet" href="assets/css/sweet-alert.css">
+
+    <!-- ace settings handler -->
+    <script src="assets/js/ace-extra.js"></script>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script src="assets/js/bootstrap.js"></script>
+    <script src="assets/js/ace/ace.js"></script>
+    <script src="assets/js/sweet-alert.js"></script>
+    <script src="assets/js/handlebars-v3.js"></script>
+    <script src="scripts/app.js"></script>
+    <script src="scripts/template.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/api.js" async></script>
+    <script src="assets/js/localforage.js"></script>
+    <script src="assets/js/html5-qrcode.min.js"></script>
+  </head>
+  <body class="no-skin">
+		<div id="loader">
+        <div class="loader"></div>
+		</div>
+		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
+    <div id="navbar" class="navbar navbar-default">
+      <div class="navbar-container" id="navbar-container">
+        <div class="navbar-header pull-left" style="position:absolute; padding-left:10px;">
+          <a href="index.html" class="font-size-24 white"><i class="fa fa-chevron-left"></i></a>
+        </div>
+        <div class="navbar-header" id="title">ใบสั่งงาน</div>
+        <div class="navbar-buttons navbar-header pull-right">
+          <div class="online-status" id="online-status">Online</div>
+        </div>
+      </div>
+    </div>
+    <div class="main-container" id="main-container">
+      <div class="main-content">
+        <div class="main-content-inner">
+          <div class="page-content">
+            <div style="position:fixed; top:45px; width:100%; margin-left:-20px; padding: 5px 12px; background-color:white; box-shadow: 0px 1px 7px #f3ecec; z-index:10;">
+              <div class="margin-top-15 margin-bottom-15">
+                <div class="width-100">
+                  <span class="width-100">
+                    <input type="text" class="form-control input-lg" style="padding-left:15px; padding-right:85px; border-radius:5px !important;" id="search-text" placeholder="ค้นหาใบสั่งาน" autofocus>
+                    <i class="ace-icon fa fa-search fa-2x" id="search-icon" style="position:absolute; top:28px; right:70px; color:grey;" onclick="searchText()"></i>
+                    <i class="ace-icon fa fa-times fa-2x hide" id="clear-icon" style="position:absolute; top:28px; right:70px; color:grey;" onclick="clearSearch()"></i>
+                    <i class="ace-icon fa fa-qrcode fa-2x" style="position:absolute; top:30px; right:22px; color:grey;" onclick="startScan(getSearch)"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12 table-responsive padding-5" id="detail-table" style="margin-top:95px; margin-bottom:60px;"></div>
+
+              <div class="sc" onclick="scrollToTop()"
+                style="width:25px; height:25px; color:white; background-color:#33333370;
+                font-size:15px; text-align:center; vertical-align: middle; position:fixed;
+                bottom:125px; right:5px; z-index:10;"><i class="fa fa-angle-double-up"></i></div>
+              <div class="sc" onclick="scrollToButtom()"
+                style="width:25px; height:25px; color:white; background-color:#33333370;
+                font-size:15px; text-align:center; vertical-align: middle; position:fixed;
+                bottom:80px; right:5px; z-index:10;"><i class="fa fa-angle-double-down"></i></div>
+            </div> <!-- row -->
+
+
+            <div class="pg-footer">
+              <div class="pg-footer-inner">
+                <div class="pg-footer-content text-right">
+                  <div class="footer-menu width-25">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
+                  </div>
+                  <div class="footer-menu width-25">
+                    <li><a href="work_list.html"><i class="fa fa-file-text-o fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
+                  </div>
+                  <div class="footer-menu width-25">
+                    <li><a href="javascript:window.location.reload()"><i class="fa fa-refresh fa-2x white"></i><span>Refresh</span></a></li>
+                  </div>
+                  <div class="footer-menu width-25">
+                    <li><a href="javascript:showMeterList()"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                  </div>
+                </div>
+              </div><!-- footer inner-->
+            </div><!-- /.footer -->
+            <div class="pg-footer">
+              <div class="pg-footer-inner">
+                <div class="pg-footer-content text-right">
+                  <div class="footer-menu width-20">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="transfer.html"><i class="fa fa-history fa-2x white"></i><span>ประวัติ</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="#" onclick="updateWorkList()"><i class="fa fa-refresh fa-2x white"></i><span>โหลดใบสั่งงาน</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="meter_list.html"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-cogs fa-2x white"></i><span>การตั้งค่า</span></a></li>
+                  </div>
+                </div>
+              </div><!-- footer inner-->
+            </div><!-- /.footer -->
+
+          </div> <!-- pang content -->
+      </div><!-- main content inner -->
+    </div><!-- main content -->
+  </div><!-- /.main-container -->
+
+
+  <div class="modal fade" id="work-list-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:95vw; max-width:400px; margin-left:auto; margin-right:auto;">
+     <div class="modal-content">
+        <div class="modal-body">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="font-size:40px; font-weight:lighter; opacity: 0.6; position:absolute; top:10px; right:15px;">&times;</button>
+          <h3 class="modal-title text-center" style="font-size:32px;">การสับเปลี่ยน</h3>
+          <div class="row" id="data-list" style="padding-left:12px; padding-right:12px; margin-top:20px;">
+
+          </div>
+        </div>
+     </div>
+   </div>
+  </div>
+
+  <script id="modal-template" type="text/x-handlebarsTemplate">
+    <div class="col-xs-12 text-center">
+      <p style="font-size:24px; font-weight:bold;">PEA NO</p>
+      <input type="text" class="form-control input-lg text-center" style="background-color:#aa3dbd; color:white; border-radius:10px !important;" value="{{pea_no}}" />
+      <p style="font-size:18px; font-weight:bold; margin-top:10px;">{{cust_name}}</p>
+      <p>{{cust_adddress}}</p>
+      <p>โทร. {{cust_tel}}</p>
+      <p class="bold">สายจดหน่วย  {{cust_route}}</p>
+      <p class="bold">หมายเลขผู้ใช้ไฟ {{ca_no}}</p>
+    </div>
+    <div class="divider-hidden"></div>
+    <div class="divider-hidden"></div>
+    <div class="col-xs-12" style="padding-left:20px; padding-right:20px;">
+      <button type="button" class="btn btn-xlg btn-success btn-block" onclick="goInstall('{{pea_no}}')" style="font-size:24px; border-radius:10px !important;"><i class="fa fa-check"></i>&nbsp;สับเปลี่ยนได้</button>
+    </div>
+    <div class="col-xs-12 margin-top-10" style="padding-left:20px; padding-right:20px;">
+      <button type="button" class="btn btn-xlg btn-danger btn-block" onclick="goInform('{{pea_no}}')" style="font-size:24px; border-radius:10px !important;"><i class="fa fa-times"></i>&nbsp;สับเปลี่ยนไม่ได้</button>
+    </div>
+  </script>
+
+
+  <script id="stock-template" type="text/x-handlebarsTemplate">
+  {{#each this}}
+    <div class="col-xs-12 margin-bottom-5" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;" onclick="showWorkList('{{pea_no}}')">
+      <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;"><i class="fa fa-file-text-o fa-3x" style="color:#b95bb9"></i></div>
+      <div class="col-xs-9-harf" style="padding: 5px 0;">
+        <p class="margin-bottom-0">Pea No : {{pea_no}}</p>
+        <p class="margin-bottom-0">สายจดหน่วย : {{cust_route}}</p>
+        <p class="margin-bottom-0">customer No : {{cust_no}}</p>
+        <p class="margin-bottom-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Address : {{cust_address}}</p>
+      </div>
+    </div>
+    {{/each}}
+  </script>
+
+  <script src="scripts/index.js"></script>
+  <script src="scripts/transfer/work_list.js"></script>
+
+  <script>
+    function scrollToTop() {
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function scrollToButtom() {
+      window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+    }
+
+  </script>
+  </body>
+</html>

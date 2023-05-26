@@ -33,7 +33,7 @@
 	<div class="form-group">
     <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">User Group</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="ugroup" onchange="toggleAreaAndWarehouse()">
+			<select class="form-control" id="ugroup" onchange="toggleArea()">
         <option value="">Please Select</option>
 				<?php echo select_ugroup($user->ugroup); ?>
       </select>
@@ -45,12 +45,27 @@
   <div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="team-table">
     <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Area</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="team_id">
+			<select class="form-control" id="team_id" onchange="getTeamGroupList()">
 				<option value="">-ไม่ระบุ-</option>
       <?php echo select_team($user->team_id); ?>
       </select>
     </div>
 		<div class="col-xs-12 col-sm-reset inline red" id="team-error"></div>
+  </div>
+
+	<div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="team-group-table">
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">ทีมติดตั้ง</label>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<select class="form-control" id="group_id" onchange="validTeamGroup()">
+				<option value="">-ไม่ระบุ-</option>
+			<?php if( ! empty($teamGroup)) : ?>
+				<?php foreach($teamGroup as $g_id => $g_name) : ?>
+					<option value="<?php echo $g_id; ?>" <?php echo is_selected($user->team_group_id, $g_id); ?>><?php echo $g_name; ?></option>
+				<?php endforeach; ?>
+			<?php endif; ?>
+      </select>
+    </div>
+		<div class="col-xs-12 col-sm-reset inline red" id="team-group-error"></div>
   </div>
 
   <div class="form-group <?php echo ($user->ugroup == 2 ? '' : 'hide'); ?>" id="area-table">
@@ -85,28 +100,17 @@
 		</div>
 		<div class="col-xs-12 col-sm-reset inline red" id="area-error"></div>
   </div>
+  
 
-  <div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="from-warehouse-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">From Warehouse</label>
+	<div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="get-meter-table">
+		<label class="col-lg-3 col-md-3 col-sm-3 hidden-xs control-label"></label>
 		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="fromWhsCode">
-				<option value="">-ไม่ระบุ-</option>
-      <?php echo select_listed_warehouse($user->fromWhsCode); ?>
-      </select>
-    </div>
-		<div class="col-xs-12 col-sm-reset inline red" id="from-warehouse-error"></div>
-  </div>
-
-	<div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="to-warehouse-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">To Warehouse</label>
-		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="toWhsCode">
-				<option value="">-ไม่ระบุ-</option>
-      <?php echo select_listed_warehouse($user->toWhsCode); ?>
-      </select>
-    </div>
-		<div class="col-xs-12 col-sm-reset inline red" id="to-warehouse-error"></div>
-  </div>
+			<label style="margin-top:7px; padding-left:10px;">
+				<input type="checkbox" class="ace" id="can_get_meter" <?php echo is_checked($user->can_get_meter, '1'); ?> />
+				<span class="lbl">&nbsp; สามารถเบิกมิเตอร์ได้</span>
+			</label>
+		</div>
+	</div>
 
 	<div class="form-group">
     <label class="col-lg-3 col-md-3 col-sm-3 hidden-xs control-label"></label>
@@ -131,6 +135,13 @@
 
   <input type="hidden" id="user_id" value="<?php echo $user->id; ?>" />
 </form>
+
+<script id="group-template" type="text/x-handlebarsTemplate">
+	<option value="">-ไม่ระบุ-</option>
+	{{#each this}}
+		<option value="{{id}}">{{name}}</option>
+	{{/each}}
+</script>
 
 <script src="<?php echo base_url(); ?>scripts/users/users.js?v=<?php echo date('Ymd'); ?>"></script>
 <?php $this->load->view('include/footer'); ?>

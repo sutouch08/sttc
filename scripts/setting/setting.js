@@ -88,3 +88,46 @@ function changeURL(tab)
 	var stObj = { stage: 'stage' };
 	window.history.pushState(stObj, 'setting', url);
 }
+
+
+function refresh_token() {
+
+	load_in();
+
+	$.ajax({
+		url:BASE_URL + 'scs/scs_token/get_token',
+		type:'POST',
+		cache:false,
+		success:function(rs) {
+			load_out();
+
+			if(isJson(rs)) {
+				let ds = JSON.parse(rs);
+
+				if(ds.status == 'success') {
+					$('#token').val(ds.token);
+
+					swal({
+						title:'Updated',
+						type:'success',
+						timer:1000
+					});
+				}
+				else {
+					swal({
+						title:'Error!',
+						text:ds.message,
+						type:'error'
+					});
+				}
+			}
+			else {
+				swal({
+					title:'Error!',
+					text:rs,
+					type:'error'
+				});
+			}
+		}
+	});
+}

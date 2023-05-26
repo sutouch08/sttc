@@ -9,12 +9,14 @@ function showTab(name) {
   $('#'+name+'-tab').addClass('active in');
 
   if(name == 'home') {
+    $('#title').text('รับมิเตอร์');
     $('#sync-li').addClass('hide');
     $('#scan-li').removeClass('hide');
     $('#home').addClass('hide');
     $('#detail').removeClass('hide');
   }
   else {
+    $('#title').text('รายการมิเตอร์');
     $('#scan-li').addClass('hide');
     $('#sync-li').removeClass('hide');
     $('#detail').addClass('hide');
@@ -75,7 +77,7 @@ function saveCameraId() {
     return false;
   }
   else {
-    setCookie('cameraId', camId, 3650);
+    localStorage.setItem('cameraId', camId);
     closeModal('cameras-modal');
     setTimeout(() => {
       startScan();
@@ -99,7 +101,7 @@ function changeCameraId() {
 
 
 function startScan() {
-  let camId = getCookie('cameraId');
+  let camId = localStorage.getItem('cameraId');
 
   if(camId == "" || camId == undefined) {
     Html5Qrcode.getCameras().then(devices => {
@@ -468,7 +470,7 @@ function deleteStockByDocNum(code) {
 }
 
 
-function updateScanType() {
+async function updateScanType() {
   if(navigator.onLine) {
     let json = JSON.stringify({"config_code" : "SCANTYPE"});
     let requestUri = URI + 'getConfig';
@@ -511,9 +513,10 @@ function updateScanType() {
 function syncItem() {
   if(navigator.onLine) {
     load_in();
+    let ud = JSON.parse(localStorage.getItem('userdata'));
 
-    let json = JSON.stringify({'user_id' : userId});
-    let requestUri = URI + 'sync_user_items';
+    let json = JSON.stringify({'team_group_id' : ud.team_group_id});
+    let requestUri = URI + 'sync_team_group_items';
     let header = new Headers();
     header.append('X-API-KEY', API_KEY);
     header.append('Authorization', AUTH);
@@ -537,9 +540,11 @@ function syncItem() {
         ds.data.forEach((item, i) => {
           let serial = item.Serial;
           let docnum = item.DocNum;
+          let peaNo = item.PeaNo;
 
           let arr = {
             "docnum" : item.DocNum,
+            "peaNo" : item.PeaNo,
             "serial" : item.Serial,
             "code" : item.ItemCode,
             "name" : item.ItemName,
@@ -548,6 +553,7 @@ function syncItem() {
 
           arr[serial] = serial;
           arr[docnum] = docnum;
+          arr[peaNo] = peaNo;
 
           data.push(arr);
         });

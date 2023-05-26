@@ -24,7 +24,8 @@ class Authentication extends CI_Controller
     $pwd = $this->input->post('pwd');
 		$rem = $this->input->post('remember') == 1 ? TRUE : FALSE;
 
-		$rs = $this->user_model->get_user_credentials($user_name);
+		//$rs = $this->user_model->get_user_credentials($user_name);
+		$rs = $this->user_model->get_by_uname($user_name);
 
     if(! empty($rs))
     {
@@ -43,8 +44,11 @@ class Authentication extends CI_Controller
 						'uname' => $rs->uname,
 						'displayName' => $rs->name,
 						'ugroup' => $rs->ugroup,
-						'teamName' => $this->user_model->get_user_team_name($rs->team_id),
 						'team_id' => $rs->team_id,
+						'teamName' => $rs->team_name,
+						'team_group_id' => $rs->team_group_id,
+						'team_group_name' => $rs->team_group_name,
+						'can_get_meter' => $rs->can_get_meter,
 						'fromWhsCode' => $rs->fromWhsCode,
 						'toWhsCode' => $rs->toWhsCode
 					);
@@ -64,7 +68,14 @@ class Authentication extends CI_Controller
 			$this->error = 'Username or password is incorrect';
     }
 
-		echo $sc === TRUE ? 'success' : $this->error;
+		$arr = array(
+			'status' => $sc === TRUE ? 'success' : 'failed',
+			'message' => $sc === TRUE ? 'success' : $this->error,
+			'userdata' => $sc === TRUE ? $ds : NULL
+		);
+
+		echo json_encode($arr);
+		//echo $sc === TRUE ? 'success' : $this->error;
 	}
 
 

@@ -19,6 +19,26 @@ class Api extends REST_Controller
 		$this->_user = $this->user_model->get_user_by_uid($uid);
   }
 
+  public function is_expire_password($last_pass_change)
+	{
+		$today = date('Y-m-d');
+
+		$last_change = empty($last_pass_change) ? date('2021-01-01') : $last_pass_change;
+
+		$expire_days = intval(getConfig('USER_PASSWORD_AGE'));
+
+		if($expire_days != 0)
+		{
+			$expire_date = date('Y-m-d', strtotime("+{$expire_days} days", strtotime($last_change)));
+
+			if($today > $expire_date)
+			{
+				return true;
+			}
+		}
+
+		return FALSE;
+	}
 
   public function validate_credentials_post()
 	{
@@ -27,7 +47,7 @@ class Api extends REST_Controller
 
     if( ! empty($data))
     {
-      $user = $this->user_model->get_user_credentials($data->uname);
+      $user = $this->user_model->get_by_uname($data->uname);
 
       if( ! empty($user))
       {
@@ -37,14 +57,19 @@ class Api extends REST_Controller
           {
             $ds = array(
   						'uid' => $user->uid,
-              'userId' => $user->id,
+  						'userId' => $user->id,
   						'uname' => $user->uname,
   						'displayName' => $user->name,
   						'ugroup' => $user->ugroup,
-  						'teamName' => $this->user_model->get_user_team_name($user->team_id),
   						'team_id' => $user->team_id,
+  						'teamName' => $user->team_name,
+  						'team_group_id' => $user->team_group_id,
+  						'team_group_name' => $user->team_group_name,
+  						'can_get_meter' => $user->can_get_meter,
   						'fromWhsCode' => $user->fromWhsCode,
-  						'toWhsCode' => $user->toWhsCode
+  						'toWhsCode' => $user->toWhsCode,
+              'is_strong_pwd' => getConfig('USE_STRONG_PWD'),
+              'is_expire_pwd' => $this->is_expire_password($user->last_pass_change)
   					);
 
             $time = intval(86400); //-- 1 days
@@ -88,8 +113,10 @@ class Api extends REST_Controller
     }
 
     $arr = array(
-      'result' => $sc === TRUE ? 'success' : $this->error
-    );
+			'status' => $sc === TRUE ? 'success' : 'failed',
+			'message' => $sc === TRUE ? 'success' : $this->error,
+			'userdata' => $sc === TRUE ? $ds : NULL
+		);
 
     $this->response($arr, 200);
 	}
@@ -191,16 +218,34 @@ class Api extends REST_Controller
 
     if( ! empty($data))
     {
-      $user = $this->user_model->get_by_uname($data->uname);
+      $rs = $this->user_model->get_user_by_uid($data->uid);
 
-      if(empty($user))
+      if( ! empty($rs))
       {
-        $sc = FALSE;
-        $this->error = "User Not Found !";
+        $ds = array(
+          'uid' => $rs->uid,
+          'userId' => $rs->id,
+          'uname' => $rs->uname,
+          'displayName' => $rs->name,
+          'ugroup' => $rs->ugroup,
+          'team_id' => $rs->team_id,
+          'teamName' => $rs->team_name,
+          'team_group_id' => $rs->team_group_id,
+          'team_group_name' => $rs->team_group_name,
+          'can_get_meter' => $rs->can_get_meter,
+          'fromWhsCode' => $rs->fromWhsCode,
+          'from_warehouse_name' => $rs->from_warehouse_name,
+          'toWhsCode' => $rs->toWhsCode,
+          'to_warehouse_name' => $rs->to_warehouse_name,
+          'is_strong_pwd' => getConfig('USE_STRONG_PWD'),
+          'is_expire_pwd' => $this->is_expire_password($rs->last_pass_change),
+          'scanType' => getConfig('SCANTYPE')
+        );
       }
       else
       {
-        $user->use_strong_pwd = getConfig('USE_STRONG_PWD') == 1 ? 1 : 0;
+        $sc = FALSE;
+        $this->error = "User Not Found !";
       }
     }
     else
@@ -209,14 +254,13 @@ class Api extends REST_Controller
       $this->error = "Missing Required parameter";
     }
 
-    if($sc === TRUE)
-    {
-      $this->response($user, 200);
-    }
-    else
-    {
-      $this->response($this->error, 200);
-    }
+    $arr = array(
+			'status' => $sc === TRUE ? 'success' : 'failed',
+			'message' => $sc === TRUE ? 'success' : $this->error,
+			'userdata' => $sc === TRUE ? $ds : NULL
+		);
+
+    $this->response($arr, 200);
   }
 
 
@@ -345,7 +389,7 @@ class Api extends REST_Controller
       $powerNo = $data->runNo;
       $mYear = $data->mYear;
       $cond = $data->cond;
-      $damage_id = get_null($data->damage_id);
+      $damage_id = empty($data->damage_id) ? NULL : get_null($data->damage_id);
       $iImage = $data->iImage;
       $uImage = $data->uImage;
       $uOrientation = $data->uOrientation;
@@ -523,6 +567,9 @@ class Api extends REST_Controller
 
           $arr = array(
             'user_id' => $this->_user->id,
+            'team_id' => $this->_user->team_id,
+            'team_group_id' => $this->_user->team_group_id,
+            'pea_no' => $rs->PeaNo,
             'serial' => $rs->Serial,
             'ItemCode' => $rs->ItemCode,
             'ItemName' => $rs->ItemName,
@@ -577,16 +624,17 @@ class Api extends REST_Controller
 
 
 
-  public function delete_open_user_items_post()
+  public function delete_open_team_group_items_post()
   {
     $this->load->model('inventory/transfer_model');
     $sc = TRUE;
-    $user_id = get_cookie('userId');
+    $team_group_id = $this->_user->team_group_id;
+
     $data = json_decode(file_get_contents('php://input'));
 
     if( ! empty($data) && ! empty($user_id))
     {
-      if( ! $this->transfer_model->delete_open_user_items($user_id, $data->docNum))
+      if( ! $this->transfer_model->delete_open_team_group_items($team_group_id, $data->docNum))
       {
         $sc = FALSE;
         $this->error = "Delete failed";
@@ -601,6 +649,119 @@ class Api extends REST_Controller
     $arr = array(
       'status' => $sc === TRUE ? 'success' : 'failed',
       'message' => $sc === TRUE ? 'success' : $this->error
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+
+  public function sync_team_group_work_list_post()
+  {
+    $sc = TRUE;
+    $this->load->model('inventory/work_list_model');
+    $data = json_decode(file_get_contents('php://input'));
+    $ds = array();
+
+    if( ! empty($data))
+    {
+      $details = $this->work_list_model->get_open_work_list_by_team_group($data->team_group_id);
+
+      if( ! empty($details))
+      {
+        foreach($details as $rs)
+        {
+          $arr = array(
+            'id' => $rs->id,
+            'pea_no' => $rs->pea_no,
+            'cust_route' => $rs->cust_route,
+            'cust_no' => $rs->cust_no,
+            'ca_no' => $rs->ca_no,
+            'cust_name' => $rs->cust_name,
+            'cust_address' => $rs->cust_address,
+            'cust_tel' => $rs->cust_tel,
+            'age_meter' => $rs->age_meter
+          );
+
+          array_push($ds, $arr);
+        }
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('required');
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'data' => $sc === TRUE ? $ds : NULL
+    );
+
+    $this->response($arr, 200);
+  }
+
+
+
+  public function get_open_work_list_by_pea_no_post()
+  {
+    $sc = TRUE;
+    $this->load->model('inventory/work_list_model');
+
+    $data = json_decode(file_get_contents('php://input'));
+    $ds = array();
+
+    if( ! empty($data) && ! empty($data->team_group_id) && ! empty($data->pea_no))
+    {
+      $rs = $this->work_list_model->get_work_list_by_pea_no($data->pea_no);
+
+      if( ! empty($rs))
+      {
+        if($rs->team_group_id == $data->team_group_id)
+        {
+          if($rs->status == 'P' OR $rs->status == 'R' OR $rs->status== 'U')
+          {
+            $ds = array(
+              'id' => $rs->id,
+              'pea_no' => $rs->pea_no,
+              'cust_route' => $rs->cust_route,
+              'cust_no' => $rs->cust_no,
+              'ca_no' => $rs->ca_no,
+              'cust_name' => $rs->cust_name,
+              'cust_address' => $rs->cust_address,
+              'cust_tel' => $rs->cust_tel,
+              'age_meter' => $rs->age_meter
+            );
+          }
+          else
+          {
+            $sc = FALSE;
+            $this->error = "ใบสั่งงานถูกดำเนินการไปแล้ว";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "ใบสั่งงานไม่ตรงกับทีมติดต้้ง";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "Pea No ไม่ถูกต้อง";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('required');
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'data' => $sc === TRUE ? $ds : NULL
     );
 
     $this->response($arr, 200);
@@ -644,6 +805,7 @@ class Api extends REST_Controller
                   'no' => $no,
                   'DocNum' => $data->docNum,
                   'Serial' => $rs->Serial,
+                  'PeaNo' => $rs->PeaNo,
                   'ItemCode' => $rs->ItemCode,
                   'ItemName' => $rs->ItemName,
                   'WhsCode' => $rs->WhsCode
@@ -694,7 +856,7 @@ class Api extends REST_Controller
   }
 
 
-  public function sync_user_items_post()
+  public function sync_team_group_items_post()
   {
     $this->load->model('inventory/user_item_model');
     $sc = TRUE;
@@ -703,7 +865,7 @@ class Api extends REST_Controller
 
     if( ! empty($data))
     {
-      $details = $this->user_item_model->get_open_user_items($data->user_id);
+      $details = $this->user_item_model->get_open_team_group_items($data->team_group_id);
 
       if( ! empty($details))
       {
@@ -714,6 +876,7 @@ class Api extends REST_Controller
           $arr = array(
             'no' => $no,
             'DocNum' => $rs->DocNum,
+            'PeaNo' => $rs->pea_no,
             'Serial' => $rs->serial,
             'ItemCode' => $rs->ItemCode,
             'ItemName' => $rs->ItemName,
@@ -739,6 +902,53 @@ class Api extends REST_Controller
 
     $this->response($arr, 200);
   }
+
+
+  // public function sync_user_items_post()
+  // {
+  //   $this->load->model('inventory/user_item_model');
+  //   $sc = TRUE;
+  //   $data = json_decode(file_get_contents('php://input'));
+  //   $ds = array();
+  //
+  //   if( ! empty($data))
+  //   {
+  //     $details = $this->user_item_model->get_open_user_items($data->user_id);
+  //
+  //     if( ! empty($details))
+  //     {
+  //       $no = 1;
+  //
+  //       foreach($details as $rs)
+  //       {
+  //         $arr = array(
+  //           'no' => $no,
+  //           'DocNum' => $rs->DocNum,
+  //           'Serial' => $rs->serial,
+  //           'ItemCode' => $rs->ItemCode,
+  //           'ItemName' => $rs->ItemName,
+  //           'WhsCode' => $rs->WhsCode
+  //         );
+  //
+  //         array_push($ds, $arr);
+  //         $no++;
+  //       }
+  //     }
+  //   }
+  //   else
+  //   {
+  //     $sc = FALSE;
+  //     set_error('required');
+  //   }
+  //
+  //   $arr = array(
+  //     'status' => $sc === TRUE ? 'success' : 'failed',
+  //     'message' => $sc === TRUE ? 'success' : $this->error,
+  //     'data' => $sc === TRUE ? $ds : ""
+  //   );
+  //
+  //   $this->response($arr, 200);
+  // }
 
 
   public function getConfig_post()
@@ -1354,15 +1564,12 @@ class Api extends REST_Controller
 
   public function get_damaged_list_post()
   {
-    $this->load->model('admin/damaged_model');
+    $this->load->model('admin/dispose_reason_model');
     $sc = TRUE;
-    $ds = array();
-
-    $list = $this->damaged_model->get_all_active();
 
     $arr = array(
       'status' => 'success',
-      'data' => $list
+      'data' => $this->dispose_reason_model->get_all()
     );
 
     $this->response($arr, 200);

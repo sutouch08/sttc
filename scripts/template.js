@@ -310,6 +310,11 @@ $('.filter').change(function() {
 })
 
 
+function goBack() {
+	window.location.href = HOME;
+}
+
+
 function clearFilter() {
 	let url = HOME + 'clear_filter';
 	$.get(url, function(rs){ goBack(); });

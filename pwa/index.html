@@ -29,12 +29,16 @@
     <script src="assets/js/sweet-alert.js"></script>
     <script src="assets/js/handlebars-v3.js"></script>
 
-    <script src="scripts/app.js" async></script>
-
+    <script src="scripts/app.js"></script>
+    <script src="scripts/template.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="assets/js/localforage.js"></script>
   </head>
   <body class="no-skin">
 		<div id="loader">
         <div class="loader"></div>
+        <div class="loader-message" id="loader-message"></div>
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
 
@@ -55,29 +59,19 @@
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 text-center">
                 <h1 id="hello"></h1>
-                <h5>Good to see you here</h5>
               </div>
               <div class="divider"></div>
             </div>
-            <div class="row">
-              <div class="col-xs-12 text-center" style="padding-left:30px; padding-right:30px; margin-bottom:5px;">
-                <a href="transfer.html" class="btn btn-info btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-tasks bigger-160"></i>Jobs List
-                </a>
-                <a href="transfer_add.html" class="btn btn-success btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-plus bigger-230"></i>New Job
-                </a>
-                <a href="checkin.html" class="btn btn-primary btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-check-square-o bigger-230"></i>Check in
-                </a>
+            <div class="row hide" id="first-menu" style="padding-left:20px; padding-right:20px;">
+              <div class="col-xs-12">
+                <a href="meter_list.html" class="row-button text-center hide" id="meter-list" style="background-color:#2a8bcb; color:white;">รายการมิเตอร์</a>
+                <a href="checkin.html" class="row-button text-center hide" id="check-in" style="background-color:#2a8bcb; color:white;">เบิกมิเตอร์</a>
               </div>
-              <div class="col-xs-12 text-center" style="padding-left:30px; padding-right:30px;">
-                <a href="return.html" class="btn btn-purple btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-undo bigger-230"></i>Return
-                </a>
-                <a href="user.html" class="btn btn-warning btn-app btn-sm radius-4" style="margin:5px;">
-                  <i class="ace-icon fa fa-user bigger-230"></i>Account
-                </a>
+              <div class="col-xs-12 text-center">
+                <a href="work_list.html" class="row-button text-center" style="background-color:#85b558; color:white;">ใบสั่งงาน</a>
+              </div>
+              <div class="col-xs-12 text-center">
+                <a href="return.html" class="row-button text-center" style="background-color:#9585bf; color:white;">คืนมิเตอร์</a>
               </div>
             </div>
 
@@ -86,19 +80,19 @@
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="return.html"><i class="fa fa-undo fa-2x white"></i><span>RETURN LIST</span></a></li>
+                    <li><a href="return.html"><i class="fa fa-recycle fa-2x white"></i><span>คืนมิเตอร์</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer.html"><i class="fa fa-tasks fa-2x white"></i><span>JOB LIST</span></a></li>
+                    <li><a href="transfer.html"><i class="fa fa-history fa-2x white"></i><span>ประวัติการติดตั้ง</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer_add.html"><i class="fa fa-plus fa-2x white"></i><span>NEW JOB</span></a></li>
+                    <li><a href="work_list.html"><i class="fa fa-tasks fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="checkin.html"><i class="fa fa-check-square-o fa-2x white"></i><span>CHECK IN</span></a></li>
+                    <li><a href="meter_list.html"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-cogs fa-2x white"></i><span>การตั้งค่า</span></a></li>
                   </div>
                 </div>
              </div>
@@ -109,21 +103,21 @@
     </div><!-- main content -->
   </div><!-- /.main-container -->
 
-      <!-- ace scripts -->
+    <script src="scripts/index.js"></script>
+
     <script>
       window.addEventListener('load', function() {
-        let uname = getCookie('uname');
+        let userdata = localStorage.getItem('userdata');
 
-        if(uname != "") {
-          const hello = document.getElementById('hello');
-          hello.innerHTML = "Hello "+uname;
+        if(userdata.length) {
+          let ud = JSON.parse(userdata);
+          $('#hello').text(ud.displayName);
         }
+
+        init();
       });
+
     </script>
-    <script src="assets/js/ace/ace.sidebar.js"></script>
-    <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
-    <script src="assets/js/ace/ace.submenu-hover.js"></script>
-    <script src="scripts/template.js"></script>
-    <script src="scripts/main.js" async></script>
+
   </body>
 </html>

@@ -16,11 +16,31 @@ function _check_login()
   }
 }
 
+function user_array($id = NULL)
+{
+  $ci =& get_instance();
+  $ds = array();
+
+  $list = $ci->user_model->get_all();
+
+  if( ! empty($list))
+  {
+    foreach($list as $rs)
+    {
+      $ds[$rs->id] = $rs->name;
+    }
+  }
+
+  return $ds;
+}
+
+
+
 function select_ugroup($id = '')
 {
   $ds = '';
   $ds .= '<option value="1" '.is_selected('1', $id).'>Admin</option>';
-  $ds .= '<option value="2" '.is_selected('2', $id).'>Outsource Manager</option>';
+  $ds .= '<option value="2" '.is_selected('2', $id).'>Manager</option>';
   $ds .= '<option value="3" '.is_selected('3', $id).'>Outsource</option>';
 
   return $ds;
@@ -93,6 +113,19 @@ function get_permission($menu, $user_id)
       }
     }
   }
+
+  return $pm;
+}
+
+
+function grant_permission()
+{
+  $pm = new stdClass();
+  $pm->can_view = TRUE;
+  $pm->can_add = TRUE;
+  $pm->can_edit = TRUE;
+  $pm->can_delete = TRUE;
+  $pm->can_approve = TRUE;
 
   return $pm;
 }

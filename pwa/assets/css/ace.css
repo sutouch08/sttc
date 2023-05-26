@@ -5360,7 +5360,7 @@ body.mob-safari .sidebar.sidebar-fixed {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
   background-image: none !important;
   border: 5px solid #FFF;
-  border-radius: 0;
+  border-radius: 5px;
   box-shadow: none !important;
   -webkit-transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
   -o-transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
@@ -8722,7 +8722,7 @@ input[type="url"],
 input[type="search"],
 input[type="tel"],
 input[type="color"] {
-  border-radius: 0px !important;
+  border-radius: 6px;
   color: #858585;
   background-color: #ffffff;
   border: 1px solid #d5d5d5;
@@ -8793,7 +8793,7 @@ input:-ms-input-placeholder,
 }
 .form-control,
 select {
-  border-radius: 0;
+  border-radius: 5px;
   -webkit-box-shadow: none !important;
   box-shadow: none !important;
   color: #858585;
@@ -8822,11 +8822,11 @@ select.form-control[multiple] {
   height: auto;
 }
 select.input-sm {
-  border-radius: 0;
+  /*border-radius: 5px;*/
   padding: 2px 3px;
 }
 select.input-lg {
-  border-radius: 0;
+  /*border-radius: 6px;*/
   padding: 6px 8px;
 }
 input.block {

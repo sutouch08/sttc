@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>STTC Web App</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="theme-color" content="salmon" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="shortcut icon" href="assets/img/favicon.png">
+    <link rel="apple-touch-icon" href="icon/icon.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.css" />
+    <link rel="stylesheet" href="assets/css/font-awesome.css" />
+    <link rel="stylesheet" href="assets/css/ace-fonts.css" />
+    <link rel="stylesheet" href="assets/css/ace.css" class="ace-main-stylesheet" id="main-ace-style" />
+    <link rel="stylesheet" href="assets/css/ace-skins.css" />
+    <link rel="stylesheet" href="assets/css/jquery-ui-1.10.4.custom.min.css " />
+    <link rel="stylesheet" href="assets/css/template.css"/>
+    <link rel="stylesheet" href="assets/css/sweet-alert.css">
+
+    <!-- ace settings handler -->
+    <script src="assets/js/ace-extra.js"></script>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script src="assets/js/bootstrap.js"></script>
+    <script src="assets/js/ace/ace.js"></script>
+
+
+    <script src="assets/js/sweet-alert.js"></script>
+    <script src="assets/js/handlebars-v3.js"></script>
+
+    <script src="scripts/template.js"></script>
+    <script src="scripts/app.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="assets/js/localforage.js"></script>
+    <script src="assets/js/html5-qrcode.min.js"></script>
+
+    <style>
+      .box {
+        background-color: white;
+        border-radius: 15px;
+        padding: 10px;
+        margin-top: 10px;
+      }
+
+    </style>
+  </head>
+  <body class="no-skin">
+		<div id="loader">
+        <div class="loader"></div>
+		</div>
+		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
+    <div id="navbar" class="navbar navbar-default">
+			<div class="navbar-container" id="navbar-container">
+        <div class="navbar-header pull-left" style="position:absolute; padding-left:10px;">
+          <a href="work_list.html" class="font-size-24 white"><i class="fa fa-chevron-left"></i></a>
+        </div>
+				<div class="navbar-header">งานสับเปลี่ยน</div>
+        <div class="navbar-buttons navbar-header pull-right">
+					<div class="online-status" id="online-status">Online</div>
+				</div>
+			</div>
+		</div>
+    <div class="main-container" id="main-container">
+      <div class="main-content">
+        <div class="main-content-inner">
+          <div class="page-content" style="background-color:#f9ddd8;">
+
+            <div class="row box">
+              <div class="col-xs-12 text-center">
+                <p style="font-size:24px; color:#555; margin:0;">มิเตอร์เก่า</p>
+              </div>
+              <hr class="margin-bottom-15"/>
+              <div class="col-xs-8">
+                <label>PEA No. ของมิเตอร์เก่า</label>
+                <input type="text" class="form-control input-lg text-center" id="u-pea-no" value="" disabled/>
+              </div>
+              <div class="col-xs-4">
+                <label>อายุการใช้งาน</label>
+                <input type="text" class="form-control input-lg text-center" id="use-age" value="" disabled/>
+              </div>
+
+              <div class="divider-hidden"></div>
+
+              <div class="col-xs-4">
+                <label>หน่วยตัดกลับ</label>
+                <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control input-lg text-center" id="u-power-no" />
+              </div>
+              <div class="col-xs-8">
+                <label>สภาพของมิเตอร์เก่า</label>
+                <select class="form-control input-lg" id="u-dispose-id" onchange="suggest()">
+                </select>
+              </div>
+              <div class="divider-hidden"></div>
+              <div class="col-xs-6">Lat: 13.187659</div>
+              <div class="col-xs-6">Long: 100.5564221</div>
+
+              <div class="divider-hidden"></div>
+
+              <div class="col-xs-12 text-center">
+                <div class="" id="suggest-label">
+                  <div class="alert alert-normal">
+                    กรุณาระบุปีและสภาพมิเตอร์
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xs-12">
+                <label class="display-block">Serail ของมิเตอร์เก่า</label>
+                <div class="width-100">
+                  <span class="width-100">
+                    <input type="text" class="form-control input-lg" style="padding-left:15px; padding-right:45px;" id="u-serial-code" placeholder="สแกน Serial" />
+                    <i class="ace-icon fa fa-qrcode fa-2x" style="position:absolute; top:35px; right:15px; color:grey;" onclick="startScan(uSerialScan)"></i>
+                  </span>
+                  <input type="hidden" id="u-serial" value="" />
+                </div>
+              </div>
+
+              <div class="divider-hidden"></div>
+              <div class="divider-hidden"></div>
+              <div class="col-xs-12 padding-5">
+                <div class="width-100 text-center">ภาพถ่ายมิเตอร์เก่า<br/>ถ่ายมิเตอร์เก่าที่ถอดแล้ว</div>
+                <div class="width-100 text-center hide" id="u-preview" style="min-height:300px; background-color:#eee; border-radius:10px;"></div>
+                <div class="width-100 text-center" id="u-photo-btn" style="height:300px; background-color:#eee; border-radius:10px; padding:132px 0px;">
+                  <button type="button" class="text-center" onclick="takePhoto('u')"
+                  style="padding: 10px; background-color: #e1ccf3; border-radius: 30px; width: 100px; border: solid 1px #d2adf1;">
+                    ถ่ายภาพ
+                  </button>
+                </div>
+                <button type="button"
+                  class="close hide"
+                  style="position:absolute; top:37px; right:10px; color:red; font-size:35px; font-weight:lighter; opacity:1; text-shadow:none;"
+                  id="del-u-image" onclick="removeImage('u')">
+                  &times
+                </button>
+              </div>
+
+              <input type="file" class="hide" id="u-photo" accept="image/jpeg" capture>
+              <input type="hidden" id="u-blob" value=""/>
+              <input type="hidden" id="u-orientation" value="" />
+
+              <div class="divider-hidden"></div>
+              <div class="divider-hidden"></div>
+
+            </div><!-- row -->
+            <!-- image preview -->
+            <div class="row box">
+              <div class="col-xs-12 text-center">
+                <p style="font-size:24px; color:#555; margin:0;">มิเตอร์ใหม่</p>
+              </div>
+
+              <hr class="margin-bottom-15"/>
+              <div class="col-xs-8">
+                <label class="display-block">PEA No.</label>
+                <div class="width-100">
+                  <span class="width-100">
+                    <input type="text" class="form-control input-lg text-center" style="padding-left:10px; padding-right:70px;" id="i-pea-no" />
+                    <i class="ace-icon fa fa-search fa-2x" id="pea-search" style="position:absolute; top:34px; right:50px; color:grey;" onclick="getPeaNo()"></i>
+                    <i class="ace-icon fa fa-times fa-2x hide" id="pea-clear" style="position:absolute; top:34px; right:50px; color:grey;" onclick="clearPeaNo()"></i>
+                    <i class="ace-icon fa fa-qrcode fa-2x" style="position:absolute; top:37px; right:15px; color:grey;" onclick="startScan(iPeaScan)"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="col-xs-4">
+                <label>หน่วยตั้งต้น</label>
+                <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control input-lg text-center" id="i-power-no" value=""/>
+              </div>
+
+              <div class="divider-hidden"></div>
+
+              <div class="col-xs-4">
+                <label class="display-block">เฟสมิเตอร์</label>
+                <select class="form-control input-lg" id="phase-selected">
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="ABC">ABC</option>
+                </select>
+              </div>
+              <div class="col-xs-8">
+                <label class="display-block">Serail ของมิเตอร์ใหม่</label>
+                <div class="width-100">
+                  <span class="width-100">
+                    <input type="text" class="form-control input-lg text-center" style="padding-left:10px; padding-right:70px;" id="i-serial-code" />
+                    <i class="ace-icon fa fa-search fa-2x" id="serial-search" style="position:absolute; top:34px; right:50px; color:grey;" onclick="getSerial()"></i>
+                    <i class="ace-icon fa fa-times fa-2x hide" id="serial-clear" style="position:absolute; top:34px; right:50px; color:grey;" onclick="clearSerial()"></i>
+                    <i class="ace-icon fa fa-qrcode fa-2x" style="position:absolute; top:37px; right:15px; color:grey;" onclick="startScan(iSerialScan)"></i>
+                  </span>
+                </div>
+                <input type="hidden" id="i-serial" value="" />
+              </div>
+
+              <div class="divider-hidden"></div>
+
+              <div class="col-xs-12 text-center">
+                <div class="alert alert-success" id="i-result">
+                  ข้อมูลมิเตอร์ใหม่
+                </div>
+              </div>
+
+              <div class="col-xs-12 text-left">
+                <label class="">หมายเหตุ</label>
+                <textarea class="autosize-transition limited form-control"
+                style="overflow: hidden; overflow-wrap: break-word; resize: horizontal; height: 52px;"
+                id="remark" maxlength="254" placeholder="หมายเหตุ"></textarea>
+              </div>
+              <div class="divider-hidden"></div>
+
+              <div class="col-xs-12 text-center padding-5">
+                <div class="width-100 text-center">ภาพถ่ายมิเตอร์ใหม่<br/>ถ่ายมิเตอร์ใหม่ก่อนติดตั้ง</div>
+                <div class="width-100 text-center hide fill" id="i-preview" style="min-height:300px; background-color:#eee; border-radius:10px;"></div>
+                <div class="width-100 text-center" id="i-photo-btn" style="height:300px; background-color:#eee; border-radius:10px; padding:132px 0px;">
+                  <button type="button" class="text-center" onclick="takePhoto('i')"
+                  style="padding: 10px; background-color: #e1ccf3; border-radius: 30px; width: 100px; border: solid 1px #d2adf1;">
+                    ถ่ายภาพ
+                  </button>
+                </div>
+                <button type="button"
+                  class="close hide"
+                  style="position:absolute; top:37px; right:10px; color:red; font-size:35px; font-weight:lighter; opacity:1; text-shadow:none;"
+                  id="del-i-image" onclick="removeImage('i')">
+                  &times
+                </button>
+              </div>
+
+              <input type="file" class="hide" id="i-photo" accept="image/jpeg" capture>
+              <input type="hidden" id="i-blob" value=""/>
+              <input type="hidden" id="i-orientation" value="" />
+
+              <div class="divider-hidden"></div>
+              <div class="divider-hidden"></div>
+            </div><!-- row -->
+            <div class="row box">
+              <div class="col-xs-12 text-center">
+                <p style="font-size:24px; color:#555; margin:0;">ผู้ใช้ไฟ</p>
+              </div>
+              <hr class="margin-bottom-15"/>
+              <div class="col-xs-12">
+                <div class="btn-group width-100">
+                  <button type="button" id="btn-sign-0" class="btn width-33 tg btn-primary" style="border-radius:5px 0px 0px 5px;" onclick="toggleSign(0)">รับทราบ</button>
+                  <button type="button" id="btn-sign-1" class="btn width-33 tg" onclick="toggleSign(1)">ไม่อยู่</button>
+                  <button type="button" id="btn-sign-2" class="btn width-33 tg" onclick="toggleSign(2)" style="border-radius:0px 5px 5px 0px;">ไม่ลงนาม</button>
+                </div>
+                <input type="hidden" id="sign-status" value="0" />
+              </div>
+
+              <div class="divider-hidden"></div>
+              <div class="col-xs-12" style="background-color:#eee; border-radius:10px; padding:15px;">
+                <div class="width-100" id="sign-pad" style="height:300px; background-color:white;">
+
+                </div>
+
+                <div class="width-100 margin-top-15">
+                  <button type="button" class="btn btn-lg btn-default" style="border-radius:5px;" onclick="clearSignaturePad()">ล้าง</button>
+                  <button type="button" class="btn btn-lg btn-purple pull-right" style="border-radius:5px;" onclick="acceptSign()">ลงลายมือชื่อ</button>
+                </div>
+              </div>
+
+
+              <div class="divider-hidden"></div>
+              <div class="divider-hidden"></div>
+
+            </div><!-- row -->
+
+            <div class="row margin-top-15" style="margin-bottom:60px;">
+              <div class="col-xs-12 text-center">
+                <button type="button" class="btn btn-success btn-lg btn-100" style="border-radius:5px;" onclick="saveItem()">บันทึก</button>
+              </div>
+            </div>
+
+
+            <div class="pg-footer">
+              <div class="pg-footer-inner">
+                <div class="pg-footer-content text-right">
+                  <div class="footer-menu width-20">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="work_list.html"><i class="fa fa-file-text-o fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:window.location.reload()"><i class="fa fa-refresh fa-2x white"></i><span>Refresh</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:showMeterList()"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-cogs fa-2x white"></i><span>การตั้งค่า</span></a></li>
+                  </div>
+                </div>
+              </div><!-- footer inner-->
+            </div><!-- /.footer -->
+
+          </div> <!-- pang content -->
+      </div><!-- main content inner -->
+    </div><!-- main content -->
+  </div><!-- /.main-container -->
+
+
+
+  <div class="modal fade" id="meter-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:500px; max-width:95%; margin-left:auto; margin-right:auto;">
+     <div class="modal-content">
+         <div class="modal-header">
+         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+         <h4 class="modal-title text-center">เลือกมิเตอร์</h4>
+        </div>
+        <div class="modal-body">
+          <div class="row" id="meter-list" style="padding-left:12px; padding-right:12px; max-height:80vh; overflow:auto;">
+
+          </div>
+        </div>
+     </div>
+   </div>
+  </div>
+
+
+  <script id="meter-list-template" type="text/x-handlebarsTemplate">
+    {{#each this}}
+      <div class="col-xs-12 margin-bottom-5" onclick="selected('{{peaNo}}')" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;">
+        <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;"><i class="fa fa-file-text-o fa-3x" style="color:lightsalmon"></i></div>
+        <div class="col-xs-9-harf" style="padding: 5px 0;">
+          <p class="margin-bottom-0"><b>PEA No : </b>{{peaNo}}</p>
+          <p class="margin-bottom-0"><b>Serial : </b>{{serial}}</p>
+          <p class="margin-bottom-0"><b>Item : </b>{{code}}</p>
+          <p class="margin-bottom-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><b>Desc. : </b>{{name}}</p>
+          <input type="hidden" id="pea-{{peaNo}}" value="{{peaNo}}">
+          <input type="hidden" id="serial-{{peaNo}}" value="{{serial}}">
+          <input type="hidden" id="code-{{peaNo}}" value="{{code}}">
+          <input type="hidden" id="name-{{peaNo}}" value="{{name}}">
+        </div>
+      </div>
+    {{/each}}
+  </script>
+
+
+  <script id="damage-list-template" type="text/x-handlebarsTemplate">
+    {{#each this}}
+      <option value="{{reason_id}}">{{title}}</option>
+    {{/each}}
+  </script>
+
+  <script src="assets/js/exif.js"></script>
+  <script src="scripts/index.js"></script>
+  <script src="scripts/transfer/install.js"></script>
+  <script src="assets/js/jquery.autosize.js"></script>
+  </body>
+</html>

@@ -18,10 +18,6 @@ $('#date_add').datepicker({
   dateFormat:'dd-mm-yy'
 });
 
-function goBack() {
-  window.location.href = HOME;
-}
-
 
 function addNew() {
   window.location.href = HOME + 'add_new';

@@ -43,7 +43,7 @@
 
     <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
-				<div class="navbar-header">Smart TTC</div>
+				<div class="navbar-header">เปลี่ยนรหัสผ่าน</div>
         <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
@@ -53,90 +53,71 @@
     <div class="main-container" id="main-container">
       <div class="main-content">
         <div class="main-content-inner">
-          <div id="sidebar2"
-            class="sidebar h-sidebar navbar-collapse collapse"
-            data-sidebar="true" data-sidebar-scoll="true"
-            data-sidebar-hover="true" aria-expanded="false"
-            style="height:1px;">
-          </div>
-          <div class="page-content" id="page-content">
-
-            <div class="row">
-              <div class="col-xs-12 padding-5">
-                <h3 class="title">เปลี่ยนรหัสผ่าน</h3>
-              </div>
-            </div>
-            <hr/>
-            <div class="row">
-              <div class="col-xs-12 hide">
-                <label>Username</label>
-                <input type="text" class="width-100" id="uname" value="" disabled />
-                <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;"></div>
-              </div>
-              <div class="col-xs-12 hide">
-                <label>Display name</label>
-                <input type="text" class="width-100" id="dname" value="" disabled />
-                <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;"></div>
-              </div>
+          <div class="page-content" id="page-content" style="padding-top:60px;">
+            <div class="row" style="padding:0px 15px;">
               <div class="col-xs-12">
-                <label class="display-block">รหัสผ่านปัจจุบัน</label>
-                <span class="input-icon input-icon-right width-100 p-hide">
-                  <input type="password" class="width-100" id="cu-pwd" value=""  />
-                  <i class="ace-icon fa fa-eye" onclick="toggleShowPwd('s')"></i>
+                <span class="width-100 p-hide">
+                  <input type="password" class="form-control input-lg text-center" style="padding:5px 45px;" id="cu-pwd" placeholder="รหัสผ่านปัจจุบัน" value=""  />
+                  <i class="ace-icon fa fa-lock fa-2x grey" style="position:absolute; top:10px; left:15px;"></i>
+                  <i class="ace-icon fa fa-eye fa-2x grey" onclick="toggleShowPwd('s')" style="position:absolute; top:10px; right:15px;"></i>
+
                 </span>
-                <span class="input-icon input-icon-right width-100 p-show hide">
-                  <input type="text" class="width-100" id="cu-pwd-alt" value="" />
-                  <i class="ace-icon fa fa-eye-slash" onclick="toggleShowPwd('h')"></i>
+                <span class="width-100 p-show hide">
+                  <input type="text" class="form-control input-lg text-center" style="padding:5px 45px;" id="cu-pwd-alt" placeholder="รหัสผ่านปัจจุบัน" value="" />
+                  <i class="ace-icon fa fa-lock fa-2x grey" style="position:absolute; top:10px; left:15px;"></i>
+                  <i class="ace-icon fa fa-eye-slash fa-2x grey" onclick="toggleShowPwd('h')" style="position:absolute; top:10px; right:15px;"></i>
                 </span>
-                <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="cu-pwd-error"></div>
+                <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="cu-pwd-error">&nbsp;</div>
               </div>
 
               <div class="col-xs-12">
-                <label class="display-block">รหัสผ่านใหม่</label>
-                <span class="input-icon input-icon-right width-100 p-hide">
-                  <input type="password" id="pwd" class="width-100">
-                  <i class="ace-icon fa fa-eye" onclick="toggleShowPwd('s')"></i>
+                <span class="width-100 p-hide">
+                  <input type="password" id="pwd" class="form-control input-lg text-center" style="padding:5px 45px;" placeholder="รหัสผ่านใหม่">
+                  <i class="ace-icon fa fa-key fa-flip-vertical fa-2x grey" style="position:absolute; top:10px; left:15px;"></i>
+                  <i class="ace-icon fa fa-eye fa-2x grey" onclick="toggleShowPwd('s')" style="position:absolute; top:10px; right:15px;"></i>
                 </span>
-                <span class="input-icon input-icon-right width-100 p-show hide" id="pwd-show">
-                  <input type="text" class="width-100" id="pwd-alt" value="" />
-                  <i class="ace-icon fa fa-eye-slash" onclick="toggleShowPwd('h')"></i>
+                <span class="width-100 p-show hide" id="pwd-show">
+                  <input type="text" id="pwd-alt" class="form-control input-lg text-center" style="padding:5px 45px;" placeholder="รหัสผ่านใหม่" />
+                  <i class="ace-icon fa fa-key fa-flip-vertical fa-2x grey" style="position:absolute; top:10px; left:15px;"></i>
+                  <i class="ace-icon fa fa-eye-slash fa-2x grey" onclick="toggleShowPwd('h')" style="position:absolute; top:10px; right:15px;"></i>
                 </span>
               </div>
-              <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="pwd-error"></div>
+              <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="pwd-error">&nbsp;</div>
 
               <div class="col-xs-12">
-                <label class="display-block">ยืนยันรหัสผ่านใหม่</label>
-                <span class="input-icon input-icon-right width-100 p-hide">
-                  <input type="password" id="cm-pwd" class="width-100">
-                  <i class="ace-icon fa fa-eye" onclick="toggleShowPwd('s')"></i>
+                <span class="width-100 p-hide">
+                  <input type="password" id="cm-pwd" class="form-control input-lg text-center" style="padding:5px 45px;" placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง">
+                  <i class="ace-icon fa fa-key fa-flip-vertical fa-2x grey" style="position:absolute; top:10px; left:15px;"></i>
+                  <i class="ace-icon fa fa-eye fa-2x grey" onclick="toggleShowPwd('s')" style="position:absolute; top:10px; right:15px;"></i>
                 </span>
-                <span class="input-icon input-icon-right width-100 p-show hide" id="pwd-show">
-                  <input type="text" class="width-100" id="cm-pwd-alt" value="" />
-                  <i class="ace-icon fa fa-eye-slash" onclick="toggleShowPwd('h')"></i>
+                <span class="width-100 p-show hide" id="pwd-show">
+                  <input type="text" id="cm-pwd-alt" class="form-control input-lg text-center" style="padding:5px 45px;" placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง" />
+                  <i class="ace-icon fa fa-key fa-flip-vertical fa-2x grey" style="position:absolute; top:10px; left:15px;"></i>
+                  <i class="ace-icon fa fa-eye-slash fa-2x grey" onclick="toggleShowPwd('h')" style="position:absolute; top:10px; right:15px;"></i>
                 </span>
-                <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="cm-pwd-error"></div>
+                <div class="help-block col-xs-12 col-sm-reset inline red" style="padding-left:15px;" id="cm-pwd-error">&nbsp;</div>
               </div>
-
+              <div class="divider-hidden"></div>
+              <div class="divider-hidden"></div>
+              <div class="divider-hidden"></div>
               <div class="col-xs-12 text-center">
-                <label class="display-block not-show">x</label>
-                <button type="button" class="btn btn-sm btn-primary btn-100" onclick="changePassword()">เปลี่ยนรหัสผ่าน</button>
+                <button type="button" class="btn btn-lg btn-primary" onclick="changePassword()">เปลี่ยนรหัสผ่าน</button>
               </div>
 
               <input type="hidden" id="is-strong-pwd" value="1" />
             </div>
-
-
+  
             <div class="pg-footer">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-33 text-center">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>HOME</span></a></li>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
                   </div>
                   <div class="footer-menu width-33 text-center">
-                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>ACCOUNT</span></a></li>
+                    <li><a href="user.html"><i class="fa fa-user fa-2x white"></i><span>บัญชี</span></a></li>
                   </div>
                   <div class="footer-menu width-33 text-center">
-                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i><span>LOG OUT</span></a></li>
+                    <li><a href="javascript:logout()"><i class="fa fa-sign-out fa-2x white"></i><span>ออกจากระบบ</span></a></li>
                   </div>
                 </div>
              </div>
@@ -147,8 +128,5 @@
     </div><!-- main content -->
   </div><!-- /.main-container -->
   <script src="scripts/change_password.js" async></script>
-  <script src="assets/js/ace/ace.sidebar.js"></script>
-  <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
-  <script src="assets/js/ace/ace.submenu-hover.js"></script>
 </body>
 </html>

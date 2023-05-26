@@ -1,41 +1,6 @@
-window.addEventListener('load', () => {
-	let uname = getCookie('uname');
-
-	if(navigator.onLine) {
-		// get data from server
-		let json = JSON.stringify({"uname" : uname});
-		let requestUri = URI + 'user_data';
-		let header = new Headers();
-		header.append('X-API-KEY', API_KEY);
-		header.append('Authorization', AUTH);
-		header.append('Content-type', 'application/json');
-
-		let requestOptions = {
-			method : 'POST',
-			headers : header,
-			body : json
-		};
-
-		fetch(requestUri, requestOptions)
-		.then(response => response.text())
-		.then(result => {
-			if(isJson(result)) {
-				let ds = JSON.parse(result);
-				$('#is-strong-pwd').val(ds.use_strong_pwd);
-				$('#uname').val(ds.uname);
-				$('#dname').val(ds.display_name);
-				$('#cu-pwd').focus();
-			}
-		})
-		.catch(error => {
-				console.error('error', error);
-		});
-	}
-});
-
-
 
 function toggleShowPwd(option) {
+	console.log(option);
 	if(option == 's') {
 		$('.p-hide').addClass('hide');
 		$('.p-show').removeClass('hide');
@@ -73,7 +38,8 @@ $('#cm-pwd-alt').keyup(function() {
 
 function validatePassword(input)
 {
-	if($('#is-strong-pwd').val() == 1) {
+
+	if(useStrongPwd == 1) {
 		var passw = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
 
 		if(input.match(passw))
@@ -88,8 +54,7 @@ function validatePassword(input)
 }
 
 
-function changePassword() {
-	const uname = $('#uname').val();
+function changePassword() {	
 	const current = $('#cu-pwd');
 	const newPass = $('#pwd');
 	const conPass = $('#cm-pwd');
@@ -106,31 +71,31 @@ function changePassword() {
 	}
 	else {
 		current.removeClass('has-error');
-		cuErr.text('');
+		cuErr.html('&nbsp;');
 	}
 
 	if(newPass.val().length === 0) {
 		newPass.addClass('has-error');
-		pwdErr.text('กรุณากำหนดรหัสผ่าน');
+		pwdErr.html('กรุณากำหนดรหัสผ่าน');
 
 		newPass.focus();
 		return false;
 	}
 	else {
 		newPass.removeClass('has-error');
-		pwdErr.text('');
+		pwdErr.html('&nbsp;');
 	}
 
 	//--- check use same as current passsword ?
 	if(newPass.val() === current.val()) {
 		newPass.addClass('has-error');
-		pwdErr.text("รหัสใหม่ต้องไม่ซ้ำกับรหัสปัจจุบัน");
+		pwdErr.html("รหัสใหม่ต้องไม่ซ้ำกับรหัสปัจจุบัน");
 
 		return false;
 	}
 	else {
 		newPass.removeClass('has-error');
-		pwdErr.text('');
+		pwdErr.html('&nbsp;');
 	}
 
 	//--- check complexity
@@ -143,20 +108,20 @@ function changePassword() {
 	}
 	else {
 		newPass.removeClass('has-error');
-		pwdErr.text('');
+		pwdErr.html('&nbsp;');
 	}
 
 
 	if(newPass.val() !== conPass.val()) {
 		conPass.addClass('has-error');
-		cmErr.text('ยืนยันรหัสผ่านไม่ตรงกับรหัสผ่านใหม่');
+		cmErr.html('ยืนยันรหัสผ่านไม่ตรงกับรหัสผ่านใหม่');
 
 		conPass.focus();
 		return false;
 	}
 	else {
 		conPass.removeClass('has-error');
-		cmErr.text('');
+		cmErr.html('&nbsp;');
 	}
 
 	let requestUri = URI + 'check_current_password';

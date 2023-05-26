@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>STTC Web App</title>
     <meta name="description" content="" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <meta name="theme-color" content="salmon" />
     <link rel="manifest" href="manifest.json" />
     <link rel="shortcut icon" href="assets/img/favicon.png">
@@ -43,6 +43,9 @@
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
     <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
+        <div class="navbar-header pull-left camera-modal">
+          <li><a harf="#" onclick="changeCameraId()"><i class="fa fa-ellipsis-v white"></i></a></li>
+        </div>
 				<div class="navbar-header">NEW JOB</div>
         <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
@@ -59,6 +62,7 @@
             <input type="hidden" id="peaNo-maxLength" value="10" />
             <input type="hidden" id="powerNo-minLength" value="5" />
             <input type="hidden" id="powerNo-maxLength" value="5" />
+            <input type="hidden" id="peaNo-verify" value="0" />
 
             <div id="cam" class="hide" style="position: absolute; top:0; left:0; height: 100vh; width:100vw; z-index:10;">
               <div id="reader" style="width:100%;"></div>
@@ -113,7 +117,7 @@
                       <div class="divider-hidden"></div>
                       <div class="input-group width-100">
                         <span class="input-group-addon" style="width:75px;">PEA NO</span>
-                        <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control input-lg" id="pea-no" value="" />
+                        <input type="text" class="form-control input-lg" id="pea-no" value="" />
                         <span class="input-group-btn">
                           <button type="button" class="btn btn-primary btn-lg" onclick="peaScan()">แสกน</button>
                         </span>
@@ -142,18 +146,12 @@
                       <div class="margin-top-15 hide" id="damage-label"></div>
 
                       <div class="divider" style="float:none;"></div>
-                      <div class="" id="suggest-label">
+                      <div class="" id="suggest-label" style="margin-bottom:65px;">
                         <div class="alert alert-normal">
                           กรุณาระบุปีและสภาพมิเตอร์
                         </div>
                       </div>
                     </div>
-                </div>
-              </div>
-              <div class="col-xs-12 text-center" style="position:fixed; left:0px; right:0px; bottom:65px; z-index:100;">
-                <div class="footer-menu width-100">
-                  <li id="btn-u-stop" class="hide"><button type="button" class="btn btn-lg btn-info" onclick="stopScan('u')">หยุดแสกน</li>
-                  <li id="btn-pea-stop" class="hide"><button type="button" class="btn btn-lg btn-info" onclick="stopScan('pea')">หยุดแสกน</li>
                 </div>
               </div>
             </div><!-- end step 1 -->
@@ -165,6 +163,7 @@
                     class="btn btn-mini btn-danger hide"
                     style="position:absolute; top:0; right:5px;"
                     id="del-u-image" onclick="removeImage('u')">
+
                     <i class="fa fa-trash"></i>
                   </button>
                 </div>
@@ -172,11 +171,6 @@
                 <input type="hidden" id="u-blob" value=""/>
                 <input type="hidden" id="u-orientation" value="" />
 
-                <div class="col-xs-12 text-center" style="position:fixed; left:0px; right:0px; bottom:65px; z-index:100;">
-                  <div class="footer-menu width-100">
-                    <li id="u-can-btn"><button type="button" class="btn btn-lg btn-info" onclick="takePhoto('u')">ถ่ายรูปมิเตอร์เก่า</li>
-                  </div>
-                </div>
               </div> <!-- step 2 -->
 
 
@@ -211,11 +205,6 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-xs-12 text-center" style="position:fixed; left:0px; right:0px; bottom:65px; z-index:100;">
-                  <div class="footer-menu width-100">
-                    <li id="btn-i-stop" class="hide"><button type="button" class="btn btn-lg btn-success" onclick="stopScan('u')">หยุดแสกน</li>
-                  </div>
-                </div>
               </div> <!-- step 3 -->
 
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 hide body-step" id="step-4">
@@ -235,23 +224,34 @@
                   <input type="hidden" id="i-blob" value=""/>
                   <input type="hidden" id="i-orientation" value="" />
                 </div>
-
-                <div class="col-xs-12 text-center" style="position:fixed; left:0px; right:0px; bottom:65px; z-index:100;">
-                  <div class="footer-menu width-100">
-                    <li id="i-can-btn"><button type="button" class="btn btn-lg btn-info" onclick="takePhoto('i')">ถ่ายรูปมิเตอร์ใหม่</li>
-                  </div>
-                </div>
               </div><!-- step 4 -->
 
-              <div class="bp-footer">
-                <div class="bp-footer-inner">
-                  <div class="bp-footer-content text-right">
-                    <button type="button" class="btn btn-prev pull-left" style="margin-top:5px;" onclick="goList()"><i class="ace-icon fa fa-arrow-left"></i> JOB LIST</button>
-                    <button type="button" class="btn btn-prev hide" id="btn-prev" onclick="prevStep()"><i class="ace-icon fa fa-arrow-left"></i> &nbsp; ก่อนหน้า</button>
-                    <button type="button" class="btn btn-success" id="btn-next" onclick="nextStep()">ถัดไป &nbsp; <i class="ace-icon fa fa-arrow-right"></i></button>
-                    <button type="button" class="btn btn-success hide" id="btn-finish" onclick="finish()">เสร็จสิ้น</button>
+              <div class="pg-footer">
+                <div class="pg-footer-inner">
+                  <div class="pg-footer-content text-right">
+                    <div class="footer-menu width-20">
+                      <li><a href="transfer.html"><i class="fa fa-arrow-left fa-2x white"></i><span>รายการติดตั้ง</span></a></li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li class="not-show">&nbsp;</li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li id="btn-u-stop" class="middle-btn hide"><a href="javascript:stopScan('u')"><i class="fa fa-stop-circle fa-2x white"></i><span>หยุดสแกน</span></a></li>
+                      <li id="btn-pea-stop" class="middle-btn hide"><a href="javascript:stopScan('pea')"><i class="fa fa-stop-circle fa-2x white"></i><span>หยุดสแกน</span></a></li>
+                      <li id="btn-i-stop" class="middle-btn hide"><a href="javascript:stopScan('i')"><i class="fa fa-stop-circle fa-2x white"></i><span>หยุดสแกน</span></a></li>
+                      <li id="i-cam-btn" class="middle-btn hide"><a href="javascript:takePhoto('i')"><i class="fa fa-camera fa-2x white"></i><span>ถ่ายรูป</span></a></li>
+                      <li id="u-cam-btn" class="middle-btn hide"><a href="javascript:takePhoto('u')"><i class="fa fa-camera fa-2x white"></i><span>ถ่ายรูป</span></a></li>
+                      <li id="space">&nbsp;</li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li id="btn-prev" class="not-show"><a href="javascript:prevStep()"><i class="fa fa-arrow-left fa-2x white"></i><span>ก่อนหน้า</span></a></li>
+                    </div>
+                    <div class="footer-menu width-20">
+                      <li id="btn-next" class=""><a href="javascript:nextStep()"><i class="fa fa-arrow-right fa-2x white"></i><span>ถัดไป</span></a></li>
+                      <li id="btn-finish" class="hide"><a href="javascript:finish()"><i class="fa fa-check-circle fa-2x white"></i><span>เสร็จสิ้น</span></a></li>
+                    </div>
                   </div>
-               </div><!-- footer inner-->
+                </div><!-- footer inner-->
               </div><!-- /.footer -->
             </div> <!-- row -->
 
@@ -259,7 +259,7 @@
 
 
             <div class="col-xs-12 text-center">
-              <button type="button" class="btn btn-success btn-sm btn-100 margin-top-15 hide" id="btn-save-item" onclick="saveItem()">SAVE</button>
+              <button type="button" class="btn btn-success btn-sm btn-100 margin-top-15 hide" id="btn-save-item" onclick="saveItem()">บันทึก</button>
             </div>
 
 
@@ -275,7 +275,7 @@
      <div class="modal-content">
          <div class="modal-header">
          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-         <h4 class="modal-title">Choose Camera</h4>
+         <h4 class="modal-title">เลือกกล้อง</h4>
          <input type="hidden" id="select-side" value="i" />
         </div>
         <div class="modal-body">
@@ -285,8 +285,8 @@
           <div class="err-label" id="camera-error"></div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-sm btn-default btn-100" onclick="closeModal('cameras-modal')">Close</button>
-  				<button type="button" class="btn btn-sm btn-success btn-100" onclick="saveCameraId()">Choose</button>
+          <!--<button type="button" class="btn btn-sm btn-default btn-100" onclick="closeModal('cameras-modal')">Close</button>-->
+  				<button type="button" class="btn btn-sm btn-success btn-100" onclick="saveCameraId()">บันทึก</button>
         </div>
      </div>
    </div>
@@ -317,7 +317,7 @@
     {{#each this}}
     <div class="radio">
       <label>
-        <input type="radio" name="camera_id"  class="ace" maxlength="100"	value="{{id}}" />
+        <input type="radio" name="camera_id" id="{{id}}" class="ace" maxlength="100"	value="{{id}}" />
         <span class="lbl">{{label}}</span>
       </label>
     </div>
@@ -337,12 +337,6 @@
     {{/each}}
   </div>
   </script>
-
-  <script>
-    function goList() {
-      window.location.href = "transfer.html";
-    }
-  </script>
   <script src="assets/js/exif.js"></script>
   <script src="scripts/transfer/transfer_add.js"></script>
 
@@ -353,3 +347,14 @@
     <script src="assets/js/jquery.autosize.js"></script>
   </body>
 </html>
+
+<div class="menu-pad move-out" id="menu-pad">
+  <div class="width-100" style="height:100vh; padding-top:45px; color:white;">
+    <li class="menu-pad-li"><a href="#"><i class="fa fa-user"></i> ข้อมูลผู้ใช้งาน</a></li>
+    <li class="menu-pad-li"><a href="#"><i class="fa fa-camera"></i> ตั้งค่ากล้อง</a></li>
+    <li class="menu-pad-li"><a href="#"><i class="fa fa-key"></i> เปลี่ยนรหัสผ่าน</a></li>
+    <li class="menu-pad-li"><a href="#"><i class="fa fa-sign-out"></i> ออกจากระบบ</a></li>
+    <li class="menu-pad-cl"><a href="javascript:toggleMenu()">&times;</a></li>
+  </div>
+  <input type="hidden" id="menu" value="hide" />
+</div>

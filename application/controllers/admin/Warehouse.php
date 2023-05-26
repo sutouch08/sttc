@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Warehouse extends PS_Controller {
 	public $menu_code = 'SCOWHS'; //--- Add/Edit Users
 	public $menu_group_code = 'SC'; //--- System security
-	public $title = 'Warehouse';
+	public $title = 'คลังสินค้า';
 	public $segment = 4;
 
   public function __construct()
@@ -12,11 +12,6 @@ class Warehouse extends PS_Controller {
     parent::__construct();
     $this->home = base_url().'admin/warehouse';
     $this->load->model('admin/warehouse_model');
-
-    if($this->pm->can_view === FALSE)
-    {
-      $this->deny_page();
-    }
   }
 
 
@@ -67,7 +62,7 @@ class Warehouse extends PS_Controller {
 
 	public function syncData()
 	{
-				
+
 		$data = $this->warehouse_model->getSyncData();
 
 		if( ! empty($data))

@@ -5,13 +5,19 @@ class Transfer extends PS_Controller
 {
   public $menu_code = 'OPWHTR';
 	public $menu_group_code = 'OP';
-	public $title = 'Transfer';
+	public $title = 'งานติดตั้ง';
 	public $segment = 4;
   public $error;
 
   public function __construct()
   {
     parent::__construct();
+
+    if($this->_Lead)
+    {
+      $this->pm->can_view = 1;
+    }
+
     $this->home = base_url().'inventory/transfer';
     $this->load->model('inventory/transfer_model');
     $this->load->model('admin/warehouse_model');

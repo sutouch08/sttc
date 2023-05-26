@@ -1,9 +1,5 @@
 var HOME = BASE_URL + 'admin/team/';
 
-function goBack() {
-  window.location.href = HOME;
-}
-
 $('#add-modal').on('shown.bs.modal', function() {
   $('#add-name').focus();
 });

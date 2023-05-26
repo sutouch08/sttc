@@ -1,3 +1,12 @@
+function isJson(str){
+	try{
+		JSON.parse(str);
+	}catch(e){
+		return false;
+	}
+	return true;
+}
+
 
 function doLogin() {
 	const uname = $('#uname').val();
@@ -29,13 +38,22 @@ function doLogin() {
 			'remember' : remember
 		},
 		success:function(rs) {
-			rs = $.trim(rs);
 
-			if(rs === 'success') {
-				window.location.href = BASE_URL;
-			}
-			else {
-				$('#error-label').text(rs);
+			if(isJson(rs)) {
+				let ds = JSON.parse(rs);
+
+				if(ds.status === 'success') {
+					let sttc_uid = ds.userdata.uid;
+					localStorage.setItem('sttc_uid', sttc_uid);
+					localStorage.setItem('userdata', JSON.stringify(ds.userdata));
+
+					setTimeout(() => {
+						window.location.href = BASE_URL;
+					}, 200);
+				}
+				else {
+					$('#error-label').text(ds.message);
+				}
 			}
 		}
 	});

@@ -121,17 +121,23 @@
       fetch(uri, options)
       .then(response => response.text())
       .then(result => {
+
         if( isJson(result)) {
           let ds = JSON.parse(result);
-          console.log(ds);
-          if(ds.result == 'success') {
-            window.location.href = "index.html";
-          }
-          else {
-            console.log(ds.result);
-            $('#error').text(ds.result);
+
+          if(ds.status === 'success') {
+            let sttc_uid = ds.userdata.uid;
+  					localStorage.setItem('sttc_uid', sttc_uid);
+  					localStorage.setItem('userdata', JSON.stringify(ds.userdata));
+
+  					setTimeout(() => {
+  						window.location.href = BASE_URL;
+  					}, 200);
+  				}
+  				else {
+            $('#error').text(ds.message);
             $('#uname').focus();
-          }
+  				}
         }
       })
       .catch(error => {

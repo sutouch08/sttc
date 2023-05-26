@@ -24,6 +24,13 @@ class Main extends PS_Controller
 	}
 
 
+	public function token()
+	{
+		$ds = array('token' => getConfig('SCS_TOKEN'));
+		$this->load->view('get_token', $ds);
+	}
+
+
 	public function set_rows()
   {
     if($this->input->post('set_rows') && $this->input->post('set_rows') > 0)

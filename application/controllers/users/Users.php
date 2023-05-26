@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Users extends PS_Controller{
 	public $menu_code = 'SCUSER'; //--- Add/Edit Users
 	public $menu_group_code = 'SC'; //--- System security
-	public $title = 'Users';
+	public $title = 'ผู้ใช้งาน';
 	public $segment = 4;
 
   public function __construct()
@@ -13,6 +13,7 @@ class Users extends PS_Controller{
     $this->home = base_url().'users/users';
 		$this->load->model('admin/warehouse_model');
 		$this->load->model('admin/team_model');
+		$this->load->model('admin/group_model');
 		$this->load->helper('team');
 		$this->load->helper('warehouse');
   }
@@ -24,9 +25,11 @@ class Users extends PS_Controller{
 		$filter = array(
 			'uname' => get_filter('uname', 'user_uname', ''),
 			'dname' => get_filter('dname', 'user_dname', ''),
+			'team_group' => get_filter('team_group', 'user_team_group', ''),
 			'ugroup' => get_filter('ugroup', 'user_ugroup', 'all'),
 			'team_id' => get_filter('team_id', 'user_team_id', 'all'),
-			'active' => get_filter('active', 'user_active', 'all')
+			'active' => get_filter('active', 'user_active', 'all'),
+			'get_meter' => get_filter('get_meter', 'user_get_meter', 'all')
 		);
 
 		//--- แสดงผลกี่รายการต่อหน้า
@@ -58,7 +61,6 @@ class Users extends PS_Controller{
 			$teams = $this->team_model->get_all_active();
 
 			$ds = array(
-				'whList' => $whList,
 				'teamList' => $teams
 			);
 
@@ -84,8 +86,8 @@ class Users extends PS_Controller{
 				$dname = trim($this->input->post('dname'));
 				$team_id = get_null($this->input->post('team_id'));
 				$team_list = json_decode($this->input->post('team_list'));
-				$fromWhsCode = $this->input->post('fromWhsCode');
-				$toWhsCode = $this->input->post('toWhsCode');
+				$group_id = get_null($this->input->post('group_id'));
+				$can_get_meter = $this->input->post('can_get_meter') == 1 ? 1 : 0;
 				$pwd = $this->input->post('pwd');
 				$ugroup = $this->input->post('ugroup');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
@@ -103,12 +105,6 @@ class Users extends PS_Controller{
 								set_error(0, "Missing Area(s)");
 							}
 
-							if($ugroup == 3 && (empty($fromWhsCode) OR empty($toWshCode)) && $fromWhsCode == $toWhsCode)
-							{
-								$sc = FALSE;
-								set_error(0, "Invalid Warehouse");
-							}
-
 							if($sc === TRUE)
 							{
 								$arr = array(
@@ -119,8 +115,8 @@ class Users extends PS_Controller{
 									'ugroup' => $ugroup,
 									'active' => $active,
 									'team_id' => $ugroup == 3 ? $team_id : NULL,
-									'fromWhsCode' => $ugroup == 3 ? $fromWhsCode : NULL,
-									'toWhsCode' => $ugroup == 3 ? $toWhsCode : NULL,
+									'team_group_id' => $ugroup == 3 ? $group_id : NULL,
+									'can_get_meter' => $ugroup == 3 ? $can_get_meter : 0,
 									'last_pass_change' => date('Y-m-d'),
 									'force_reset' => $force_reset,
 									'create_at' => now(),
@@ -222,7 +218,10 @@ class Users extends PS_Controller{
 			{
 				$teams = $this->team_model->get_all_active();
 				$userTeam = $this->team_model->get_user_team($id);
+				$teamGroup = $user->ugroup == 3 ? $this->group_model->get_by_team_id($user->team_id) : NULL;
 				$uteam = array();
+				$tGroup = array();
+
 				if( ! empty($userTeam))
 				{
 					foreach($userTeam as $rs)
@@ -231,10 +230,19 @@ class Users extends PS_Controller{
 					}
 				}
 
+				if( ! empty($teamGroup))
+				{
+					foreach($teamGroup as $rd)
+					{
+						$tGroup[$rd->id] = $rd->name;
+					}
+				}
+
 				$ds = array(
 					'user' => $user,
 					'teamList' => $teams,
-					'uteam' => $uteam
+					'uteam' => $uteam,
+					'teamGroup' => $tGroup
 				);
 
 				$this->load->view('users/user_edit', $ds);
@@ -264,9 +272,9 @@ class Users extends PS_Controller{
 				$id = $this->input->post('id');
 				$dname = trim($this->input->post('dname'));
 				$team_id = get_null($this->input->post('team_id'));
+				$group_id = get_null($this->input->post('group_id'));
+				$can_get_meter = $this->input->post('can_get_meter') == 1 ? 1 : 0;
 				$team_list = json_decode($this->input->post('team_list'));
-				$fromWhsCode = $this->input->post('fromWhsCode');
-				$toWhsCode = $this->input->post('toWhsCode');
 				$ugroup = $this->input->post('ugroup');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
 
@@ -280,11 +288,6 @@ class Users extends PS_Controller{
 							set_error(0, "Missing Area(s)");
 						}
 
-						if($ugroup == 3 && (empty($fromWhsCode) OR empty($toWhsCode)) && $fromWhsCode == $toWhsCode)
-						{
-							$sc = FALSE;
-							set_error(0, "Invalid Warehouse(s)");
-						}
 
 						if($sc === TRUE)
 						{
@@ -293,8 +296,8 @@ class Users extends PS_Controller{
 								'ugroup' => $ugroup,
 								'active' => $active,
 								'team_id' => $ugroup == 3 ? $team_id : NULL,
-								'fromWhsCode' => $ugroup == 3 ? $fromWhsCode : NULL,
-								'toWhsCode' => $ugroup == 3 ? $toWhsCode : NULL,								
+								'team_group_id' => $ugroup == 3 ? $group_id : NULL,
+								'can_get_meter' => $ugroup == 3 ? $can_get_meter : 0,
 								'update_at' => now(),
 								'update_by' => $this->_user->id
 							);
@@ -398,20 +401,12 @@ class Users extends PS_Controller{
 
 			if( ! empty($user))
 			{
-				$whList = $this->warehouse_model->get_all();
-				$userWh = $this->warehouse_model->get_user_warehouse($id);
-				$uwh = array();
-				if( ! empty($userWh))
-				{
-					foreach($userWh as $rs)
-					{
-						$uwh[$rs->id] = $rs->code;
-					}
-				}
-
 				$teams = $this->team_model->get_all_active();
 				$userTeam = $this->team_model->get_user_team($id);
+				$teamGroup = $user->ugroup == 3 ? $this->group_model->get_by_team_id($user->team_id) : NULL;
 				$uteam = array();
+				$tGroup = array();
+
 				if( ! empty($userTeam))
 				{
 					foreach($userTeam as $rs)
@@ -420,13 +415,20 @@ class Users extends PS_Controller{
 					}
 				}
 
+				if( ! empty($teamGroup))
+				{
+					foreach($teamGroup as $rd)
+					{
+						$tGroup[$rd->id] = $rd->name;
+					}
+				}
+
 				$ds = array(
 					'user' => $user,
-					'whList' => $whList,
-					'uwh' => $uwh,
 					'teamList' => $teams,
-					'uteam' => $uteam
-				);
+					'uteam' => $uteam,
+					'teamGroup' => $tGroup
+				);			
 
 				$this->load->view('users/user_detail', $ds);
 			}
@@ -726,7 +728,7 @@ class Users extends PS_Controller{
 
 	public function clear_filter()
 	{
-		$filter = array('user_uname', 'user_dname', 'user_team_id', 'user_ugroup', 'user_active');
+		$filter = array('user_uname', 'user_dname', 'user_team_id', 'user_team_group', 'user_ugroup', 'user_active', 'user_get_meter');
 
 		return clear_filter($filter);
 

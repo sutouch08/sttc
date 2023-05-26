@@ -34,7 +34,10 @@ class PS_Controller extends CI_Controller
     $this->_Lead = $this->_user->ugroup == 2 ? TRUE : FALSE;
     $this->_Outsource = $this->_user->ugroup == 3 ? TRUE : FALSE;
 
-    //$this->ms = $this->load->database('ms', TRUE);
+    if($this->_Outsource)
+    {
+      redirect(base_url().'pwa/index.html');
+    }
 
     if($this->close_system == 1 && $this->_SuperAdmin === FALSE)
     {

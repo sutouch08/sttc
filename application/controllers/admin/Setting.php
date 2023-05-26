@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Setting extends PS_Controller{
 	public $menu_code = 'SCCONF';
 	public $menu_group_code = 'SC'; //--- System security
-	public $title = 'Setting';
+	public $title = 'การกำหนดค่า';
 
   public function __construct()
   {

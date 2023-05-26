@@ -11,12 +11,7 @@ class Team extends PS_Controller {
   {
     parent::__construct();
     $this->home = base_url().'admin/team';
-    $this->load->model('admin/team_model');
-
-    if($this->pm->can_view === FALSE)
-    {
-      $this->deny_page();
-    }
+    $this->load->model('admin/team_model');    
   }
 
 

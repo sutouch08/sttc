@@ -18,7 +18,7 @@
 <hr class="margin-bottom-30"/>
 <form class="form-horizontal" id="addForm" method="post">
 	<div class="form-group">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Username</label>
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">ชื่อผู้ใช้งาน</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 			<input type="text" name="uname" id="uname"
 			class="form-control" maxlength="50"
@@ -30,7 +30,7 @@
   </div>
 
 	<div class="form-group">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Display name</label>
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">ชื่อพนักงาน</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 			<input type="text" name="dname" id="dname" class="form-control" maxlength="100" required />
     </div>
@@ -39,10 +39,10 @@
 
 
 	<div class="form-group">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">User Group</label>
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">กลุ่มผู้ใช้งาน</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="ugroup" onchange="toggleAreaAndWarehouse()">
-        <option value="">Please Select</option>
+			<select class="form-control" id="ugroup" onchange="toggleArea()">
+        <option value="">โปรดเลือก</option>
 				<?php echo select_ugroup(); ?>
       </select>
     </div>
@@ -51,9 +51,9 @@
 
 
 	<div class="form-group hide" id="team-table">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Area</label>
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">เขต/พื้นที่</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="team_id">
+			<select class="form-control" id="team_id" onchange="getTeamGroupList()">
 				<option value="">-ไม่ระบุ-</option>
       <?php echo select_team(); ?>
       </select>
@@ -61,14 +61,24 @@
 		<div class="col-xs-12 col-sm-reset inline red" id="team-error"></div>
   </div>
 
+	<div class="form-group hide" id="team-group-table">
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">ทีมติดตั้ง</label>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<select class="form-control" id="group_id" onchange="validTeamGroup()">
+				<option value="">-ไม่ระบุ-</option>
+      </select>
+    </div>
+		<div class="col-xs-12 col-sm-reset inline red" id="team-group-error"></div>
+  </div>
+
   <div class="form-group hide" id="area-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">Area</label>
+		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">เขต/พื้นที่</label>
 		<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12" id="area-list" style="margin-top:10px; max-height:400px; overflow-y:auto;">
 			<table class="table table-bordered border-1">
 				<thead>
 					<tr class="freez">
 						<th class="fix-width-60 text-center outline">#</th>
-						<th class="min-width-100 text-left outline">Name</th>
+						<th class="min-width-100 text-left outline">เขต/พื้นที่</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -85,7 +95,7 @@
 						</tr>
 					<?php endforeach; ?>
 				<?php else : ?>
-					<tr><td colspan="2" class="text-center">Please Define Area</td></tr>
+					<tr><td colspan="2" class="text-center">กรุณาระบุเขต/พื้นที่</td></tr>
 				<?php endif; ?>
 				</tbody>
 			</table>
@@ -93,32 +103,21 @@
 		<div class="col-xs-12 col-sm-reset inline red" id="area-error"></div>
   </div>
 
-	<div class="form-group hide" id="from-warehouse-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">From Warehouse</label>
-		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="fromWhsCode">
-				<option value="">-ไม่ระบุ-</option>
-      <?php echo select_listed_warehouse(); ?>
-      </select>
-    </div>
-		<div class="col-xs-12 col-sm-reset inline red" id="from-warehouse-error"></div>
-  </div>
 
-	<div class="form-group hide" id="to-warehouse-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">To Warehouse</label>
+	<div class="form-group hide" id="get-meter-table">
+		<label class="col-lg-3 col-md-3 col-sm-3 hidden-xs control-label"></label>
 		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="toWhsCode">
-				<option value="">-ไม่ระบุ-</option>
-      <?php echo select_listed_warehouse(); ?>
-      </select>
-    </div>
-		<div class="col-xs-12 col-sm-reset inline red" id="to-warehouse-error"></div>
-  </div>
+			<label style="margin-top:7px; padding-left:10px;">
+				<input type="checkbox" class="ace" id="can_get_meter" />
+				<span class="lbl">&nbsp; สามารถเบิกมิเตอร์ได้</span>
+			</label>
+		</div>
+	</div>
 
 	<div class="divider"></div>
 
   <div class="form-group">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">New password</label>
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">รหัสผ่าน</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 			<span class="input-icon input-icon-right width-100">
         <input type="password" name="pwd" id="pwd" class="form-control" required />
@@ -129,7 +128,7 @@
   </div>
 
 	<div class="form-group">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Confirm password</label>
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">ยืนยันรหัสผ่าน</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 			<span class="input-icon input-icon-right width-100">
         <input type="password" name="cm-pwd" id="cm-pwd" class="form-control" required />
@@ -155,7 +154,7 @@
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 			<label style="margin-top:7px; padding-left:10px;">
 				<input type="checkbox" class="ace" id="force_reset" checked />
-				<span class="lbl">&nbsp; Force user to change password</span>
+				<span class="lbl">&nbsp; บังคับผู้ใช้เปลี่ยนรหัสผ่าน</span>
 			</label>
     </div>
   </div>
@@ -172,6 +171,13 @@
     </div>
   </div>
 </form>
+
+<script id="group-template" type="text/x-handlebarsTemplate">
+	<option value="">-ไม่ระบุ-</option>
+	{{#each this}}
+		<option value="{{id}}">{{name}}</option>
+	{{/each}}
+</script>
 
 <script src="<?php echo base_url(); ?>scripts/users/users.js?v=<?php echo date('Ymd'); ?>"></script>
 <?php $this->load->view('include/footer'); ?>

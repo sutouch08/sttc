@@ -33,13 +33,27 @@ window.addEventListener('load', () => {
   $('#toDate').val(to);
   $('#status').val((status == "" ? "all" : status));
 
-   //load_in();
+  localforage.getItem('inventory').then((data) => {
+    let ds = [];
+    if(data != null || data != undefined) {
+      $('#n-install').addClass('hide');
+      $('#i-install').removeClass('hide');
+    }
+  });
 
    setTimeout(() => {
      loadPage();
    }, 200);
 });
 
+function noDataAlert() {
+  swal({
+    title:'',
+    text:'<center>ไม่พบข้อมูลมิเตอร์ในเครื่อง<br/>กรุณา Check in ก่อนติดตั้งมิเตอร์</center>',
+    type:'info',
+    html:true
+  });
+}
 
 function clearFilterList() {
   setCookie('trCode', '');

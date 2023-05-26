@@ -16,7 +16,7 @@
 	<div class="form-group">
     <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Username</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<input type="text" class="form-control" maxlength="50" value="<?php echo $user->uname; ?>" disabled />
+			<input type="text" name="uname" id="uname" class="form-control" maxlength="50" value="<?php echo $user->uname; ?>" disabled />
     </div>
 		<div class="col-xs-12 col-sm-reset inline red" id="uname-error"></div>
   </div>
@@ -24,7 +24,7 @@
 	<div class="form-group">
     <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Display name</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<input type="text" class="form-control width-100" maxlength="100" value="<?php echo $user->name; ?>" disabled/>
+			<input type="text" name="dname" id="dname" class="form-control width-100" maxlength="100" value="<?php echo $user->name; ?>" disabled/>
     </div>
 		<div class="col-xs-12 col-sm-reset inline red" id="dname-error"></div>
   </div>
@@ -33,7 +33,7 @@
 	<div class="form-group">
     <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">User Group</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="ugroup" disabled>
+			<select class="form-control" id="ugroup" onchange="toggleArea()" disabled>
         <option value="">Please Select</option>
 				<?php echo select_ugroup($user->ugroup); ?>
       </select>
@@ -42,10 +42,10 @@
 	</div>
 
 
-  <div class="form-group" id="team-table">
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Outsource Area</label>
+  <div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="team-table">
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Area</label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-			<select class="form-control" id="team_id" disabled>
+			<select class="form-control" id="team_id" onchange="getTeamGroupList()" disabled>
 				<option value="">-ไม่ระบุ-</option>
       <?php echo select_team($user->team_id); ?>
       </select>
@@ -53,8 +53,23 @@
 		<div class="col-xs-12 col-sm-reset inline red" id="team-error"></div>
   </div>
 
-  <div class="form-group" id="area-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">Manager Area</label>
+	<div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="team-group-table">
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">ทีมติดตั้ง</label>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<select class="form-control" id="group_id" onchange="validTeamGroup()" disabled>
+				<option value="">-ไม่ระบุ-</option>
+			<?php if( ! empty($teamGroup)) : ?>
+				<?php foreach($teamGroup as $g_id => $g_name) : ?>
+					<option value="<?php echo $g_id; ?>" <?php echo is_selected($user->team_group_id, $g_id); ?>><?php echo $g_name; ?></option>
+				<?php endforeach; ?>
+			<?php endif; ?>
+      </select>
+    </div>
+		<div class="col-xs-12 col-sm-reset inline red" id="team-group-error"></div>
+  </div>
+
+  <div class="form-group <?php echo ($user->ugroup == 2 ? '' : 'hide'); ?>" id="area-table">
+		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">Area</label>
 		<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12" id="area-list" style="margin-top:10px; max-height:400px; overflow-y:auto;">
 			<table class="table table-bordered border-1">
 				<thead>
@@ -86,52 +101,27 @@
 		<div class="col-xs-12 col-sm-reset inline red" id="area-error"></div>
   </div>
 
-  <div class="form-group" id="warehouse-table">
-		<label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label ">Warehouse</label>
-		<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12" id="wh-list" style="margin-top:10px; height:400px; overflow-y:auto;">
-			<table class="table table-bordered border-1">
-				<thead>
-					<tr class="freez">
-						<th class="fix-width-60 text-center outline">#</th>
-						<th class="fix-width-100 text-center outline">Code</th>
-						<th class="min-width-100 text-left outline">Name</th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php if( ! empty($whList)) : ?>
-					<?php foreach($whList as $rs) : ?>
-            <?php $checked = isset($uwh[$rs->id]) ? 'checked' : ''; ?>
-						<tr>
-							<td class="middle text-center">
-								<label>
-									<input type="checkbox" class="ace chk-wh" value="<?php echo $rs->code; ?>" <?php echo $checked; ?> disabled/>
-									<span class="lbl"></span>
-								</label>
-							</td>
-							<td class="middle text-center"><?php echo $rs->code; ?></td>
-							<td class="middle"><?php echo $rs->name; ?></td>
-						</tr>
-					<?php endforeach; ?>
-				<?php else : ?>
-					<tr><td colspan="3" class="text-center">Please Define Warehouse</td></tr>
-				<?php endif; ?>
-				</tbody>
-			</table>
+
+	<div class="form-group <?php echo ($user->ugroup == 3 ? '' : 'hide'); ?>" id="get-meter-table">
+		<label class="col-lg-3 col-md-3 col-sm-3 hidden-xs control-label"></label>
+		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<label style="margin-top:7px; padding-left:10px;">
+				<input type="checkbox" class="ace" id="can_get_meter" <?php echo is_checked($user->can_get_meter, '1'); ?> disabled/>
+				<span class="lbl">&nbsp; สามารถเบิกมิเตอร์ได้</span>
+			</label>
 		</div>
-		<div class="col-xs-12 col-sm-reset inline red" id="warehouse-error"></div>
+	</div>
+
+	<div class="form-group">
+    <label class="col-lg-3 col-md-3 col-sm-3 hidden-xs control-label"></label>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+			<label style="margin-top:7px; padding-left:10px;">
+				<input type="checkbox" class="ace" id="active" <?php echo is_checked($user->active, '1'); ?> disabled/>
+				<span class="lbl">&nbsp; Active</span>
+			</label>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label class="col-lg-3 col-md-3 col-sm-3 control-label hidden-xs">Status</label>
-    <label class="col-xs-3 font-size-18 visible-xs text-right" style="padding-top:3px;">Status : </label>
-    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-6" style="padding-top:3px; padding-left:15px;">
-      <?php if($user->active == 1) : ?>
-        <label class="font-size-18 green">Active</label>
-      <?php else : ?>
-        <label class="font-size-18 red">Inactive</label>
-      <?php endif; ?>
-    </label>
-	</div>
 </form>
 
 <script src="<?php echo base_url(); ?>scripts/users/users.js?v=<?php echo date('Ymd'); ?>"></script>

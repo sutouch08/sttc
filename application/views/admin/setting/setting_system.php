@@ -49,6 +49,33 @@
     </div>
     <div class="divider-hidden"></div>
 
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">SCS Username</span></div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <input type="text" class="form-control input-sm input-large" name="SCS_USER" value="<?php echo $SCS_USER; ?>" <?php echo ($this->_SuperAdmin ? "" : 'disabled'); ?>/>
+      <span class="help-block">Username สำหรับใช้ login ระบบ SCS หากต้องเปลี่ยนแปลงกรุณาติดต่อผู้ดูแลระบบ</span>
+    </div>
+    <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">SCS Password</span></div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <input type="text" class="form-control input-sm input-large" name="SCS_PWD" id="" value="<?php echo $SCS_PWD; ?>" <?php echo ($this->_SuperAdmin ? "" : 'disabled'); ?>/>
+      <span class="help-block">Password สำหรับใช้ login ระบบ SCS หากต้องเปลี่ยนแปลงกรุณาติดต่อผู้ดูแลระบบ</span>
+    </div>
+    <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">SCS Current Token</span></div>
+    <div class="col-lg-4 col-md-5 col-sm-5 col-xs-8">
+      <input type="text" class="form-control input-sm" name="SCS_TOKEN" id="token" value="<?php echo $SCS_TOKEN; ?>" <?php echo ($this->_SuperAdmin ? "" : 'disabled'); ?> />
+    </div>
+    <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4">
+      <button type="button" class="btn btn-xs btn-primary btn-block" onclick="refresh_token()">Refresh token</button>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">&nbsp;</div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <span class="help-block">Password สำหรับใช้ login ระบบ SCS หากต้องเปลี่ยนแปลงกรุณาติดต่อผู้ดูแลระบบ</span>
+    </div>
+    <div class="divider-hidden"></div>
+
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Barcode Format</span></div>
     <div class="col-lg-9 col-md-3 col-sm-4 col-xs-12">
       <select class="form-control input-sm input-medium" name="SCANTYPE">

@@ -1,9 +1,5 @@
 var HOME = BASE_URL + 'admin/warehouse/';
 
-function goBack() {
-  window.location.href = HOME;
-}
-
 function updateListed(id) {
   const chk = $('#chk-'+id);
   let listed = chk.is(':checked') ? 1 : 0;
@@ -18,7 +14,7 @@ function updateListed(id) {
     success:function(rs) {
       console.log(rs);
     }
-  });  
+  });
 }
 
 

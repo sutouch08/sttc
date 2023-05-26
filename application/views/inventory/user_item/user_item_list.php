@@ -15,6 +15,11 @@
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+			<label>PEA No</label>
+			<input type="text" class="form-control input-sm search-box" name="pea_no" value="<?php echo $pea_no; ?>" />
+		</div>
+
+		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
 			<label>Serial</label>
 			<input type="text" class="form-control input-sm search-box" name="serial" value="<?php echo $serial; ?>" />
 		</div>
@@ -25,8 +30,16 @@
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
-			<label>พนักงาน</label>
-			<input type="text" class="form-control input-sm search-box" name="user" value="<?php echo $user; ?>" />
+			<label>เขต/พื้นที่</label>
+			<select class="form-control input-sm search" name="team" onchange="getSearch()">
+				<option value="all">ทั้งหมด</option>
+				<?php echo select_team($team); ?>
+			</select>
+		</div>
+
+		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+			<label>ทีมติดตั้ง</label>
+			<input type="text" class="form-control input-sm search-box" name="team_group" value="<?php echo $team_group; ?>" />
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-3 col-xs-6 margin-bottom-5">
@@ -38,14 +51,17 @@
 		</div>
 
 
-		<div class="col-lg-2 col-md-2 col-sm-3 col-xs-6 margin-bottom-5">
-			<label>Status</label>
+		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+			<label>สถานะ</label>
 			<select class="form-control input-sm" name="status" onchange="getSearch()">
-				<option value="all">ทั้งหมด</opton>
-					<option value="0" <?php echo is_selected('0', $status); ?>>รอติดตั้ง</option>
-					<option value="1" <?php echo is_selected('1', $status); ?>>ติดตั้งแล้ว</option>
-					<option value="2" <?php echo is_selected('2', $status); ?>>ส่งคืน</option>
-					<option value="3" <?php echo is_selected('3', $status); ?>>คืนแล้ว</option>
+				<option value="all">ทั้งหมด</option>
+				<option value="P" <?php echo is_selected('P', $status); ?>>รอติดตั้ง</option>
+				<option value="I" <?php echo is_selected('I', $status); ?>>ติดตั้งแล้ว</option>
+				<option value="A" <?php echo is_selected('A', $status); ?>>STTC อนุมัติแล้ว</option>
+				<option value="R" <?php echo is_selected('R', $status); ?>>ต้องแก้ไข</option>
+				<option value="W" <?php echo is_selected('W', $status); ?>>PEA กำลังตรวจสอบ</option>
+				<option value="S" <?php echo is_selected('S', $status); ?>>PEA อนุมัติแล้ว</option>
+				<option value="U" <?php echo is_selected('U', $status); ?>>PEA ไม่อนุมัติ</option>
 			</select>
 		</div>
 
@@ -71,15 +87,17 @@
 <?php echo $this->pagination->create_links(); ?>
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1260px;;">
+		<table class="table table-hover border-1" style="min-width:1310px;;">
 			<thead>
 				<tr>
 					<th class="fix-width-60 middle text-center">#</th>
-					<th class="fix-width-120 middle text-center">พนักงาน</th>
 					<th class="fix-width-80 middle text-center">สถานะ</th>
+					<th class="fix-width-120 middle">ทีมติดตั้ง</th>
+					<th class="fix-width-120 middle">เขต/พื้นที่</th>
+					<th class="fix-width-150 middle">PEA No</th>
 					<th class="fix-width-150 middle">ซีเรียล</th>
 					<th class="fix-width-150 middle">รหัสสินค้า</th>
-					<th class="min-width-200 middle" style="max-width:350px;">ชื่อสินค้า</th>
+					<th class="fix-width-200 middle">ชื่อสินค้า</th>
 					<th class="fix-width-100 middle">เลขที่เอกสาร</th>
 					<th class="fix-width-100 middle">คลังสินค้า</th>
           <th class="fix-width-100 middle">วันที่เพิ่ม</th>
@@ -90,12 +108,13 @@
 <?php if(! empty($data))	: ?>
 	<?php $no = $this->uri->segment($this->segment) + 1; ?>
 	<?php foreach($data as $rs) : ?>
-			<?php $color = $rs->status == 1 ? "color: blue;" : ($rs->status == 3 ? "color: green" : ""); ?>
-				<tr id="row-<?php echo $rs->id; ?>" style="<?php echo $color; ?>">
+				<tr id="row-<?php echo $rs->id; ?>" style="<?php echo status_color($rs->status); ?>">
 					<td class="middle text-center" id="no-<?php echo $rs->id; ?>"><?php echo $no; ?></td>
-					<td class="middle text-center"><?php echo $rs->uname; ?></td>
-					<td class="middle text-center"><?php echo ($rs->status == 3 ? "คืนแล้ว" :($rs->status == 2 ? "ส่งคืน" : ($rs->status == 1 ? "ติดตั้งแล้ว" : "รอติดตั้ง"))); ?></td>
-					<td class="middle text-center"><?php echo $rs->serial; ?></td>
+					<td class="middle text-center"><?php echo status_text($rs->status); ?></td>
+					<td class="middle"><?php echo $rs->team_group_name; ?></td>
+					<td class="middle"><?php echo $rs->team_name; ?></td>
+					<td class="middle"><?php echo $rs->pea_no; ?></td>
+					<td class="middle"><?php echo $rs->serial; ?></td>
 					<td class="middle"><?php echo $rs->ItemCode; ?></td>
 					<td class="middle"><?php echo $rs->ItemName; ?></td>
 					<td class="middle"><?php echo $rs->DocNum; ?></td>

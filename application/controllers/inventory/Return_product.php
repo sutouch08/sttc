@@ -5,12 +5,17 @@ class Return_product extends PS_Controller
 {
   public $menu_code = 'OPWHRT';
 	public $menu_group_code = 'OP';
-	public $title = 'Return';
+	public $title = 'คืนมิเตอร์';
 	public $segment = 4;
 
   public function __construct()
   {
     parent::__construct();
+    if($this->_Lead)
+    {
+      $this->pm->can_view = 1;
+    }
+
     $this->home = base_url().'inventory/return_product';
     $this->load->model('inventory/return_product_model');
     $this->load->model('admin/warehouse_model');

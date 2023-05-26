@@ -11,12 +11,7 @@ class Damaged extends PS_Controller {
   {
     parent::__construct();
     $this->home = base_url().'admin/damaged';
-    $this->load->model('admin/damaged_model');
-
-    if($this->pm->can_view === FALSE)
-    {
-      $this->deny_page();
-    }
+    $this->load->model('admin/damaged_model');    
   }
 
 

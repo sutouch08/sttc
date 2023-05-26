@@ -14,9 +14,6 @@ $('#toDate').datepicker({
   }
 });
 
-function goBack() {
-  window.location.href = HOME;
-}
 
 
 function addNew() {
@@ -133,7 +130,7 @@ function preview(id) {
         if(data.status == 1 || data.is_approve == 1 || data.status == 3) {
           $('#btn-temp').removeClass('hide');
         }
-    
+
         $('#previewModal').modal('show');
       }
       else {

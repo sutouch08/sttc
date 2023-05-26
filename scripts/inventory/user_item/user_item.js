@@ -13,8 +13,3 @@ $('#toDate').datepicker({
     $('#fromDate').datepicker('option', 'maxDate', sd);
   }
 });
-
-
-function goBack() {
-  window.location.href = HOME;
-}

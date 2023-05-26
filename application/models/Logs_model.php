@@ -15,4 +15,10 @@ class Logs_model extends CI_Model
       return $this->db->insert('logs_transfer', $ds);
     }
 
+
+		public function log_scs($ds)
+		{
+			return $this->db->insert('logs_scs', $ds);
+		}
+
 } //---
