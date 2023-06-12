@@ -32,6 +32,14 @@
     <script src="scripts/api.js" async></script>
     <script src="assets/js/localforage.js"></script>
     <script src="assets/js/html5-qrcode.min.js"></script>
+
+    <style>
+      a.map-link {
+        background-color: #edc9ed;
+        padding: 30px 20px 15px;
+        border-radius: 10px;
+      }
+    </style>
   </head>
   <body class="no-skin">
 		<div id="loader">
@@ -78,25 +86,6 @@
                 bottom:80px; right:5px; z-index:10;"><i class="fa fa-angle-double-down"></i></div>
             </div> <!-- row -->
 
-
-            <div class="pg-footer">
-              <div class="pg-footer-inner">
-                <div class="pg-footer-content text-right">
-                  <div class="footer-menu width-25">
-                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
-                  </div>
-                  <div class="footer-menu width-25">
-                    <li><a href="work_list.html"><i class="fa fa-file-text-o fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
-                  </div>
-                  <div class="footer-menu width-25">
-                    <li><a href="javascript:window.location.reload()"><i class="fa fa-refresh fa-2x white"></i><span>Refresh</span></a></li>
-                  </div>
-                  <div class="footer-menu width-25">
-                    <li><a href="javascript:showMeterList()"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
-                  </div>
-                </div>
-              </div><!-- footer inner-->
-            </div><!-- /.footer -->
             <div class="pg-footer">
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
@@ -104,16 +93,16 @@
                     <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="transfer.html"><i class="fa fa-history fa-2x white"></i><span>ประวัติ</span></a></li>
+                    <li><a href="temp.html"><i class="fa fa-check-circle fa-2x white"></i><span>ผลการสับเปลี่ยน</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="#" onclick="updateWorkList()"><i class="fa fa-refresh fa-2x white"></i><span>โหลดใบสั่งงาน</span></a></li>
+                    <li><a href="transfer.html"><i class="fa fa-history fa-2x white"></i><span>ประวัติการติดตั้ง</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="meter_list.html"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                    <li><a href="javascript:goInform()"><i class="fa fa-exclamation-circle fa-2x white"></i><span>เหตุสุดวิสัย</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="javascript:toggleMenu()"><i class="fa fa-cogs fa-2x white"></i><span>การตั้งค่า</span></a></li>
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-bars fa-2x white"></i><span>การตั้งค่า</span></a></li>
                   </div>
                 </div>
               </div><!-- footer inner-->
@@ -162,13 +151,20 @@
 
   <script id="stock-template" type="text/x-handlebarsTemplate">
   {{#each this}}
-    <div class="col-xs-12 margin-bottom-5" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;" onclick="showWorkList('{{pea_no}}')">
-      <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;"><i class="fa fa-file-text-o fa-3x" style="color:#b95bb9"></i></div>
-      <div class="col-xs-9-harf" style="padding: 5px 0;">
-        <p class="margin-bottom-0">Pea No : {{pea_no}}</p>
+    <div class="col-xs-12 margin-bottom-5" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;" >
+      <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;">
+        {{#if latitude}}
+          <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{latitude}}%2C{{longitude}}" target="_blank"><i class="fa fa-map-marker fa-3x" style="color:#b95bb9"></i></a>
+        {{else}}
+        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{cust_address}}" target="_blank"><i class="fa fa-map-marker fa-3x" style="color:#b95bb9"></i></a>
+        {{/if}}
+      </div>
+      <div class="col-xs-9-harf" style="padding: 5px 5px 5px 10px; {{state_color}}" onclick="showWorkList('{{pea_no}}')">
+        <div style="position:absolute; top:5px; right:5px;">{{state_label}}</div>
+        <p class="margin-bottom-0">PEA NO : {{pea_no}}</p>
         <p class="margin-bottom-0">สายจดหน่วย : {{cust_route}}</p>
-        <p class="margin-bottom-0">customer No : {{cust_no}}</p>
-        <p class="margin-bottom-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Address : {{cust_address}}</p>
+        <p class="margin-bottom-0">Customer No : {{cust_no}}</p>
+        <p class="margin-bottom-0">ที่อยู่ : {{cust_address}}</p>
       </div>
     </div>
     {{/each}}

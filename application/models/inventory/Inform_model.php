@@ -1,11 +1,24 @@
 <?php
-class Work_list_model extends CI_Model
+class Inform_model extends CI_Model
 {
-  private $tb = "work_list";
+  private $tb = "inform";
 
   public function __construct()
   {
     parent::__construct();
+  }
+
+  public function add(array $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      if($this->db->insert($this->tb, $ds))
+      {
+        return $this->db->insert_id();
+      }
+    }
+
+    return FALSE;
   }
 
 
@@ -30,9 +43,9 @@ class Work_list_model extends CI_Model
   }
 
 
-  public function get($pea_no)
+  public function get($id)
   {
-    $rs = $this->db->where('pea_no', $pea_no)->get($this->tb);
+    $rs = $this->db->where('id', $id)->get($this->tb);
 
     if($rs->num_rows() === 1)
     {
@@ -61,23 +74,13 @@ class Work_list_model extends CI_Model
   {
     $this->db
     ->select('w.*, u.name AS team_group_name')
-    ->from('work_list AS w')
+    ->from('inform AS w')
     ->join('team_group AS u', 'w.team_group_id = u.id', 'left')
     ->where('w.team_id IS NOT NULL');
 
     if(! empty($ds['pea_no']))
     {
       $this->db->like('w.pea_no', $ds['pea_no']);
-    }
-
-    if(! empty($ds['customer']))
-    {
-      $this->db
-      ->group_start()
-      ->like('w.cust_no', $ds['customer'])
-      ->or_like('w.cust_name', $ds['customer'])
-      ->or_like('w.cust_tel', $ds['customer'])
-      ->group_end();
     }
 
     if(! empty($ds['ca_no']))
@@ -129,19 +132,6 @@ class Work_list_model extends CI_Model
       }
     }
 
-
-    if( isset($ds['assigned']) && $ds['assigned'] != 'all')
-    {
-      if($ds['assigned'] == 1)
-      {
-        $this->db->where('w.team_group_id IS NOT NULL', NULL, FALSE);
-      }
-      else
-      {
-        $this->db->where('w.team_group_id IS NULL', NULL, FALSE);
-      }
-    }
-
     if( isset($ds['status']) && $ds['status'] != 'all')
     {
       $this->db->where('w.status', $ds['status']);
@@ -149,10 +139,10 @@ class Work_list_model extends CI_Model
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
-      $this->db->where('w.date_upd >=', from_date($ds['from_date']))->where('w.date_upd <=', to_date($ds['to_date']));
+      $this->db->where('w.date_add >=', from_date($ds['from_date']))->where('w.date_add <=', to_date($ds['to_date']));
     }
 
-    $this->db->order_by('w.date_upd', 'DESC')->limit($perpage, $offset);
+    $this->db->order_by('w.date_add', 'DESC')->limit($perpage, $offset);
 
     $rs = $this->db->get();
 
@@ -169,23 +159,13 @@ class Work_list_model extends CI_Model
   public function count_rows(array $ds = array())
   {
     $this->db
-    ->from('work_list AS w')
+    ->from('inform AS w')
     ->join('team_group AS u', 'w.team_group_id = u.id', 'left')
     ->where('w.team_id IS NOT NULL');
 
     if(! empty($ds['pea_no']))
     {
       $this->db->like('w.pea_no', $ds['pea_no']);
-    }
-
-    if(! empty($ds['customer']))
-    {
-      $this->db
-      ->group_start()
-      ->like('w.cust_no', $ds['customer'])
-      ->or_like('w.cust_name', $ds['customer'])
-      ->or_like('w.cust_tel', $ds['customer'])
-      ->group_end();
     }
 
     if(! empty($ds['ca_no']))
@@ -236,19 +216,6 @@ class Work_list_model extends CI_Model
       }
     }
 
-
-    if( isset($ds['assigned']) && $ds['assigned'] != 'all')
-    {
-      if($ds['assigned'] == 1)
-      {
-        $this->db->where('w.team_group_id IS NOT NULL', NULL, FALSE);
-      }
-      else
-      {
-        $this->db->where('w.team_group_id IS NULL', NULL, FALSE);
-      }
-    }
-
     if( isset($ds['status']) && $ds['status'] != 'all')
     {
       $this->db->where('w.status', $ds['status']);
@@ -256,90 +223,23 @@ class Work_list_model extends CI_Model
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
-      $this->db->where('w.date_upd >=', from_date($ds['from_date']))->where('w.date_upd <=', to_date($ds['to_date']));
+      $this->db->where('w.date_add >=', from_date($ds['from_date']))->where('w.data_add <=', to_date($ds['to_date']));
     }
 
     return $this->db->count_all_results();
   }
 
 
-  public function assign_work_list($team_group_id, array $rows_id = array())
+  public function is_exists($pea_no)
   {
-    if( ! empty($rows_id))
-    {
-      $this->db
-      ->set('team_group_id', $team_group_id)
-      ->where_in('id', $rows_id)
-      ->where_in('status', array('P', 'R', 'U'));
+    $rs = $this->db->where('pea_no', $pea_no)->count_all_results($this->tb);
 
-      return $this->db->update($this->tb);
+    if($rs > 0)
+    {
+      return TRUE;
     }
 
     return FALSE;
-  }
-
-
-  public function unassign_work_list($rows_id = array())
-  {
-    /*
-    *  P = Pending (รอติดตั้ง)
-    *  I = Installed (ติดตั้งแล้ว รอหลังบ้านอนุมัติ)
-    *  A = Approved (หลังบ้านอนุมัติแล้ว แต่ยังไม่ส่งไป PEA)
-    *  R = Rejected (หลังบ้านไม่อนุมัติ ต้องกลับไปแก้ไขที่จุดติดตั้ง)
-    *  W = Waitin (ส่งข้อมูลไป PEA แล้ว รอผลว่าผ่านหรือไม่)
-    *  S = Success (PEA อนุมัติแล้วการสลับมิเตอร์เสร็จสมบูรณ์)
-    *  U = Rejectd (PEA ตรวจแล้วไม่ผ่าน ต้องกลับไปแก้ไขใหม่)
-    */
-
-    if( ! empty($rows_id))
-    {
-      $this->db
-      ->set('team_group_id', NULL)
-      ->where_in('id', $rows_id)
-      ->where_in('status', array('P', 'R', 'U'))
-      ->where('team_group_id IS NOT NULL', NULL, FALSE);
-
-      return $this->db->update($this->tb);
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_open_work_list_by_team_group($team_group_id)
-  {
-    $rs = $this->db
-    ->select('w.*, g.latitude, g.longitude')
-    ->from('work_list AS w')
-    ->join('pea_data AS g', 'w.pea_no = g.pea_no', 'left')
-    ->where('w.team_group_id', $team_group_id)
-    ->where_in('w.status', array('P', 'R', 'U'))
-    ->get();
-
-    if( ! empty($rs))
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function get_work_list_by_pea_no($pea_no)
-  {
-    $rs = $this->db
-    ->select('w.*, g.latitude, g.longitude')
-    ->from('work_list AS w')
-    ->join('pea_data AS g', 'w.pea_no = g.pea_no', 'left')
-    ->where('w.pea_no', $pea_no)
-    ->get();
-
-    if($rs->num_rows() == 1)
-    {
-      return $rs->row();
-    }
-
-    return NULL;
   }
 
 

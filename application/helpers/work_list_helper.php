@@ -16,10 +16,10 @@ function status_text($status = 'P')
   switch($status)
   {
     case 'P' :
-      $text = "รอติดตั้ง";
+      $text = "รอสับเปลี่ยน";
       break;
     case 'I' :
-      $text = "ติดตั้งแล้ว";
+      $text = "รออนุมัติ";
       break;
     case 'A' :
       $text = "อนุมัติแล้ว";
@@ -36,8 +36,11 @@ function status_text($status = 'P')
     case 'U' :
       $text = "PEA ไม่อนุมัติ";
       break;
+    case 'F' :
+      $text = "เหตุสุดวิสัย";
+      break;
     default :
-      $text = "รอติดตั้ง";
+      $text = "รอสับเปลี่ยน";
       break;
   }
 
@@ -79,6 +82,9 @@ function status_color($status = 'P')
       $text = "color:orange;";
       break;
     case 'U' :
+      $text = "color:red;";
+      break;
+    case 'F' :
       $text = "color:red;";
       break;
     default :

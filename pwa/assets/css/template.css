@@ -1,5 +1,5 @@
 
-a {
+a, a:visited, a:hover, a:focus {
   text-decoration: none;
 }
 
@@ -8,6 +8,9 @@ hr {
     margin-right: -7px;
 }
 
+.noscroll {
+  overflow: hidden;
+}
 
 .container {
   padding-right: 15px;
@@ -430,7 +433,9 @@ hr.padding-5 {
   width:3%;
 }
 
-
+.height-100 {
+  height: 100% !important;
+}
 
 .input-discount {
 	width:50% !important;
@@ -763,7 +768,6 @@ hr.padding-5 {
 .margin-right-15 {
 	margin-right:15px !important;
 }
-
 
 
 .margin-top-5{
@@ -2213,90 +2217,6 @@ li {
   border-radius:10px;
 }
 
-
-.top-left {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 25px;
-  height: 2px;
-  top: -2px;
-  left: 0px;
-}
-
-.left-top {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 2px;
-  height: 25px;
-  top: -2px;
-  left: -2px;
-}
-
-
-.top-right {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 25px;
-  height: 2px;
-  top: -2px;
-  right: 0px;
-}
-
-.right-top {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 2px;
-  height: 25px;
-  top: -2px;
-  right: -2px;
-}
-
-.left-bottom {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 2px;
-  height: 25px;
-  bottom: -2px;
-  left: -2px;
-}
-
-.bottom-left {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 25px;
-  height: 2px;
-  bottom: -2px;
-  left: 0px;
-}
-
-
-.right-bottom {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 2px;
-  height: 25px;
-  bottom: -2px;
-  right: -2px;
-}
-
-.bottom-right {
-  position: absolute;
-  background-color: rgb(255, 255, 255);
-  width: 25px;
-  height: 2px;
-  bottom: -2px;
-  right: -2px;
-}
-
-.middle-line {
-  position: absolute;
-  background-color: rgb(255 255 255);
-  width: 100%;
-  height: 1px;
-  top: 50%;
-  left: 0px;
-}
-
 .menu-pad {
   position: fixed;
   top: 0px;
@@ -2344,4 +2264,54 @@ li {
   border-radius: 25px;
   background-color:#3333332b;
   color:#333;
+}
+
+button.close.remove-img {
+  position:absolute;
+  top:5px;
+  right:10px;
+  color:red;
+  font-size:3em;
+  font-weight:lighter;
+  text-shadow:none;
+  width:30px;
+  height: 30px;
+  background-color: #d3d2d261;
+  padding:0;
+  line-height: 0.1;
+  border-radius: 20px;
+  box-shadow: 0px 0px 2px 2px #0000004d;
+  opacity: 1;
+}
+
+.image-preview {
+  background-color:#eee;
+  border-radius:10px;
+  border:solid 1px #d5d5d5;
+}
+
+.pre-image {
+  height:300px;
+  background-color:#eee;
+  border-radius:10px;
+  padding:132px 0px;
+}
+
+.search-content {
+  position:fixed;
+  top:45px;
+  width:100%;
+  height: 86px;
+  margin-left:-20px;
+  padding: 5px 12px;
+  background-color:white;
+  box-shadow: 0px 1px 7px #f3ecec;
+  z-index:10;
+}
+
+.box {
+  background-color: white;
+  border-radius: 15px;
+  padding: 10px;
+  margin-bottom: 10px;
 }

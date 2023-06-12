@@ -42,6 +42,7 @@ function loadSettingMenu() {
   let menuPad = `
   <input type="hidden" id="scan-type" value="" />
   <input type="hidden" id="scan-result" value="" />
+  <input type="hidden" id="code" value="" />
   <div id="cam" class="hide" style="position: fixed; top:45px; left:0; width:100vw; z-index:13;">
     <div id="reader" style="width:100%;"></div>
   </div>
@@ -125,6 +126,12 @@ function loadSettingMenu() {
       <tr><td class="fix-width-100">คลังต้นทาง</td><td class="">{{fromWhsCode}} : {{from_warehouse_name}}</td></tr>
       <tr><td class="fix-width-100">คลังปลายทาง</td><td class="">{{toWhsCode}} : {{to_warehouse_name}}</td></tr>
     </table>
+  </script>
+
+  <script id="damage-list-template" type="text/x-handlebarsTemplate">
+    {{#each this}}
+      <option value="{{reason_id}}">{{title}}</option>
+    {{/each}}
   </script>
   `;
 

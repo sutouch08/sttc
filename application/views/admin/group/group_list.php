@@ -31,18 +31,18 @@
   </div>
 
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-    <label>คลังต้นทาง</label>
+    <label>คลังพื้นที่</label>
 		<select class="form-control input-sm" name="fromWhsCode" onchange="getSearch()">
 			<option value="all">ทั้งหมด</opton>
-			<?php echo select_warehouse($fromWhsCode); ?>
+			<?php echo select_listed_warehouse($fromWhsCode); ?>
 		</select>
   </div>
 
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-    <label>คลังปลายทาง</label>
+    <label>คลังติดตั้งสำเร็จ</label>
 		<select class="form-control input-sm" name="toWhsCode" onchange="getSearch()">
 			<option value="all">ทั้งหมด</opton>
-			<?php echo select_warehouse($toWhsCode); ?>
+			<?php echo select_listed_warehouse($toWhsCode); ?>
 		</select>
   </div>
 
@@ -79,8 +79,8 @@
 					<th class="fix-width-50 middle text-center">#</th>
           <th class="fix-width-150 middle">ชื่อทีม</th>
           <th class="fix-width-150 middle">เขต/พื้นที่</th>
-					<th class="fix-width-200 middle">คลังต้นทาง</th>
-					<th class="fix-width-200 middle">คลังปลายทาง</th>
+					<th class="fix-width-200 middle">คลังพื้นที่</th>
+					<th class="fix-width-200 middle">คลังติดตั้งสำเร็จ</th>
 					<th class="fix-width-100 middle">สร้างเมื่อ</th>
 					<th class="fix-width-100 middle">สร้างโดย</th>
 					<th class="fix-width-100 middle">แก้ไขเมื่อ</th>
@@ -136,27 +136,27 @@
 					</div>
           <div class="divider-hidden"></div>
           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>เขต/พื้นที่</label>
+						<label>เขต</label>
 						<select class="form-control" id="add-team">
-              <option value="">เลือกเขต/พื้นที่</option>
+              <option value="">เลือกเขต</option>
               <?php echo select_team(); ?>
             </select>
 						<div class="err-label" id="add-team-error"></div>
 					</div>
 
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>คลังต้นทาง</label>
+						<label>คลังพื้นที่</label>
 						<select class="form-control" id="add-fromWh">
-              <option value="">เลือกคลังต้นทาง</option>
+              <option value="">เลือกคลังพื้นที่</option>
               <?php echo select_warehouse(); ?>
             </select>
 						<div class="err-label" id="add-fromWh-error"></div>
 					</div>
 
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>คลังปลายทาง</label>
+						<label>คลังติดตั้งสำเร็จ</label>
 						<select class="form-control" id="add-toWh">
-              <option value="">เลือกคลังปลายทาง</option>
+              <option value="">เลือกคลังติดตั้งสำเร็จ</option>
               <?php echo select_warehouse(); ?>
             </select>
 						<div class="err-label" id="add-toWh-error"></div>
@@ -188,7 +188,7 @@
    <div class="modal-content">
        <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-       <h4 class="modal-title">แก้ไข เขต/พื้นที่</h4>
+       <h4 class="modal-title">แก้ไข ทีมติดตั้ง</h4>
       </div>
       <div class="modal-body">
         <div class="row" style="padding-left:12px; padding-right:12px;">
@@ -200,28 +200,28 @@
 					</div>
           <div class="divider-hidden"></div>
           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>เขต/พื้นที่</label>
+						<label>เขต</label>
 						<select class="form-control" id="edit-team">
-              <option value="">เลือกเขต/พื้นที่</option>
+              <option value="">เลือกเขต</option>
               <?php echo select_team(); ?>
             </select>
 						<div class="err-label" id="edit-team-error"></div>
 					</div>
 
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>คลังต้นทาง</label>
+						<label>คลังพื้นที่</label>
 						<select class="form-control" id="edit-fromWh">
-              <option value="">เลือกคลังต้นทาง</option>
-              <?php echo select_warehouse(); ?>
+              <option value="">เลือกคลังพื้นที่</option>
+              <?php echo select_listed_warehouse(); ?>
             </select>
 						<div class="err-label" id="edit-fromWh-error"></div>
 					</div>
 
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>คลังปลายทาง</label>
+						<label>คลังติดตั้งสำเร็จ</label>
 						<select class="form-control" id="edit-toWh">
-              <option value="">เลือกคลังปลายทาง</option>
-              <?php echo select_warehouse(); ?>
+              <option value="">เลือกคลังติดตั้งสำเร็จ</option>
+              <?php echo select_listed_warehouse(); ?>
             </select>
 						<div class="err-label" id="edit-toWh-error"></div>
 					</div>

@@ -39,7 +39,9 @@ function edit(id) {
 
         render(source, data, output);
 
-        $('#damage').val(data.damage_id);
+        $('#damage_id').val(data.damage_id);
+        $('#phase').val(data.phase);
+        powerInit();
 
         $('#editModal').modal('show');
       }
@@ -55,8 +57,7 @@ function edit(id) {
 }
 
 
-function getEdit()
-{
+function getEdit() {
   let id = $('#transfer-id').val();
 
   $('#previewModal').modal('hide');
@@ -73,11 +74,9 @@ function getEdit()
         let source = $('#edit-template').html();
         let data = JSON.parse(rs);
         let output = $('#edit-detail');
-
         render(source, data, output);
-
-        $('#damage').val(data.damage_id);
-
+        console.log(data)
+        $('#damage_id').val(data.damage_id);
         $('#editModal').modal('show');
       }
       else {
@@ -89,14 +88,6 @@ function getEdit()
       }
     }
   })
-}
-
-
-function showTab(name) {
-  $('.header-menu').removeClass('focus');
-  $('.tab-pane').removeClass('active in');
-  $('#'+name).addClass('focus');
-  $('#'+name+'-tab').addClass('active in');
 }
 
 
@@ -119,16 +110,23 @@ function preview(id) {
         render(source, data, output);
 
         $('#btn-approve').addClass('hide');
+        $('#btn-reject').addClass('hide');
         $('#btn-edit').addClass('hide');
         $('#btn-temp').addClass('hide');
+        $('#btn-scs').addClass('hide');
 
-        if(data.status == 0 && data.is_approve == 0) {
+        if(data.status == 'I' && data.is_approve == 0) {
           $('#btn-approve').removeClass('hide');
+          $('#btn-reject').removeClass('hide');
           $('#btn-edit').removeClass('hide');
         }
 
-        if(data.status == 1 || data.is_approve == 1 || data.status == 3) {
+        if(data.status == 'A' && data.is_approve == 1 && (data.sap_status == 'P' || data.sap_status == 'F')) {
           $('#btn-temp').removeClass('hide');
+        }
+
+        if(data.status == 'A' && data.is_approve == 1 && (data.pea_status == 'P' || data.pea_status == 'F')) {
+          $('#btn-scs').removeClass('hide');
         }
 
         $('#previewModal').modal('show');
@@ -163,6 +161,7 @@ function doApprove() {
       },
       success:function(rs) {
         load_out();
+
         if(rs == 'success') {
           swal({
             title:'Approved',
@@ -179,11 +178,69 @@ function doApprove() {
             title:'Error!',
             text: rs,
             type:'error'
+          }, function() {
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
           });
         }
       }
     });
   }, 500);
+}
+
+
+function doReject() {
+  let id = $('#transfer-id').val();
+
+  swal({
+    title:'กรุณายืนยัน',
+    text:'กรุณายืนยันว่าคุณ "ไม่อนุมัติ" รายการนี้<br/>เพื่อให้ใบสั่งงานถูกดึงกลับไปแก้ไขใหม่อีกครั้ง',
+    type:'warning',
+    html:true,
+    showCancelButton:true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText:'ยกเลิก',
+    closeOnConfirm:true
+  }, function() {
+    $('#previewModal').modal('hide');
+    load_in();
+
+    $.ajax({
+      url:HOME + 'reject',
+      type:'POST',
+      cache:false,
+      data:{
+        'id' : id
+      },
+      success:function(rs) {
+        load_out();
+
+        if(rs == 'success') {
+          setTimeout(() => {
+            swal({
+              title:'Success',
+              type:'success',
+              timer:1000
+            });
+
+            setTimeout(() => {
+              window.location.reload();
+            }, 1200);
+          }, 200);
+        }
+        else {
+          setTimeout(() => {
+            swal({
+              title:'Error!',
+              text:rs,
+              type:'error'
+            });
+          }, 200)
+        }
+      }
+    })
+  })
 }
 
 
@@ -215,67 +272,40 @@ function updateRow(id, no) {
 
 
 function suggest() {
-  let year = parseDefault(parseInt($('#mYear').val()), 0);
-  let cond = $('#condition').val();
-  let label = "";
 
-  if(year == 0 || year == "" || cond == "") {
-    if(cond == "" && (year == "" || year == 0)) {
-      $('#suggest-label').html(`<div>กรุณาระบุปีและสภาพมิเตอร์</div>`);
-    }
-    else {
-      if(cond != "" && (year == 0 || year == "")) {
-        $('#suggest-label').html(`<div>กรุณาระบุปีมิเตอร์</div>`);
-      }
+  let age = parseDefault(parseInt($('#use-age').val()), 0);
+  let cond = $('#damage_id').val();
+  let color = "red";
 
-      if(cond == "" && (year != 0 && year != "")) {
-        $('#suggest-label').html(`<div>กรุณาระบุสภาพมิเตอร์</div>`);
-      }
+  if(age <= 10) {
+    if(cond != '0' && age > 3) {
+      color = "orange";
     }
 
-    $('#use-age').text("0 ปี");
-    $('#useAge').val("");
+    if(cond != '0' && age <= 3) {
+      color = "blue";
+    }
+
+    if(cond == '0') {
+      color = "green";
+    }
   }
-  else {
-    let thisYear = new Date().getFullYear();
-    let age = thisYear - year;
-    let label = `<div style="background-color:red; width:20px; height:20px;"></div>`;
 
-    $('#use-age').text(age + " ปี");
-    $('#useAge').val(age);
+  let label = `<div style="background-color:${color}; width:40px; height:40px;"></div>`;
+  $('#suggest-label').html(label);
 
-    if( age < 10 )
-    {
-      if( cond == 2 && age > 3) {
-        label = `<div style="background-color:orange; width:20px; height:20px;"></div>`;
-      }
-
-      if( cond == 2 && age <= 3) {
-        label = `<div style="background-color:blue; width:20px; height:20px;"></div>`;
-      }
-
-      if( cond == 1) {
-        label = `<div style="background-color:green; width:20px; height:20px;"></div>`;
-      }
-    }
-
-    $('#suggest-label').html(label);
-  }
 }
 
 
+
 function updateItem() {
+  $('#btn-update').attr('disabled', 'disabled');
+
   let id = $('#transfer-id').val();
-  let peaNo = $('#peaNo').val();
-  let powerNo = $('#powerNo').val();
-  let mYear = $('#mYear').val();
-  let cond = $('#condition').val();
-  let useAge = $('#useAge').val();
-  let damage_id = $('#damage').val();
-  let peaNoMinLength = parseDefault(parseInt($('#peaNo-minLength').val()), 4);
-  let peaNoMaxLength = parseDefault(parseInt($('#peaNo-maxLength').val()), 10);
-  let powerNoMinLength = parseDefault(parseInt($('#powerNo-minLength').val()), 5);
-  let powerNoMaxLength = parseDefault(parseInt($('#powerNo-maxLength').val()), 5);
+  let i_power_no = $('#i-power-no').val();
+  let u_power_no = $('#u-power-no').val();
+  let damage_id = $('#damage_id').val();
+  let phase = $('#phase').val();
 
 
   setTimeout(() => {
@@ -286,66 +316,31 @@ function updateItem() {
         type:'error'
       });
 
-      return false;
-    }
-
-    if(peaNo.length < peaNoMinLength || peaNo.length > peaNoMaxLength) {
-      swal({
-        title:'Oops!',
-        text:"PEA NO ไม่ถูกต้อง",
-        type:'error'
-      });
+      $('#btn-update').removeAttr('disabled');
 
       return false;
     }
 
-    if(powerNo.length < powerNoMinLength || powerNo.length > powerNoMaxLength) {
+
+    if(i_power_no.length != 5) {
       swal({
         title:'Opps!',
-        text:"หน่วยไฟไม่ถูกต้อง",
+        text:"หน่วยตัดกลับไม่ถูกต้อง",
         type:'error'
       });
 
+      $('#btn-update').removeAttr('disabled');
       return false;
     }
 
-    if(mYear == "" || mYear == 0) {
+    if(u_power_no.length != 5) {
       swal({
         title:'Opps!',
-        text:"กรุณาระบุปีมิเตอร์",
+        text:"หน่วยตั้งต้นไม่ถูกต้อง",
         type:'error'
       });
 
-      return false;
-    }
-
-    if(cond == "" || cond == 0) {
-      swal({
-        title:'Opps!',
-        text:"กรุณาระบุสภาพมิเตอร์",
-        type:'error'
-      });
-
-      return false;
-    }
-
-    if(useAge === "") {
-      swal({
-        title:'Opps!',
-        text:'อายุการใช้งานไม่ถูกต้อง',
-        type:'error'
-      });
-
-      return false;
-    }
-
-    if(cond == 2 && damage_id == "") {
-      swal({
-        title:'Opps!',
-        text:"กรุณาระบุสาเหตุการชำรุด",
-        type:'error'
-      });
-
+      $('#btn-update').removeAttr('disabled');
       return false;
     }
 
@@ -358,12 +353,10 @@ function updateItem() {
       type:'POST',
       cache:false,
       data: {
-        'peaNo' : peaNo,
-        'powerNo' : powerNo,
-        'mYear' : mYear,
-        'cond' : cond,
-        'useAge' : useAge,
-        'damage_id' : damage_id
+        'i_power_no' : i_power_no,
+        'u_power_no' : u_power_no,
+        'damage_id' : damage_id,
+        'phase' : phase
       },
       success:function(rs) {
         load_out();
@@ -380,6 +373,7 @@ function updateItem() {
           }, 1200);
         }
         else {
+          $('#btn-update').removeAttr('disabled');
           swal({
             title:'Error!',
             text:rs,
@@ -427,13 +421,61 @@ function sendToSAP() {
           }, 1200);
         }
         else {
+          setTimeout(() => {
+            swal({
+              title:'Error!',
+              text:rs,
+              type:'error'
+            }, () => {
+              $('#previewModal').modal('show');
+            });
+          }, 200)
+        }
+      }
+    });
+  }, 500);
+}
+
+
+function sendToSCS() {
+  let id = $('#transfer-id').val();
+
+  $('#previewModal').modal('hide');
+
+  setTimeout(() => {
+    load_in();
+
+    $.ajax({
+      url:HOME + 'send_to_scs',
+      type:'POST',
+      cache:false,
+      data:{
+        'id' : id
+      },
+      success:function(rs) {
+        load_out();
+
+        if(rs == 'success') {
           swal({
-            title:'Error!',
-            text:rs,
-            type:'error'
-          }, () => {
-            $('#previewModal').modal('show');
+            title:'Success',
+            type:'success',
+            timer:1000
           });
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
+        }
+        else {
+          setTimeout(() => {
+            swal({
+              title:'Error!',
+              text:rs,
+              type:'error'
+            }, () => {
+              $('#previewModal').modal('show');
+            });
+          }, 200)
         }
       }
     });

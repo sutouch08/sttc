@@ -264,25 +264,15 @@ class Api extends REST_Controller
   }
 
 
-  public function get_transfer_list_post()
+  public function get_transfer_history_post()
   {
     $this->load->model('inventory/transfer_model');
     $this->load->helper('transfer');
     $sc = TRUE;
     $data = json_decode(file_get_contents("php://input"));
 
-    $filter = array(
-      'code' => $data->code,
-      'serial' => $data->serial,
-      'from_date' => $data->fromDate,
-      'to_date' => $data->toDate,
-      'status' => $data->status
-    );
-
-    $perpage = $data->perpage;
-    $offset = $data->offset;
-    $rows = $this->transfer_model->count_rows($filter);
-    $ds = $this->transfer_model->get_list($filter, $perpage, $offset);
+    $rows = $this->transfer_model->count_history_rows($data->search_text);
+    $ds = $this->transfer_model->get_history_list($data->search_text, $data->perpage, $data->offset);
     $dataset = array();
 
     if( ! empty($ds))
@@ -291,13 +281,11 @@ class Api extends REST_Controller
       {
         $arr = array(
           'id' => $rs->id,
-          'date_add' => thai_date($rs->date_add),
           'code' => $rs->code,
-          'serial' => $rs->InstallSerialNum,
-          'teamName' => $rs->team_name,
-          'statusLabel' => transfer_status_label($rs->status),
-          'remark' => $rs->remark,
-          'uname' => $rs->uname
+          'date_add' => thai_date($rs->date_add, FALSE),
+          'u_pea_no' => $rs->u_pea_no,
+          'route' => $rs->route,
+          'statusLabel' => transfer_status_label($rs->status)
         );
 
         array_push($dataset, $arr);
@@ -314,39 +302,27 @@ class Api extends REST_Controller
   public function view_detail_post()
   {
     $this->load->model('inventory/transfer_model');
-    $this->load->model('admin/damaged_model');
+    $this->load->model('admin/dispose_reason_model');
+    $this->load->helper('image');
     $sc = TRUE;
     $data = json_decode(file_get_contents("php://input"));
 
     if( ! empty($data))
     {
       $rs = $this->transfer_model->get($data->id);
+
       if( ! empty($rs))
       {
-        $arr = array(
-          "id" => $rs->id,
-          "date_add" => thai_date($rs->date_add, FALSE),
-          "code" => $rs->code,
-          "itemCode" => $rs->ItemCode,
-          "itemName" => $rs->ItemName,
-          "iSerial" => $rs->InstallSerialNum,
-          "uSerial" => $rs->ReturnnedSerialNum,
-          "fromWhsCode" => $rs->fromWhsCode,
-          "toWhsCode" => $rs->toWhsCode,
-          "i_image_path" => $rs->install_image,
-          "u_image_path" => $rs->returnned_image,
-          "i_image_data" => $this->readImage($rs->install_image),
-          "u_image_data" => $this->readImage($rs->returnned_image),
-          "peaNo" => $rs->peaNo,
-          "powerNo" => $rs->powerNo,
-          "mYear" => $rs->mYear,
-          "cond" => $rs->cond,
-          "damage_id" => $rs->damage_id,
-          "damage_name" => $this->damaged_model->get_name($rs->damage_id),
-          "usageAge" => $rs->usageAge,
-          "status" => $rs->status,
-          "fromDoc" => $rs->fromDoc
-        );
+        $i_path = $this->config->item('image_path')."installed/{$rs->i_pea_no}-{$rs->id}.jpg";
+        $u_path = $this->config->item('image_path')."returnned/{$rs->u_pea_no}-{$rs->id}.jpg";
+        $s_path = $this->config->item('image_path')."signature/{$rs->u_pea_no}-{$rs->id}_sign.jpg";
+
+        $rs->i_image = readImage($i_path);
+        $rs->u_image = readImage($u_path);
+        $rs->signature_image = readImage($s_path);
+        $rs->damage_name = $this->dispose_reason_model->get_title($rs->damage_id);
+
+        $arr = (array) $rs;
       }
       else
       {
@@ -374,84 +350,123 @@ class Api extends REST_Controller
   public function add_transfer_post()
   {
     $this->load->model('inventory/transfer_model');
+    $this->load->model('inventory/user_item_model');
+    $this->load->model('inventory/work_list_model');
+    $this->load->helper('image');
+
     $sc = TRUE;
     $data = json_decode(file_get_contents("php://input"));
 
     if( ! empty($data))
     {
-      $fromWhsCode = $data->fromWhsCode;
-      $toWhsCode = $data->toWhsCode;
-      $itemCode = $data->itemCode;
-      $itemName = $data->itemName;
-      $iSerial = $data->iSerial;
-      $uSerial = $data->uSerial;
-      $peaNo = $data->peaNo;
-      $powerNo = $data->runNo;
-      $mYear = $data->mYear;
-      $cond = $data->cond;
-      $damage_id = empty($data->damage_id) ? NULL : get_null($data->damage_id);
-      $iImage = $data->iImage;
-      $uImage = $data->uImage;
-      $uOrientation = $data->uOrientation;
-      $iOrientation = $data->iOrientation;
-      $fromDoc = get_null($data->fromDoc);
-      $remark = get_null(trim($data->remark));
-      $usageAge = $data->usageAge;
-      $pea_verify = empty($data->pea_verify) ? $this->verify_pea_no($peaNo) : $data->pea_verify;
 
-      $i_path = $this->config->item('image_path')."installed/{$iSerial}.jpg";
-      $u_path = $this->config->item('image_path')."returnned/{$uSerial}.jpg";
+      $item = $this->user_item_model->get_item_by_pea_no($data->i_pea_no);
 
       $code = $this->get_new_transfer_code();
 
-      $arr = array(
-        'date_add' => date('Y-m-d'),
-        'code' => $code,
-        'ItemCode' => $itemCode,
-        'ItemName' => $itemName,
-        'InstallSerialNum' => $iSerial,
-        'ReturnnedSerialNum' => $uSerial,
-        'Qty' => 1,
-        'fromWhsCode' => $fromWhsCode,
-        'toWhsCode' => $toWhsCode,
-        'install_image' => $i_path,
-        'returnned_image' => $u_path,
-        'peaNo' => $peaNo,
-        'powerNo' => $powerNo,
-        'mYear' => $mYear,
-        'cond' => $cond,
-        'damage_id' => $damage_id,
-        'usageAge' => $usageAge,
-        'status' => 0,
-        'remark' => $remark,
-        'team_id' => $this->_user->team_id,
-        'create_at' => now(),
-        'create_by' => $this->_user->id,
-        'fromDoc' => $fromDoc,
-        'orientation' => $iOrientation,
-        'pea_verify' => $pea_verify
-      );
-
-      if( ! $this->transfer_model->add($arr))
+      if( ! empty($item) && ($item->status == 'P' OR $item->status == 'R' OR $item->status == 'U' ) )
       {
-        $sc = FALSE;
-        set_error(0, "Create Document Failed");
+        $arr = array(
+          'date_add' => date('Y-m-d'),
+          'code' => $code,
+          'ItemCode' => $item->ItemCode,
+          'ItemName' => $item->ItemName,
+          'i_serial' => $item->serial,
+          'u_serial' => $item->serial.'-1',
+          'qty' => 1,
+          'fromWhsCode' => $item->WhsCode,
+          'fromBinCode' => $item->BinCode,
+          'toWhsCode' => $item->WhsCode,
+          'toBinCode' => $item->WhsCode.'-SYSTEM-BIN-LOCATION',
+          'u_pea_no' => $data->u_pea_no,
+          'u_power_no' => $data->u_power_no,
+          'route' => $data->route,
+          'i_pea_no' => $item->pea_no,
+          'i_power_no' => $data->i_power_no,
+          'damage_id' => $data->damage_id,
+          'use_age' => $data->use_age,
+          'phase' => $data->phase,
+          'latitude' => $data->i_lat,
+          'longitude' => $data->i_lng,
+          'sign_status' => $data->sign_status,
+          'remark' => get_null(trim($data->remark)),
+          'fromDoc' => $data->fromDoc,
+          'team_id' => $this->_user->team_id,
+          'team_group_id' => $this->_user->team_group_id,
+          'create_by' => $this->_user->id
+        );
+
+        $this->db->trans_begin();
+        $id = $this->transfer_model->add($arr);
+
+        if( ! $id)
+        {
+          $sc = FALSE;
+          $this->error = "บันทึกรายการไม่สำเร็จ";
+        }
+
+        if($sc === TRUE)
+        {
+          //-- Update user_item status
+          if( ! $this->user_item_model->update_by_id($item->id, array('status' => 'I')))
+          {
+            $sc = FALSE;
+            $this->error = "เปลี่ยนสถานะรายการมิเตอร์ไม่สำเร็จ";
+          }
+
+          //-- update work_list status
+          if( ! $this->work_list_model->update_by_pea_no($data->u_pea_no, array('status' => 'I')))
+          {
+            $sc = FALSE;
+            $this->error = "เปลี่ยนสถานะใบสั่งงานไม่สำเร็จ";
+          }
+        }
+
+
+        //----- Save return images
+        if($sc === TRUE)
+        {
+          $i_path = $this->config->item('image_path')."installed/{$data->i_pea_no}-{$id}.jpg";
+          $u_path = $this->config->item('image_path')."returnned/{$data->u_pea_no}-{$id}.jpg";
+          $s_path = $this->config->item('image_path')."signature/{$data->u_pea_no}-{$id}_sign.jpg";
+
+          if(createImage($data->u_image, $u_path, $data->u_orientation) === FALSE)
+          {
+            $sc = FALSE;
+            set_error(0, "Create Returnned Image Failed");
+          }
+
+          if(createImage($data->i_image, $i_path, $data->i_orientation) === FALSE)
+          {
+            $sc = FALSE;
+            set_error(0, "Create Installed Image Failed");
+          }
+
+          if($data->sign_status == 0 && ! empty($data->signature_image))
+          {
+            if(createImage($data->signature_image, $s_path, 1) === FALSE)
+            {
+              $sc = FALSE;
+              set_error(0, "Create Signature Image Failed");
+            }
+          }
+        }
+
+
+        if($sc === TRUE)
+        {
+          $this->db->trans_commit();
+        }
+        else
+        {
+          $this->db->trans_rollback();
+        }
+
       }
       else
       {
-        $this->transfer_model->set_valid_item($this->_user->id, $iSerial);
-
-        if($this->createImage($uImage, $u_path, $uOrientation ) === FALSE)
-        {
-          $sc = FALSE;
-          set_error(0, "Create Returnned Image Failed");
-        }
-
-        if($this->createImage($iImage, $i_path, $iOrientation ) === FALSE)
-        {
-          $sc = FALSE;
-          set_error(0, "Create Installed Image Failed");
-        }
+        $sc = FALSE;
+        $this->error = empty($item) ? "ไม่พบ PEA NO ของมิเตอร์ใหม่ในรายการมิเตอร์" : "มิเตอร์ถูกติดตั้งไปแล้วกรุณาตรวจสอบ";
       }
     }
     else
@@ -538,103 +553,18 @@ class Api extends REST_Controller
   }
 
 
-  public function update_user_item_post()
-  {
-    $this->ms = $this->load->database('ms', TRUE);
-    $this->load->model('inventory/transfer_model');
-    $this->load->model('inventory/user_item_model');
-    $this->load->model('admin/warehouse_model');
-    $sc = TRUE;
-    $ds = array();
-    $data = json_decode(file_get_contents('php://input'));
-
-    if( ! empty($data))
-    {
-      $list = $this->transfer_model->getSapTransferSerialDetails($data->docNum);
-
-      if( ! empty($list))
-      {
-        $this->db->trans_begin();
-
-        $this->user_item_model->drop_open_item($data->docNum, $this->_user->id);
-
-        foreach($list as $rs)
-        {
-          if($sc === FALSE)
-          {
-            break;
-          }
-
-          $arr = array(
-            'user_id' => $this->_user->id,
-            'team_id' => $this->_user->team_id,
-            'team_group_id' => $this->_user->team_group_id,
-            'pea_no' => $rs->PeaNo,
-            'serial' => $rs->Serial,
-            'ItemCode' => $rs->ItemCode,
-            'ItemName' => $rs->ItemName,
-            'DocNum' => $data->docNum,
-            'WhsCode' => $rs->WhsCode,
-            'status' => 0,
-            'date_add' => now(),
-            'date_upd' => NULL
-          );
-
-          if( ! $this->user_item_model->is_exists($data->docNum, $this->_user->id, $rs->Serial))
-          {
-            if( ! $this->transfer_model->add_user_item($arr))
-            {
-              $sc = FALSE;
-              $this->error = "บันทึกรายการเข้าส่วนกลางไม่สำเร็จ";
-            }
-          }
-        }
-
-        if($sc === TRUE)
-        {
-          $this->db->trans_commit();
-        }
-        else
-        {
-          $this->db->trans_rollback();
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "ไม่พบรายการสินค้าในเอกสาร {$data->docNum}";
-      }
-
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error('required');
-    }
-
-    $ds = array(
-      'status' => $sc === TRUE ? 'success' : 'failed',
-      'message' => $sc === TRUE ? 'success' : $this->error
-    );
-
-
-    $this->response($ds, 200);
-  }
-
-
-
 
   public function delete_open_team_group_items_post()
   {
-    $this->load->model('inventory/transfer_model');
+    $this->load->model('inventory/user_item_model');
     $sc = TRUE;
     $team_group_id = $this->_user->team_group_id;
 
     $data = json_decode(file_get_contents('php://input'));
 
-    if( ! empty($data) && ! empty($user_id))
+    if( ! empty($data) && ! empty($team_group_id))
     {
-      if( ! $this->transfer_model->delete_open_team_group_items($team_group_id, $data->docNum))
+      if( ! $this->user_item_model->delete_open_team_group_items($team_group_id, $data->docNum))
       {
         $sc = FALSE;
         $this->error = "Delete failed";
@@ -660,6 +590,7 @@ class Api extends REST_Controller
   {
     $sc = TRUE;
     $this->load->model('inventory/work_list_model');
+    $this->load->helper('work_list');
     $data = json_decode(file_get_contents('php://input'));
     $ds = array();
 
@@ -680,7 +611,12 @@ class Api extends REST_Controller
             'cust_name' => $rs->cust_name,
             'cust_address' => $rs->cust_address,
             'cust_tel' => $rs->cust_tel,
-            'age_meter' => $rs->age_meter
+            'age_meter' => $rs->age_meter,
+            'latitude' => $rs->latitude,
+            'longitude' => $rs->longitude,
+            'status' => $rs->status,
+            'status_label' => status_text($rs->status),
+            'status_color' => status_color($rs->status)
           );
 
           array_push($ds, $arr);
@@ -708,7 +644,7 @@ class Api extends REST_Controller
   {
     $sc = TRUE;
     $this->load->model('inventory/work_list_model');
-
+    $this->load->helper('work_list');
     $data = json_decode(file_get_contents('php://input'));
     $ds = array();
 
@@ -731,7 +667,12 @@ class Api extends REST_Controller
               'cust_name' => $rs->cust_name,
               'cust_address' => $rs->cust_address,
               'cust_tel' => $rs->cust_tel,
-              'age_meter' => $rs->age_meter
+              'age_meter' => $rs->age_meter,
+              'latitude' => $rs->latitude,
+              'longitude' => $rs->longitude,
+              'status' => $rs->status,
+              'status_label' => status_text($rs->status),
+              'status_color' => status_color($rs->status)
             );
           }
           else
@@ -771,6 +712,7 @@ class Api extends REST_Controller
 
   public function get_transfer_details_post()
   {
+    $test = true;
     $this->ms = $this->load->database('ms', TRUE);
     $this->load->model('inventory/transfer_model');
     $this->load->model('admin/warehouse_model');
@@ -783,12 +725,10 @@ class Api extends REST_Controller
     if( ! empty($data))
     {
       $doc = $this->transfer_model->getSapDoc($data->docNum);
-      //$doc = array('docEntry' => 2066);
 
       if( ! empty($doc))
       {
-        //if($data->docNum)
-        if($doc->toWhsCode == $this->_user->fromWhsCode)
+        if($test OR ($test == FALSE && $doc->toWhsCode == $this->_user->fromWhsCode))
         {
           //-- check exists data loaded
           if( ! $this->transfer_model->is_loaded($data->docNum) OR $data->reload == 'Y')
@@ -805,10 +745,11 @@ class Api extends REST_Controller
                   'no' => $no,
                   'DocNum' => $data->docNum,
                   'Serial' => $rs->Serial,
-                  'PeaNo' => $rs->PeaNo,
+                  'PeaNo' => $test ? (empty($rs->PeaNo) ? $rs->Serial : $rs->PeaNo) : $rs->PeaNo,
                   'ItemCode' => $rs->ItemCode,
                   'ItemName' => $rs->ItemName,
-                  'WhsCode' => $rs->WhsCode
+                  'WhsCode' => $rs->WhsCode,
+                  'BinCode' => (empty($rs->BinCode) ? "{$rs->WhsCode}-SYSTEM-BIN-LOCATION" : $rs->BinCode)
                 );
 
                 array_push($ds, $arr);
@@ -856,9 +797,97 @@ class Api extends REST_Controller
   }
 
 
+  public function update_user_item_post()
+  {
+    $test = true;
+    $this->ms = $this->load->database('ms', TRUE);
+    $this->load->model('inventory/transfer_model');
+    $this->load->model('inventory/user_item_model');
+    $this->load->model('admin/warehouse_model');
+    $sc = TRUE;
+    $ds = array();
+    $data = json_decode(file_get_contents('php://input'));
+
+    if( ! empty($data))
+    {
+      $list = $this->transfer_model->getSapTransferSerialDetails($data->docNum);
+
+      if( ! empty($list))
+      {
+        $this->db->trans_begin();
+        $team_group_id = $this->_user->team_group_id;
+
+        $this->user_item_model->drop_open_item($data->docNum, $team_group_id);
+
+        foreach($list as $rs)
+        {
+          if($sc === FALSE)
+          {
+            break;
+          }
+
+          $arr = array(
+            'team_id' => $this->_user->team_id,
+            'team_group_id' => $this->_user->team_group_id,
+            'pea_no' => $test ? ((empty($rs->PeaNo) ? $rs->Serial : $rs->PeaNo)) : $rs->PeaNo,
+            'serial' => $rs->Serial,
+            'ItemCode' => $rs->ItemCode,
+            'ItemName' => $rs->ItemName,
+            'DocNum' => $data->docNum,
+            'WhsCode' => $rs->WhsCode,
+            'BinCode' => $rs->BinCode,
+            'status' => 'P',
+            'date_add' => now(),
+            'date_upd' => NULL
+          );
+
+          if( ! $this->user_item_model->is_exists($data->docNum, $team_group_id, $rs->Serial))
+          {
+            if( ! $this->user_item_model->add_user_item($arr))
+            {
+              $sc = FALSE;
+              $this->error = "บันทึกรายการเข้าส่วนกลางไม่สำเร็จ";
+            }
+          }
+        }
+
+        if($sc === TRUE)
+        {
+          $this->db->trans_commit();
+        }
+        else
+        {
+          $this->db->trans_rollback();
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "ไม่พบรายการสินค้าในเอกสาร {$data->docNum}";
+      }
+
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('required');
+    }
+
+    $ds = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error
+    );
+
+
+    $this->response($ds, 200);
+  }
+
+
+
   public function sync_team_group_items_post()
   {
     $this->load->model('inventory/user_item_model');
+    $this->load->helper('user_item');
     $sc = TRUE;
     $data = json_decode(file_get_contents('php://input'));
     $ds = array();
@@ -880,7 +909,12 @@ class Api extends REST_Controller
             'Serial' => $rs->serial,
             'ItemCode' => $rs->ItemCode,
             'ItemName' => $rs->ItemName,
-            'WhsCode' => $rs->WhsCode
+            'WhsCode' => $rs->WhsCode,
+            'BinCode' => $rs->BinCode,
+            'date' => thai_date($rs->date_add, FALSE),
+            'state' => $rs->status,
+            'status_label' => meter_status_text($rs->status),
+            'status_color' => meter_status_color($rs->status)
           );
 
           array_push($ds, $arr);
@@ -902,53 +936,6 @@ class Api extends REST_Controller
 
     $this->response($arr, 200);
   }
-
-
-  // public function sync_user_items_post()
-  // {
-  //   $this->load->model('inventory/user_item_model');
-  //   $sc = TRUE;
-  //   $data = json_decode(file_get_contents('php://input'));
-  //   $ds = array();
-  //
-  //   if( ! empty($data))
-  //   {
-  //     $details = $this->user_item_model->get_open_user_items($data->user_id);
-  //
-  //     if( ! empty($details))
-  //     {
-  //       $no = 1;
-  //
-  //       foreach($details as $rs)
-  //       {
-  //         $arr = array(
-  //           'no' => $no,
-  //           'DocNum' => $rs->DocNum,
-  //           'Serial' => $rs->serial,
-  //           'ItemCode' => $rs->ItemCode,
-  //           'ItemName' => $rs->ItemName,
-  //           'WhsCode' => $rs->WhsCode
-  //         );
-  //
-  //         array_push($ds, $arr);
-  //         $no++;
-  //       }
-  //     }
-  //   }
-  //   else
-  //   {
-  //     $sc = FALSE;
-  //     set_error('required');
-  //   }
-  //
-  //   $arr = array(
-  //     'status' => $sc === TRUE ? 'success' : 'failed',
-  //     'message' => $sc === TRUE ? 'success' : $this->error,
-  //     'data' => $sc === TRUE ? $ds : ""
-  //   );
-  //
-  //   $this->response($arr, 200);
-  // }
 
 
   public function getConfig_post()
@@ -1027,52 +1014,6 @@ class Api extends REST_Controller
 
     return $new_code;
   }
-
-
-  public function createImage($imageObject, $path, $orientation = 1)
-  {
-    if( ! empty($imageObject))
-    {
-      $img = explode(',', $imageObject);
-      $count = count($img);
-      if($count == 1)
-      {
-        $imageData = base64_decode($img[0]);
-      }
-      else
-      {
-        $imageData = base64_decode($img[1]);
-      }
-
-      $image = imagecreatefromstring($imageData);
-      $image_rotate = ($orientation == 3 ? 180 : ($orientation == 6 ? -90 : ($orientation == 8 ? 90 : NULL)));
-      $image_width = imagesx($image);
-      $image_height = imagesy($image);
-      $ratio = $image_height / $image_width;
-      $new_width = 800;
-      $new_height = intval($ratio * $new_width);
-      $thumb = imagecreatetruecolor($new_width, $new_height);
-      imagecopyresampled($thumb, $image, 0, 0, 0, 0, $new_width, $new_height, $image_width, $image_height);
-      $source = $image_rotate != NULL ? imagerotate($thumb, $image_rotate, 0) : $thumb;
-      imagejpeg($source, $path, 100);
-      imagedestroy($image);
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-
-  public function readImage($path)
-  {
-    $type = pathinfo($path, PATHINFO_EXTENSION);
-    $data = file_get_contents($path);
-    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-
-    return $base64;
-  }
-
-
 
   public function get_return_list_post()
   {
@@ -1576,37 +1517,165 @@ class Api extends REST_Controller
   }
 
 
-  public function verify_pea_no_post()
+  public function add_inform_post()
   {
-    $this->load->model('inventory/transfer_model');
-
+    $this->load->model('inventory/inform_model');
+    $this->load->model('inventory/work_list_model');
+    $this->load->helper('image');
+    $this->load->library('scs');
     $sc = TRUE;
-    $exists = 0;
+    $ex = 0;
 
     $data = json_decode(file_get_contents('php://input'));
 
     if( ! empty($data))
     {
-      $peaData = $this->transfer_model->get_pea_data($data->pea_no);
-
-      if( ! empty($peaData))
+      //--- check exists
+      if( ! $this->inform_model->is_exists($data->pea_no))
       {
-        $exists = 1;
+
+        $rs = $this->work_list_model->get($data->pea_no);
+
+        if( ! empty($rs))
+        {
+          $f_path = $this->config->item('image_path')."inform/{$data->pea_no}-f.jpg";
+          $s_path = $this->config->item('image_path')."inform/{$data->pea_no}-s.jpg";
+
+          if(createImgae($data->u_image, $f_path, $data->u_orientation) === FALSE)
+          {
+            $sc = FALSE;
+            set_error(0, "Create Returnned Image Failed");
+          }
+
+          if(createImgae($data->i_image, $s_path, $data->i_orientation) === FALSE)
+          {
+            $sc = FALSE;
+            set_error(0, "Create Installed Image Failed");
+          }
+
+          if($sc === TRUE)
+          {
+            $this->db->trans_begin();
+
+            $ds = array(
+              'cust_no' => $rs->cust_no,
+              'pea_no' => $rs->pea_no,
+              'pea_no_full' => $rs->pea_no_full,
+              'mat_code_full' => $rs->mat_code_full,
+              'ca_no' => $rs->ca_no,
+              'cust_name' => $rs->cust_name,
+              'cust_address' => $rs->cust_address,
+              'cust_tel' => $rs->cust_tel,
+              'cust_route' => $rs->cust_route,
+              'age_meter' => $rs->age_meter,
+              'Plan_TableName' => $rs->Plan_TableName,
+              'remark' => trim($data->remark),
+              'user_id' => $this->_user->id,
+              'team_id'=> $this->_user->team_id,
+              'team_group_id' => $this->_user->team_group_id,
+              'latitude' => $data->lat,
+              'longitude' => $data->lng
+            );
+
+            $id = $this->inform_model->add($ds);
+            if( ! $id)
+            {
+              $sc = FALSE;
+              $this->error = "บันทึกรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+            }
+            else
+            {
+              if( ! $this->work_list_model->set_status($rs->pea_no, 'F'))
+              {
+                $sc = FALSE;
+                $this->error = "เปลี่ยนสถานะใบสั่งงานไม่สำเร็จ";
+              }
+            }
+
+            if($sc === TRUE)
+            {
+              $this->db->trans_commit();
+            }
+            else
+            {
+              $this->db->trans_rollback();
+            }
+
+            if($sc === TRUE && getConfig('PEA_API'))
+            {
+              //--- send data to pea
+              $ds['f_path'] = $f_path;
+              $ds['s_path'] = $s_path;
+              $ds['image1'] = $data->u_image;
+              $ds['image2'] = $data->i_image;
+
+              $res = json_decode($this->scs->send_inform($ds));
+
+              if( ! empty($res))
+              {
+                if($res->status == 0)
+                {
+                  $this->error = "บันทึกรายการสำเร็จ แต่ส่งข้อมูลไประบบ SCS ไม่สำเร็จ : {$res->friendly_msg_en}";
+                  $ex = 1;
+
+                  $arr = array(
+                    'status' => 'F',
+                    'message' => $res->friendly_msg_en
+                  );
+                }
+                else
+                {
+                  $arr = array(
+                    'status' => 'S',
+                    'message' => NULL
+                  );
+                }
+
+                $this->inform_model->update($id, $arr);
+              }
+              else
+              {
+                $this->error = "บันทึกรายการสำเร็จ แต่ส่งข้อมูลไประบบ SCS ไม่สำเร็จ";
+                $ex = 1;
+
+                $arr = array(
+                  'status' => 'F',
+                  'message' => "ไม่ได้รับการตอบกลับ"
+                );
+
+                $this->inform_model->update($id, $arr);
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "{$data->pea_no} เคยถูกแจ้งไว้แล้ว ไม่สามารถแจ้งซ้ำได้";
       }
     }
     else
     {
       $sc = FALSE;
-      $this->error = "Missing Required Parameter";
+      set_error('required');
     }
 
     $arr = array(
       'status' => $sc === TRUE ? 'success' : 'failed',
-      'message' => $sc === TRUE ? 'success' : $this->error,
-      'isVerify' => $exists
+      'message' => $this->error,
+      'ex' => $ex
     );
 
     $this->response($arr, 200);
   }
+
+
+  public function test_api_post()
+  {
+    print_r($_FILES['image1']);
+    print_r($this->input->post());
+  }
+
 } //--- end class
 ?>

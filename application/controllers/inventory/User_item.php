@@ -21,7 +21,7 @@ class User_item extends PS_Controller
     $this->load->model('admin/warehouse_model');
     $this->load->helper('team');
     $this->load->helper('image');
-    $this->load->helper('transfer');
+    $this->load->helper('user_item');
     $this->load->helper('warehouse');
     $this->load->helper('work_list');
   }
@@ -34,6 +34,7 @@ class User_item extends PS_Controller
       'serial' => get_filter('serial', 'u_serial', ''),
       'pea_no' => get_filter('pea_no', 'u_pea_no', ''),
       'docNum' => get_filter('docNum', 'u_docNum', ''),
+      'user' => get_filter('user', 'u_user', ''),
       'whCode' => get_filter('whCode', 'u_whCode', 'all'),
       'status' => get_filter('status', 'u_status', 'all'),
       'from_date' => get_filter('from_date', 'u_from_date', ''),
@@ -71,7 +72,7 @@ class User_item extends PS_Controller
       'u_whCode',
       'u_status',
       'u_from_date',
-      'u_to_date'    
+      'u_to_date'
     );
 
     return clear_filter($filter);

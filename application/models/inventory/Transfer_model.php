@@ -2,7 +2,6 @@
 class Transfer_model extends CI_Model
 {
   private $tb = "transfer";
-  private $ti = "user_item";
 
   public function __construct()
   {
@@ -13,7 +12,10 @@ class Transfer_model extends CI_Model
   {
     if( ! empty($ds))
     {
-      return $this->db->insert($this->tb, $ds);
+      if($this->db->insert($this->tb, $ds))
+      {
+        return $this->db->insert_id();
+      }
     }
 
     return FALSE;
@@ -35,13 +37,15 @@ class Transfer_model extends CI_Model
   public function get($id)
   {
     $rs = $this->db
-    ->select('tr.*, fwh.name AS from_warehouse_name, twh.name AS to_warehouse_name')
-    ->select('u.uname, t.name AS team_name')
+    ->select('tr.*')
+    ->select('fwh.name AS from_warehouse_name, twh.name AS to_warehouse_name')
+    ->select('u.uname, u.name AS display_name, t.name AS team_name, tg.name AS team_group_name')
     ->from('transfer AS tr')
     ->join('warehouse AS fwh', 'tr.fromWhsCode = fwh.code', 'left')
     ->join('warehouse AS twh', 'tr.toWhsCode = twh.code', 'left')
     ->join('user AS u', 'tr.create_by = u.id', 'left')
     ->join('team AS t', 'tr.team_id = t.id', 'left')
+    ->join('team_group AS tg', 'tr.team_group_id = tg.id', 'left')
     ->where('tr.id', $id)
     ->get();
 
@@ -58,7 +62,7 @@ class Transfer_model extends CI_Model
   public function cancle_document($id)
   {
     $arr = array(
-      'status' => 2,
+      'status' => 'C',
       'update_at' => now(),
       'update_by' => $this->_user->id
     );
@@ -70,78 +74,76 @@ class Transfer_model extends CI_Model
 
   public function get_list(array $ds = array(), $limit = 20, $offset = 0)
   {
-    $order_by = isset($ds['order_by']) ? $ds['order_by'] : 'code';
-    $sort_by = isset($ds['sort_by']) ? $ds['sort_by'] : 'DESC';
-
     $this->db
-    ->select('tr.*, wf.name AS fromWhsName, wt.name AS toWhsName, u.uname, t.name AS team_name')
+    ->select('tr.*')
+    ->select('wf.name AS fromWhsName, wt.name AS toWhsName')
+    ->select('u.uname, u.name AS display_name, t.name AS team_name, tg.name AS team_group_name')
     ->from('transfer AS tr')
     ->join('warehouse AS wf', 'tr.fromWhsCode = wf.code', 'left')
     ->join('warehouse AS wt', 'tr.toWhsCode = wt.code', 'left')
     ->join('user AS u', 'tr.create_by = u.id', 'left')
-    ->join('team AS t', 'tr.team_id = t.id', 'left');
+    ->join('team AS t', 'tr.team_id = t.id', 'left')
+    ->join('team_group AS tg', 'tr.team_group_id = tg.id', 'left');
 
-    if( isset($ds['code']) && $ds['code'] != "" && $ds['code'] != NULL)
+    if( ! empty($ds['code']))
     {
       $this->db->like('tr.code', $ds['code']);
     }
 
-    if(isset($ds['serial']) && $ds['serial'] != "" && $ds['serial'] != NULL)
+    if( ! empty($ds['u_pea_no']))
+    {
+      $this->db->like('tr.u_pea_no', $ds['u_pea_no']);
+    }
+
+    if( ! empty($ds['i_pea_no']))
+    {
+      $this->db->like('tr.i_pea_no', $ds['i_pea_no']);
+    }
+
+    if( ! empty($ds['serial']))
+    {
+      $this->db->like('tr.i_serial', $ds['serial']);
+    }
+
+    if( ! empty($ds['user']))
     {
       $this->db
       ->group_start()
-      ->like('InstallSerialNum', $ds['serial'])
-      ->or_like('ReturnnedSerialNum', $ds['serial'])
+      ->like('u.uname', $ds['user'])
+      ->or_like('u.name', $ds['user'])
       ->group_end();
     }
 
-
-    if(isset($ds['peaNo']) && $ds['peaNo'] != "" && $ds['peaNo'] != NULL)
+    if($ds['team_group_id'] != 'all')
     {
-      $this->db->like('peaNo', $ds['peaNo']);
+      $this->db->where('tr.team_group_id', $ds['team_group_id']);
     }
 
-    if(isset($ds['pea_verify']) && $ds['pea_verify'] != 'all')
+    if($ds['team_id'] != 'all')
     {
-      $this->db->where('pea_verify', $ds['pea_verify']);
+      $this->db->where('tr.team_id', $ds['team_id']);
     }
 
-    if(isset($ds['fromWhCode']) && $ds['fromWhCode'] != 'all')
+    if($ds['status'] != 'all')
     {
-      $this->db->where('tr.fromWhsCode', $ds['fromWhCode']);
+      $this->db->where('tr.status', $ds['status']);
     }
 
-    if(isset($ds['toWhCode']) && $ds['toWhCode'] != "all")
+    if($ds['sap_status'] != 'all')
     {
-      $this->db->where('tr.toWhsCode', $ds['toWhCode']);
+      $this->db->where('tr.sap_status', $ds['sap_status']);
     }
 
-    if(isset($ds['is_approve']) && $ds['is_approve'] != 'all')
+    if($ds['pea_status'] != 'all')
     {
-      $this->db->where('tr.isApprove', $ds['is_approve']);
+      $this->db->where('tr.pea_status', $ds['pea_status']);
     }
-
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
       $this->db
       ->where('tr.date_add >=', from_date($ds['from_date']))
       ->where('tr.date_add <=', to_date($ds['to_date']));
-    }
-
-    if( isset($ds['status']) && $ds['status'] != 'all')
-    {
-      $this->db->where('tr.status', $ds['status']);
-    }
-
-    if(isset($ds['team_id']) && $ds['team_id'] != 'all')
-    {
-      $this->db->where('tr.team_id', $ds['team_id']);
-    }
-
-    if(isset($ds['user_id']) && $ds['user_id'] != 'all')
-    {
-      $this->db->where('tr.create_by', $ds['user_id']);
     }
 
 
@@ -171,9 +173,8 @@ class Transfer_model extends CI_Model
       }
     }
 
-    $this->db->order_by($order_by, $sort_by)->limit($limit, $offset);
+    $this->db->order_by('tr.code', 'DESC')->limit($limit, $offset);
     $rs = $this->db->get();
-    // echo $this->db->get_compiled_select();
 
     if($rs->num_rows() > 0)
     {
@@ -192,47 +193,61 @@ class Transfer_model extends CI_Model
     ->join('warehouse AS wf', 'tr.fromWhsCode = wf.code', 'left')
     ->join('warehouse AS wt', 'tr.toWhsCode = wt.code', 'left')
     ->join('user AS u', 'tr.create_by = u.id', 'left')
-    ->join('team AS t', 'tr.team_id = t.id', 'left');
+    ->join('team AS t', 'tr.team_id = t.id', 'left')
+    ->join('team_group AS tg', 'tr.team_group_id = tg.id', 'left');
 
-    if( isset($ds['code']) && $ds['code'] != "" && $ds['code'] != NULL)
+    if( ! empty($ds['code']))
     {
       $this->db->like('tr.code', $ds['code']);
     }
 
-    if(isset($ds['serial']) && $ds['serial'] != "" && $ds['serial'] != NULL)
+    if( ! empty($ds['u_pea_no']))
+    {
+      $this->db->like('tr.u_pea_no', $ds['u_pea_no']);
+    }
+
+    if( ! empty($ds['i_pea_no']))
+    {
+      $this->db->like('tr.i_pea_no', $ds['i_pea_no']);
+    }
+
+    if( ! empty($ds['serial']))
+    {
+      $this->db->like('tr.i_serial', $ds['serial']);
+    }
+
+    if( ! empty($ds['user']))
     {
       $this->db
       ->group_start()
-      ->like('InstallSerialNum', $ds['serial'])
-      ->or_like('ReturnnedSerialNum', $ds['serial'])
+      ->like('u.uname', $ds['user'])
+      ->or_like('u.name', $ds['user'])
       ->group_end();
     }
 
-
-    if(isset($ds['peaNo']) && $ds['peaNo'] != "" && $ds['peaNo'] != NULL)
+    if($ds['team_group_id'] != 'all')
     {
-      $this->db->like('peaNo', $ds['peaNo']);
+      $this->db->where('tr.team_group_id', $ds['team_group_id']);
     }
 
-    if(isset($ds['pea_verify']) && $ds['pea_verify'] != 'all')
+    if($ds['team_id'] != 'all')
     {
-      $this->db->where('pea_verify', $ds['pea_verify']);
+      $this->db->where('tr.team_id', $ds['team_id']);
     }
 
-
-    if(isset($ds['fromWhCode']) && $ds['fromWhCode'] != 'all')
+    if($ds['status'] != 'all')
     {
-      $this->db->where('tr.fromWhsCode', $ds['fromWhCode']);
+      $this->db->where('tr.status', $ds['status']);
     }
 
-    if(isset($ds['toWhcode']) && $ds['toWhCode'] != "all")
+    if($ds['sap_status'] != 'all')
     {
-      $this->db->where('tr.toWhsCode', $ds['toWhCode']);
+      $this->db->where('tr.sap_status', $ds['sap_status']);
     }
 
-    if(isset($ds['is_approve']) && $ds['is_approve'] != 'all')
+    if($ds['pea_status'] != 'all')
     {
-      $this->db->where('tr.isApprove', $ds['is_approve']);
+      $this->db->where('tr.pea_status', $ds['pea_status']);
     }
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
@@ -242,22 +257,8 @@ class Transfer_model extends CI_Model
       ->where('tr.date_add <=', to_date($ds['to_date']));
     }
 
-    if( isset($ds['status']) && $ds['status'] != 'all')
-    {
-      $this->db->where('tr.status', $ds['status']);
-    }
 
-    if(isset($ds['team_id']) && $ds['team_id'] != 'all')
-    {
-      $this->db->where('tr.team_id', $ds['team_id']);
-    }
-
-    if(isset($ds['user_id']) && $ds['user_id'] != 'all')
-    {
-      $this->db->where('tr.create_by', $ds['user_id']);
-    }
-
-    if( ! $this->_Admin && ! $this->_SuperAdmin && !$this->_Lead)
+    if( ! $this->_Admin && ! $this->_SuperAdmin && ! $this->_Lead)
     {
       $this->db->where('tr.create_by', $this->_user->id);
     }
@@ -289,64 +290,37 @@ class Transfer_model extends CI_Model
 
 
 
-  public function count_doc_rows(array $ds = array())
+  public function count_history_rows($txt)
   {
-    $this->db
-    ->from('transfer AS tr')
-    ->join('user AS u', 'tr.create_by = u.id', 'left');
+    $this->db->where('create_by', $this->_user->id);
 
-    if( isset($ds['code']) && $ds['code'] != "" && $ds['code'] != NULL)
-    {
-      $this->db->like('tr.code', $ds['code']);
-    }
-
-    if( ! empty($ds['fromDate']) && ! empty($ds['toDate']))
+    if($txt != "")
     {
       $this->db
-      ->where('tr.date_add >=', from_date($ds['fromDate']))
-      ->where('tr.date_add <=', to_date($ds['toDate']));
+      ->group_start()
+      ->like('u_pea_no', $txt)
+      ->or_like('route', $txt)
+      ->group_end();
     }
 
-    if( isset($ds['status']) && $ds['status'] != 'all')
-    {
-      $this->db->where('tr.status', $ds['status']);
-    }
-
-    $this->db->where('tr.create_by', $this->_user->id);
-
-    return $this->db->count_all_results();
+    return $this->db->count_all_results($this->tb);
   }
 
 
-  public function get_doc_list(array $ds = array())
+  public function get_history_list($txt, $perpage = 20, $offset = 0)
   {
-    $perpage = empty($ds['perpage']) ? 20 : $ds['perpage'];
-    $offset = empty($ds['offset']) ? 0 : $ds['offset'];
+    $this->db->where('create_by', $this->_user->id);
 
-    $this->db
-    ->from('transfer AS tr')
-    ->join('user AS u', 'tr.create_by = u.id', 'left');
-
-    if( isset($ds['code']) && $ds['code'] != "" && $ds['code'] != NULL)
-    {
-      $this->db->like('tr.code', $ds['code']);
-    }
-
-    if( ! empty($ds['fromDate']) && ! empty($ds['toDate']))
+    if($txt != "")
     {
       $this->db
-      ->where('tr.date_add >=', from_date($ds['fromDate']))
-      ->where('tr.date_add <=', to_date($ds['toDate']));
+      ->group_start()
+      ->like('u_pea_no', $txt)
+      ->or_like('route', $txt)
+      ->group_end();
     }
 
-    if( isset($ds['status']) && $ds['status'] != 'all')
-    {
-      $this->db->where('tr.status', $ds['status']);
-    }
-
-    $this->db->where('tr.create_by', $this->_user->id);
-
-    $rs = $this->db->limit($perpage, $offset)->get();
+    $rs = $this->db->order_by('create_at', 'DESC')->limit($perpage, $offset)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -354,55 +328,6 @@ class Transfer_model extends CI_Model
     }
 
     return NULL;
-  }
-
-
-  public function is_loaded($docNum)
-  {
-    $rs = $this->db->where('DocNum', $docNum)->count_all_results($this->ti);
-
-    if($rs > 0)
-    {
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-
-  public function add_user_item($ds = array())
-  {
-    return $this->db->insert($this->ti, $ds);
-  }
-
-
-  public function get_open_user_items($user_id)
-  {
-    $rs = $this->db->where('user_id', $user_id)->where('status', 0)->get($this->ti);
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function delete_open_user_items($user_id, $docNum)
-  {
-    return $this->db->where('user_id', $user_id)->where('DocNum', $docNum)->where('status', 0)->delete($this->ti);
-  }
-
-
-  public function set_valid_item($user_id, $serial)
-  {
-    return $this->db->set('status', 1)->where('user_id', $user_id)->where('serial', $serial)->update($this->ti);
-  }
-
-  public function unvalid_item($user_id, $serial)
-  {
-    return $this->db->set('status', 0)->where('user_id', $user_id)->where('serial', $serial)->update($this->ti);
   }
 
 
@@ -417,62 +342,6 @@ class Transfer_model extends CI_Model
     if($rs->num_rows() === 1)
     {
       return $rs->row()->code;
-    }
-
-    return NULL;
-  }
-
-
-  public function getInstallItemDataBySerial($serial, $whsCode)
-  {
-    $qr  = "SELECT I.ItemCode, I.ItemName, S.DistNumber AS Serial, Q.WhsCode, Q.Quantity, Q.CommitQty ";
-    $qr .= "FROM OSRQ AS Q ";
-    $qr .= "LEFT JOIN OSRN AS S ON Q.SysNumber = S.SysNumber AND Q.ItemCode = S.ItemCode ";
-    $qr .= "LEFT JOIN OITM AS I ON S.ItemCode = I.ItemCode ";
-    $qr .= "WHERE S.DistNumber = {$serial} AND Q.WhsCode = '{$whsCode}' AND Q.Quantity > 0";
-
-    $rs = $this->ms->query($qr);
-    // $rs = $this->ms
-    // ->select('I.ItemCode, I.ItemName')
-    // ->select('S.DistNumber AS Serial')
-    // ->select('Q.WhsCode, Q.Quantity, Q.CommitQty')
-    // ->from('OSRQ AS Q')
-    // ->join('OSRN AS S', 'Q.SysNumber = S.SysNumber AND Q.ItemCode = S.ItemCode', 'left')
-    // ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
-    // ->where('S.DistNumber', $serial)
-    // ->where('Q.WhsCode', $whsCode)
-    // ->where('Q.Quantity >', 0, FALSE)
-    // ->get();
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return NULL;
-  }
-
-
-
-
-  public function getItemBySerial($serial)
-  {
-    $qr = "SELECT I.ItemCode, I.ItemName, S.DistNumber AS Serial ";
-    $qr .= "FROM OSRN AS S LEFT JOIN OITM AS I ON S.ItemCode = I.ItemCode ";
-    $qr .= "WHERE S.DistNumber = '{$serial}'";
-
-    $rs = $this->ms->query($qr);
-    // $rs = $this->ms
-    // ->select('I.ItemCode, I.ItemName')
-    // ->select('S.DistNumber AS Serial')
-    // ->from('OSRN AS S')
-    // ->join('OITM AS I', 'S.ItemCode = I.ItemCode', 'left')
-    // ->where('S.DistNumber', $serial)
-    // ->get();
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
     }
 
     return NULL;
@@ -494,11 +363,13 @@ class Transfer_model extends CI_Model
 
   public function getSapTransferSerialDetails($docNum)
   {
-    // $rs = $this->db->get('demo_item');
-    $qr = "SELECT S.DistNumber AS Serial, S.MnfSerial AS PeaNo, D.ItemCode, D.ItemName, D.WhsCode ";
+    $qr  = "SELECT S.DistNumber AS Serial, S.MnfSerial AS PeaNo, D.ItemCode, ";
+    $qr .= "D.ItemName, D.WhsCode, B.FisrtBin AS BinCode, O.DocEntry ";
     $qr .= "FROM SRI1 AS D ";
     $qr .= "LEFT JOIN OSRN AS S ON D.SysSerial = S.SysNumber AND D.ItemCode = S.ItemCode ";
-    $qr .= "WHERE D.BaseNum = '{$docNum}' AND D.Direction = 0";
+    $qr .= "LEFT JOIN OWTR AS O ON D.BaseNum = O.DocNum ";
+    $qr .= "LEFT JOIN WTR1 AS B ON O.DocEntry = B.DocEntry AND B.WhsCode = D.WhsCode AND D.Direction = 0 ";
+    $qr .= "WHERE D.BaseNum = '{$docNum}' AND D.Direction = 0 ";
 
     $rs = $this->ms->query($qr);
 
@@ -511,13 +382,30 @@ class Transfer_model extends CI_Model
   }
 
 
-  public function get_pea_data($pea_no)
+  public function is_loaded($docNum)
   {
-    $rs = $this->db->where('pea_no', $pea_no)->get('pea_data');
+    $rs = $this->db->where('DocNum', $docNum)->count_all_results('user_item');
+
+    if($rs > 0)
+    {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  public function get_demo_items($docNum)
+  {
+    $rs = $this->db->get('demo_item');
 
     if($rs->num_rows() > 0)
     {
-      return $rs->row();
+      foreach($rs->result() as $ds)
+      {
+        $ds->docNum = $docNum;
+      }
+
+      return $rs->result();
     }
 
     return NULL;

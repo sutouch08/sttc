@@ -1,112 +1,86 @@
 <?php
 
-function transfer_status_label($status = -1)
+function transfer_status_label($status = 'I')
 {
-  $label = "<span class='label label-lg label-purple arrowed'>Draft</span>";
-  switch($status)
-  {
-    case -1:
-    $label = "<span class='label label-lg label-purple arrowed'>Draft</span>";
-    break;
-    case 0 :
-    $label = "<span class='label label-lg label-warning arrowed'>Pending</span>";
-    break;
-    case 1 :
-    $label = "<span class='label label-lg label-success arrowed'>Success</span>";
-    break;
-    case 2 :
-    $label = "<span class='label label-lg label-danger arrowed'>Cancelled</span>";
-    break;
-    case 3 :
-    $label = "<span class='label label-lg label-danger arrowed'>Failed</span>";
-    break;
-    default :
-    $label = "<span class='label label-lg label-purple arrowed'>Draft</span>";
-    break;
-  }
+  $arr = array(
+    'I' => '<span style="color:#ff892a;">รออนุมัติ</span>',
+    'A' => '<span style="color:#478fca;">อนุมัติแล้ว</span>',
+    'R' => '<span style="color:red;">ไม่อนุมัติ</span>',
+    'W' => '<span style="color:blue;">รอตรวจรับ</span>',
+    'S' => '<span style="color:green;">ตรวจรับแล้ว</span>',
+    'U' => '<span style="color:red;">ต้องแก้ไข</span>',
+    'C' => '<span style="color:darkgrey;">ยกเลิก</span>'
+  );
 
-  return $label;
+  return $arr[$status];
 }
 
-function transfer_line_status_label($status = 'O')
+function sap_status_label($status = 'P')
 {
-  $label = "<span class='label label-lg label-info arrowed'>Open</span>";
-  switch($status)
-  {
-    case 'O':
-    $label = "<span class='label label-lg label-info arrowed'>Open</span>";
-    break;
-    case 'C' :
-    $label = "<span class='label label-lg label-success arrowed'>Closed</span>";
-    break;
-    case 'D' :
-    $label = "<span class='label label-lg arrowed'>Cancelled</span>";
-    break;
-    default :
-    $label = "<span class='label label-lg label-info arrowed'>Open</span>";
-    break;
-  }
+  $arr = array(
+    'P' => '<span class="orange">Pending</span>',
+    'S' => '<span class="green">Success</span>',
+    'F' => '<span class="red">Failed</span>'
+  );
 
-  return $label;
-}
-
-function condLabel($cond)
-{
-  return $cond == 1 ? "สภาพดี" : "ชำรุด";
+  return $arr[$status];
 }
 
 
-function condLabelColor($age, $cond)
+function sticker_color($cond, $age)
 {
   $color = "red";
 
-  if($age < 10)
+  if($age <= 10)
   {
-    if($cond == 2 && $age > 3)
+    if($cond != 0 && $age > 3)
     {
       $color = "orange";
     }
 
-    if($cond == 2 && $age <= 3)
+    if($cond != 0 && $age <= 3)
     {
       $color = "blue";
     }
 
-    if($cond == 1)
+    if($cond == 0)
     {
       $color = "green";
     }
   }
 
-  $label = '<div style="background-color:'.$color.'; width:20px; height:20px;"></div>';
+  $label = '<div style="background-color:'.$color.'; width:40px; height:40px;"></div>';
 
   return $label;
 }
 
-function select_cond($se = NULL)
-{
-  $sc = '<option value="1" '.is_selected('1', $se).'>สภาพดี</option>';
-  $sc .= '<option value="2" '.is_selected('2', $se).'>ชำรุด</option>';
 
-  return $sc;
-}
-
-
-function select_damage($id = NULL)
+function select_damage($damage_id = 0)
 {
   $ds = "";
   $ci =& get_instance();
-  $ci->load->model('admin/damaged_model');
-  $res = $ci->damaged_model->get_all_active();
+  $ci->load->model('admin/dispose_reason_model');
 
-  if( ! empty($res))
+  $list = $ci->dispose_reason_model->get_all();
+
+  if( ! empty($list))
   {
-    foreach($res as $rs)
+    foreach($list as $rs)
     {
-      $ds .= '<option value="'.$rs->id.'" '.is_selected($rs->id, $id).'>'.$rs->name.'</option>';
+      $ds .= '<option value="'.$rs->reason_id.'" '.is_selected($damage_id, $rs->reason_id).'>'.$rs->title.'</option>';
     }
   }
 
   return $ds;
+}
+
+
+function damage_name($damage_id = 0)
+{
+  $ds = "";
+  $ci =& get_instance();
+  $ci->load->model('admin/dispose_reason_model');
+
+  return $ci->dispose_reason_model->get_title($damage_id);
 }
  ?>

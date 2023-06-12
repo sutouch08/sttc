@@ -50,7 +50,6 @@
       </div>
     </div>
     <div class="main-container" id="main-container">
-      <input type="hidden" id="code" value="" />
       <div class="main-content">
         <div class="main-content-inner">
           <div class="page-content" id="page-content">
@@ -65,9 +64,10 @@
                   </span>
                 </div>
               </div>
+              <div class="width-100 text-center"><span class="bold" id="all-meter">ทั้งหมด 0 รายการ</span>&nbsp;&nbsp;&nbsp;  <span class="bold" id="complete-meter">รอส่งผล 0 รายการ</span></div>
             </div>
             <div class="row">
-              <div class="col-xs-12 table-responsive padding-5" id="detail-table" style="margin-top:95px; margin-bottom:60px;"></div>
+              <div class="col-xs-12 table-responsive padding-5" id="detail-table" style="margin-top:110px; margin-bottom:60px;"></div>
 
               <div class="sc" onclick="scrollToTop()"
                 style="width:25px; height:25px; color:white; background-color:#33333370;
@@ -96,7 +96,7 @@
                     <li><a href="work_list.html"><i class="fa fa-tasks fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="javascript:toggleMenu()"><i class="fa fa-cogs fa-2x white"></i><span>การตั้งค่า</span></a></li>
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-bars fa-2x white"></i><span>การตั้งค่า</span></a></li>
                   </div>
                 </div>
               </div><!-- footer inner-->
@@ -111,12 +111,19 @@
   <script id="stock-template" type="text/x-handlebarsTemplate">
   {{#each this}}
     <div class="col-xs-12 margin-bottom-5" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;">
-      <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;"><i class="fa fa-file-text-o fa-3x" style="color:lightsalmon"></i></div>
-      <div class="col-xs-9-harf" style="padding: 5px 0;">
-        <p class="margin-bottom-0"><b>PEA No : </b>{{peaNo}}</p>
-        <p class="margin-bottom-0"><b>Serial : </b>{{serial}}</p>
-        <p class="margin-bottom-0"><b>Item : </b>{{code}}</p>
-        <p class="margin-bottom-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><b>Desc. : </b>{{name}}</p>
+      <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;">
+        {{#if status}}
+        <i class="fa fa-file-text-o fa-3x" style="color:lightsalmon"></i>
+        {{else}}
+        <i class="fa fa-file-o fa-3x" style="color:green"></i>
+        <i class="fa fa-check" style="position:absolute; left:28px; top:36px; color:green"></i>
+        {{/if}}
+      </div>
+      <div class="col-xs-9-harf" style="padding: 5px 0; {{state_color}}">
+        <div style="position:absolute; top:5px; right:5px;">{{state_label}}</div>
+        <p class="margin-bottom-0"><b>วันที่เบิก : </b>{{date}}</p>
+        <p class="margin-bottom-0"><b>PEA NO : </b>{{peaNo}}</p>
+        <p class="margin-bottom-0"><b>รายละเอียด : </b>{{name}}</p>
       </div>
     </div>
     {{/each}}

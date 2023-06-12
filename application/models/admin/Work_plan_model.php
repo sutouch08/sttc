@@ -119,6 +119,11 @@ class Work_plan_model extends CI_Model
       }
     }
 
+    if(isset($ds['status']) && $ds['status'] != 'all')
+    {
+      $this->db->where('status', $ds['status']);
+    }
+
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
       $this->db->where('date_upd >=', from_date($ds['from_date']))->where('date_upd <=', to_date($ds['to_date']));
@@ -185,6 +190,11 @@ class Work_plan_model extends CI_Model
       {
         $this->db->where('team_id', $ds['team_id']);
       }
+    }
+
+    if(isset($ds['status']) && $ds['status'] != 'all')
+    {
+      $this->db->where('status', $ds['status']);
     }
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))

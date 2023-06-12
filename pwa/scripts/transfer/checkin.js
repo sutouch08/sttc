@@ -1,6 +1,5 @@
 
 window.addEventListener('load', function() {
-  updateScanType();
   getItemList();
 });
 
@@ -24,128 +23,6 @@ function showTab(name) {
   }
 }
 
-var scanner;
-var config;
-
-function readerInit() {
-  let scan_type = $('#scan-type').val();
-
-  let formatToSupport = [
-    Html5QrcodeSupportedFormats.QR_CODE,
-    Html5QrcodeSupportedFormats.EAN_13,
-    Html5QrcodeSupportedFormats.CODE_39,
-    Html5QrcodeSupportedFormats.CODE_93,
-    Html5QrcodeSupportedFormats.CODE_128
-  ];
-
-  let qrWidth = 250;
-  let qrHeight = 250;
-
-  if( scan_type == 'barcode') {
-    formatToSupport = [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.CODE_93,
-      Html5QrcodeSupportedFormats.CODE_128
-    ];
-
-    qrWidth = 350;
-    qrHeight = 100;
-  }
-
-  if( scan_type == 'qrcode') {
-    formatToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
-  }
-
-  scanner = new Html5Qrcode("reader", {formatsToSupport: formatToSupport});
-  config = {
-    fps: 60,
-    qrbox: {width: qrWidth, height: qrHeight},
-    experimentalFeatures: {
-      useBarCodeDetectorIfSupported: true
-    }
-  };
-}
-
-
-
-function saveCameraId() {
-  let camId = $("input[name='camera_id']:checked").val();
-
-  if(camId === undefined || camId == "") {
-    $('#camera-error').text("Please choose camera for use to scan");
-    return false;
-  }
-  else {
-    localStorage.setItem('cameraId', camId);
-    closeModal('cameras-modal');
-    setTimeout(() => {
-      startScan();
-    }, 200);
-  }
-}
-
-
-function changeCameraId() {
-  Html5Qrcode.getCameras().then(devices => {
-    if(devices && devices.length) {
-      $('#select-side').val('');
-      let source = $('#cameras-list-template').html();
-      let output = $('#cameras-list');
-
-      render(source, devices, output);
-      showModal('cameras-modal');
-    }
-  });
-}
-
-
-function startScan() {
-  let camId = localStorage.getItem('cameraId');
-
-  if(camId == "" || camId == undefined) {
-    Html5Qrcode.getCameras().then(devices => {
-  		if(devices && devices.length) {
-        let source = $('#cameras-list-template').html();
-        let output = $('#cameras-list');
-        render(source, devices, output);
-        showModal('cameras-modal');
-  		}
-  	})
-    .catch((error) => {
-      console.log('error', error);
-      swal({
-        title:'Oops!',
-        text: error,
-        type:'error'
-      });
-    });
-  }
-  else {
-    if(navigator.onLine) {
-
-      $('#cam').removeClass('hide');
-      $('#btn-scan').addClass('hide');
-      $('#btn-stop').removeClass('hide');
-      $('#btn-save').addClass('hide');
-      $('#promt-text').removeClass('hide');
-
-      scanner.start({deviceId: {exact: camId}}, config, (decodedText, decodedResult) => {
-        stopScan();
-        $('#code').val(decodedText);
-
-        getTransferDetail(decodedText);
-      });
-    }
-    else {
-      swal({
-        title:'ข้อผิดพลาด',
-        text:'ไม่สามารถโหลดข้อมูลในขณะออฟไลน์ได้',
-        type:'warning'
-      });
-    }
-  }
-}
 
 
 function submitDocument() {
@@ -169,8 +46,47 @@ function submitDocument() {
 }
 
 
-function getTransferDetail(docnum) {
-  if(docnum.length > 5 ) {
+$('#doc-num').keyup(function(e) {
+  if(e.keyCode == 13) {
+    getTransferDetail();
+  }
+  else {
+    let val = $(this).val();
+    $('#scan-result').val(val);
+  }
+});
+
+
+function scanResult() {
+  setTimeout(() => {
+    const docnum = $('#scan-result').val();
+    $('#doc-num').val(docnum);
+
+    getTransferDetail();
+  }, 100);
+}
+
+function activeSearch(option) {
+  if(option == 'on') {
+    $('#clear-icon').addClass('hide');
+    $('#search-icon').removeClass('hide');
+    return;
+  }
+  else {
+    $('#search-icon').addClass('hide');
+    $('#clear-icon').removeClass('hide');
+  }
+}
+
+function clearSearch() {
+
+}
+
+
+function getTransferDetail() {
+  let docnum = $('#scan-result').val();
+  if(docnum.length ) {
+
     if(navigator.onLine) {
       $('#code').val(docnum);
       load_in();
@@ -295,15 +211,6 @@ function getTransferDetail(docnum) {
 }
 
 
-function stopScan() {
-	scanner.stop().then((ignore) => {
-		$('#cam').addClass('hide');
-		$('#btn-stop').addClass('hide');
-		$('#btn-scan').removeClass('hide');
-	});
-}
-
-
 function getItemList() {
   localforage.getItem('inventory').then((data) => {
     let ds = [];
@@ -410,7 +317,7 @@ function deleteStockByDocNum(code) {
 		closeOnConfirm: true
   },function() {
     let json = JSON.stringify({'docNum' : code});
-    let requestUri = URI + 'delete_open_user_items';
+    let requestUri = URI + 'delete_open_team_group_items';
     let header = new Headers();
     header.append('X-API-KEY', API_KEY);
     header.append('Authorization', AUTH);
@@ -470,117 +377,8 @@ function deleteStockByDocNum(code) {
 }
 
 
-async function updateScanType() {
-  if(navigator.onLine) {
-    let json = JSON.stringify({"config_code" : "SCANTYPE"});
-    let requestUri = URI + 'getConfig';
-    let header = new Headers();
-    header.append('X-API-KEY', API_KEY);
-    header.append('Authorization', AUTH);
-    header.append('Content-type', 'application/json');
-
-    let requestOptions = {
-      method : 'POST',
-      headers : header,
-      body : json,
-      redirect : 'follow'
-    };
-
-    fetch(requestUri, requestOptions)
-    .then(response => response.text())
-    .then(result => {
-      let ds = JSON.parse(result);
-      $('#scan-type').val(ds);
-      localStorage.setItem('scanType', ds);
-    })
-    .then(() => {
-      readerInit();
-    })
-  }
-  else {
-    let ds = localStorage.getItem('scanType');
-
-    if(ds == "qrcode" || ds == "barcode" || ds == "both")
-    {
-      $('#scan-type').val(ds);
-    }
-
-    readerInit();
-  }
-}
-
-
-function syncItem() {
-  if(navigator.onLine) {
-    load_in();
-    let ud = JSON.parse(localStorage.getItem('userdata'));
-
-    let json = JSON.stringify({'team_group_id' : ud.team_group_id});
-    let requestUri = URI + 'sync_team_group_items';
-    let header = new Headers();
-    header.append('X-API-KEY', API_KEY);
-    header.append('Authorization', AUTH);
-    header.append('Content-type', 'application/json');
-
-    let requestOptions = {
-      method : 'POST',
-      headers : header,
-      body : json,
-      redirect : 'follow'
-    };
-
-    fetch(requestUri, requestOptions)
-    .then(response => response.text())
-    .then(result => {
-      let ds = JSON.parse(result);
-
-      if(ds.data != null || ds.data != "") {
-        let data = [];
-
-        ds.data.forEach((item, i) => {
-          let serial = item.Serial;
-          let docnum = item.DocNum;
-          let peaNo = item.PeaNo;
-
-          let arr = {
-            "docnum" : item.DocNum,
-            "peaNo" : item.PeaNo,
-            "serial" : item.Serial,
-            "code" : item.ItemCode,
-            "name" : item.ItemName,
-            "whCode" : item.WhsCode
-          };
-
-          arr[serial] = serial;
-          arr[docnum] = docnum;
-          arr[peaNo] = peaNo;
-
-          data.push(arr);
-        });
-
-        if(data.length == 0) {
-          localforage.removeItem('inventory').then(() => {
-            getItemList();
-          });
-        }
-        else {
-          localforage.setItem('inventory', data).then(() => {
-            getItemList();
-          });
-        }
-      }
-    })
-    .catch((error) => {
-      console.error('error', error);
-    });
-
-    load_out();
-  }
-  else {
-    swal({
-      title:'ข้อผิดพลาด',
-      text:'ไม่สามารถโหลดข้อมูลในขณะออฟไลน์ได้',
-      type:'warning'
-    });
-  }
+async function syncItemList() {
+  load_in();
+  await syncItem(getItemList);
+  load_out();
 }

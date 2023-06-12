@@ -36,7 +36,7 @@
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-			<label>เขต/พื้นที่</label>
+			<label>เขต</label>
 			<select class="form-control input-sm" name="team_id" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
 				<?php echo $myteam; ?>
@@ -56,13 +56,14 @@
 			<label>สถานะ</label>
 			<select class="form-control input-sm" name="status" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
-				<option value="P" <?php echo is_selected('P', $status); ?>>รอติดตั้ง</option>
-				<option value="I" <?php echo is_selected('I', $status); ?>>ติดตั้งแล้ว</option>
-				<option value="A" <?php echo is_selected('A', $status); ?>>STTC อนุมัติแล้ว</option>
-				<option value="R" <?php echo is_selected('R', $status); ?>>ต้องแก้ไข</option>
-				<option value="W" <?php echo is_selected('W', $status); ?>>PEA กำลังตรวจสอบ</option>
+				<option value="P" <?php echo is_selected('P', $status); ?>>รอสับเปลี่ยน</option>
+				<option value="I" <?php echo is_selected('I', $status); ?>>รออนุมัติ</option>
+				<option value="A" <?php echo is_selected('A', $status); ?>>อนุมัติแล้ว</option>
+				<option value="R" <?php echo is_selected('R', $status); ?>>ไม่อนุมัติ</option>
+				<option value="W" <?php echo is_selected('W', $status); ?>>PEA รออนุมัติ</option>
 				<option value="S" <?php echo is_selected('S', $status); ?>>PEA อนุมัติแล้ว</option>
 				<option value="U" <?php echo is_selected('U', $status); ?>>PEA ไม่อนุมัติ</option>
+				<option value="F" <?php echo is_selected('F', $status); ?>>เหตุสุดวิสัย</option>
 			</select>
 		</div>
 
@@ -128,8 +129,9 @@
 <?php if(! empty($data))	: ?>
 	<?php $no = $this->uri->segment($this->segment) + 1; ?>
 	<?php foreach($data as $rs) : ?>
-		<?php $color = (empty($rs->user_id) ? '' : 'background-color:#e3f3db'); ?>
-				<tr style="<?php echo $color; ?>">
+		<?php $color = (empty($rs->user_id) ? '' : 'background-color:#e3f3db;'); ?>
+		<?php $text_color = status_color($rs->status); ?>
+				<tr style="<?php echo $color; ?> <?php echo $text_color; ?>">
 					<td class="text-center no"><?php echo $no; ?></td>
 					<td class="text-center">
 						<?php if($rs->status == 'P' OR $rs->status == 'R') : ?>

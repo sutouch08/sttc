@@ -91,7 +91,7 @@ class Work_list extends PS_Controller
 
     if( ! empty($work_list))
     {
-      if( ! $this->work_list_model->assign_work_list($work_list, $team_group_id) )
+      if( ! $this->work_list_model->assign_work_list($team_group_id, $work_list) )
       {
         $sc = FALSE;
         $this->error = "มอบหมายใบงานไม่สำเร็จ";

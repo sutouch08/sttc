@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" style="height:100%;">
+  <head>
+    <meta charset="utf-8">
+    <title>STTC Web App</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="theme-color" content="salmon" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="shortcut icon" href="assets/img/favicon.png">
+    <link rel="apple-touch-icon" href="icon/icon.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.css" />
+    <link rel="stylesheet" href="assets/css/font-awesome.css" />
+    <link rel="stylesheet" href="assets/css/ace-fonts.css" />
+    <link rel="stylesheet" href="assets/css/ace.css" class="ace-main-stylesheet" id="main-ace-style" />
+    <link rel="stylesheet" href="assets/css/ace-skins.css" />
+    <link rel="stylesheet" href="assets/css/jquery-ui-1.10.4.custom.min.css " />
+    <link rel="stylesheet" href="assets/css/template.css"/>
+    <link rel="stylesheet" href="assets/css/sweet-alert.css">
+
+    <!-- ace settings handler -->
+    <script src="assets/js/ace-extra.js"></script>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script src="assets/js/bootstrap.js"></script>
+    <script src="assets/js/ace/ace.js"></script>
+    <script src="assets/js/sweet-alert.js"></script>
+    <script src="assets/js/handlebars-v3.js"></script>
+    <script src="scripts/app.js"></script>
+    <script src="scripts/template.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="assets/js/localforage.js"></script>
+    <script src="assets/js/html5-qrcode.min.js"></script>
+    <style>
+      a.map-link {
+        background-color: #edc9ed;
+        padding: 30px 20px 15px;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body class="no-skin">
+		<div id="loader">
+        <div class="loader"></div>
+		</div>
+    <div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
+    <div id="navbar" class="navbar navbar-default">
+      <div class="navbar-container" id="navbar-container">
+        <div class="navbar-header pull-left" style="position:absolute; padding-left:10px;">
+          <a href="index.html" class="font-size-24 white"><i class="fa fa-chevron-left"></i></a>
+        </div>
+        <div class="navbar-header" id="title">ผลการสับเปลี่ยน</div>
+        <div class="navbar-buttons navbar-header pull-right">
+          <div class="online-status" id="online-status">Online</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- /section:basics/navbar.layout -->
+    <div class="main-container" id="main-container">
+      <!-- /section:basics/sidebar -->
+      <div class="main-content">
+        <div class="main-content-inner">
+          <div class="page-content">
+            <div class="search-content" style="height:95px;">
+              <div class="margin-top-15 margin-bottom-15">
+                <div class="width-100">
+                  <span class="width-100">
+                    <input type="text" class="form-control input-lg" style="padding-left:15px; padding-right:85px;" id="search-text" placeholder="ค้นหาเลขที่ใบสั่งงาน" autofocus>
+                    <i class="ace-icon fa fa-search fa-2x" id="search-icon" style="position:absolute; top:28px; right:70px; color:grey;" onclick="searchText()"></i>
+                    <i class="ace-icon fa fa-times fa-2x hide" id="clear-icon" style="position:absolute; top:28px; right:70px; color:grey;" onclick="clearSearch()"></i>
+                    <i class="ace-icon fa fa-qrcode fa-2x" style="position:absolute; top:30px; right:22px; color:grey;" onclick="startScan(getSearch)"></i>
+                  </span>
+                </div>
+                <div class="width-100 text-center margin-top-5">
+                  แสดง <span id="show_rows">0</span> รายการ &nbsp; &nbsp; จาก <span id="num_rows">0</span> รายการ
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="perpage" value="20" />
+            <input type="hidden" id="offset" value="0" />
+            <input type="hidden" id="limit" value="20" />
+            <input type="hidden" id="show" value="0" />
+
+            <div class="row">
+              <div class="col-xs-12" id="offline-job" style="margin-top:110px; padding-bottom:120px;"></div>
+            </div>
+
+            <div class="width-100" style="position:fixed; bottom:70px; left:0px; height:60px; padding-top:10px; background-color:white; box-shadow:0px -1px 9px 0px #f3ecec;">
+              <div class="width-50 text-center" style="float:left;">
+                <button type="button" class="btn btn-md btn-primary btn-100" id="btn-send-all" onclick="sendAll()" disabled>ส่งรายการทั้งหมด</button>
+              </div>
+              <div class="width-50 text-center" style="float:left;">
+                <button type="button" class="btn btn-md btn-info btn-100" id="btn-send-checked" onclick="sendChecked()" disabled>ส่งรายการที่เลือก</button>
+              </div>
+            </div>
+            <div class="col-xs-12 text-center" id="no-list" style="display:none; position:fixed; bottom:100px; z-index:100;">
+              <div id="no-list-label" style="border-radius: 7px; background-color:#afafaf; width:150px; height:60px; line-height:60px; vertical-align:middle; margin:auto; opacity:0.3">
+                <div style="font-size:16px; color:white;">No data found</div>
+              </div>
+            </div>
+
+            <div class="pg-footer">
+              <div class="pg-footer-inner">
+                <div class="pg-footer-content text-right">
+                  <div class="footer-menu width-20">
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="work_list.html"><i class="fa fa-tasks fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="transfer.html"><i class="fa fa-history fa-2x white"></i><span>ประวัติการติดตั้ง</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="meter_list.html"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-bars fa-2x white"></i><span>อื่นๆ</span></a></li>
+                  </div>
+                </div>
+              </div><!-- footer inner-->
+            </div><!-- /.footer -->
+          </div> <!-- pang content -->
+      </div><!-- main content inner -->
+    </div><!-- main content -->
+  </div><!-- /.main-container -->
+
+  <script id="offline-template" type="text/x-handlebarsTemplate">
+  {{#each this}}
+    <div class="col-xs-12 margin-bottom-5" id="div-{{u_pea_no}}" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;" >
+      <div class="col-xs-1-harf middle text-center" style="padding:28px 8px;">
+        <label>
+          <input type="checkbox" class="ace input-lg chk" id="check-{{u_pea_no}}" value="{{u_pea_no}}" />
+          <span class="lbl bigger-120"></span>
+        </label>
+      </div>
+      <div class="col-xs-8" style="padding: 10px 5px;">
+        <p class="margin-bottom-0" style="font-size:14px;">PEA NO : {{u_pea_no}}</p>
+        <p class="margin-bottom-0" style="font-size:14px;">สายจดหน่วย : {{route}} {{cust_route}}</p>
+        <p class="margin-bottom-0" style="font-size:14px;">
+          สถานะ : <span class="red"><i class="fa fa-exclamation-triangle"></i>
+          {{#if can_edit}}
+          ยังไม่ส่งผลการสับเปลี่ยน
+          {{else}}
+          เหตุสุดวิสัย
+          {{/if}}
+          </span></p>
+      </div>
+      <div class="col-xs-2-harf" style="padding: 20px 5px;">
+        {{#if can_edit}}
+        <button type="button" class="btn btn-lg btn-warning btn-block" onclick="showWorkList('{{u_pea_no}}')"><i class="fa fa-pencil"></i></button>
+        {{/if}}
+      </div>
+    </div>
+    {{/each}}
+  </script>
+
+  <script src="scripts/index.js"></script>
+  <script src="scripts/transfer/temp.js"></script>
+  </body>
+</html>

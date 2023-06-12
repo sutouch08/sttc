@@ -53,11 +53,25 @@
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-4">
-			<label>เขต/พื้นที่</label>
+			<label>เขต</label>
 			<select class="form-control input-sm" name="team_id" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
 				<option value="null" <?php echo is_selected('null', $team_id); ?>>ไม่ระบุ</option>
 				<?php echo select_team($team_id); ?>
+			</select>
+		</div>
+
+		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-4">
+			<label>สถานะ</label>
+			<select class="form-control input-sm" name="status" onchange="getSearch()">
+				<option value="all">ทั้งหมด</option>
+				<option value="P" <?php echo is_selected('P', $status); ?>>รอสับเปลี่ยน</option>
+				<option value="I" <?php echo is_selected('I', $status); ?>>รออนุมัติ</option>
+				<option value="A" <?php echo is_selected('A', $status); ?>>อนุมัติแล้ว</option>
+				<option value="R" <?php echo is_selected('R', $status); ?>>ไม่อนุมัติ</option>
+				<option value="W" <?php echo is_selected('W', $status); ?>>PEA รออนุมัติ</option>
+				<option value="S" <?php echo is_selected('S', $status); ?>>PEA อนุมัติแล้ว</option>
+				<option value="U" <?php echo is_selected('U', $status); ?>>PEA ไม่อนุมัติ</option>
 			</select>
 		</div>
 
@@ -96,7 +110,7 @@
 <hr/>
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1450px;;">
+		<table class="table table-hover border-1" style="min-width:1550px;;">
 			<thead>
 				<tr>
 					<th class="fix-width-60 text-center">#</th>
@@ -106,6 +120,7 @@
 							<span class="lbl"></span>
 						</label>
 					</th>
+					<th class="fix-width-100 text-center">สถานะ</th>
 					<th class="fix-width-120">เขต/พื้นที่</th>
 					<th class="fix-width-120">PEA No</th>
 					<th class="fix-width-100 ">CA No</th>
@@ -123,16 +138,17 @@
 <?php if(! empty($data))	: ?>
 	<?php $no = $this->uri->segment($this->segment) + 1; ?>
 	<?php foreach($data as $rs) : ?>
-				<tr>
+				<tr style="<?php echo status_color($rs->status); ?>">
 					<td class="text-center no"><?php echo $no; ?></td>
 					<td class="text-center">
-						<?php if(empty($rs->is_loaded)) : ?>
+						<?php if($rs->status == 'P' OR $rs->status == 'R' OR $rs->status == 'U') : ?>
 							<label>
 								<input type="checkbox" class="ace chk" value="<?php echo $rs->id; ?>">
 								<span class="lbl"></span>
 							</label>
 						<?php endif; ?>
 					</td>
+					<td class="text-center"><?php echo status_text($rs->status); ?></td>
 					<td class=""><?php echo (empty($rs->team_id) ? "ไม่ระบุ" : (empty($team[$rs->team_id]) ? "" : $team[$rs->team_id])); ?></td>
 					<td class=""><?php echo $rs->pea_no; ?></td>
 					<td class=""><?php echo $rs->ca_no; ?></td>

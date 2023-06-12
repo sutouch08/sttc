@@ -44,9 +44,9 @@
     <div id="navbar" class="navbar navbar-default">
 			<div class="navbar-container" id="navbar-container">
         <div class="navbar-header pull-left" style="position:absolute; padding-left:10px;">
-          <a href="work_list.html" class="font-size-24 white"><i class="fa fa-chevron-left"></i></a>
+          <a href="temp.html" class="font-size-24 white"><i class="fa fa-chevron-left"></i></a>
         </div>
-				<div class="navbar-header">งานสับเปลี่ยน</div>
+				<div class="navbar-header">รายละเอียดงานสับเปลี่ยน</div>
         <div class="navbar-buttons navbar-header pull-right">
 					<div class="online-status" id="online-status">Online</div>
 				</div>
@@ -57,7 +57,7 @@
         <div class="main-content-inner">
           <div class="page-content" style="background-color:#f9ddd8;">
 
-            <div class="row box margin-top-10">
+            <div class="row box">
               <div class="col-xs-12 text-center">
                 <p style="font-size:24px; color:#555; margin:0;">มิเตอร์เก่า</p>
               </div>
@@ -101,13 +101,11 @@
               </div>
 
               <div class="divider-hidden"></div>
-
-              <div class="col-xs-12 text-center padding-5">
-                <div class="width-100 text-center font-size-18 red">ภาพมิเตอร์เก่าที่ถอดแล้ว</div>
-              </div>
+              <div class="divider-hidden"></div>
               <div class="col-xs-12 padding-5">
+                <div class="width-100 text-center font-size-18 red">ภาพถ่ายมิเตอร์เก่า<br/>ถ่ายมิเตอร์เก่าที่ถอดแล้ว</div>
                 <div class="width-100 text-center image-preview hide" id="u-preview"></div>
-                <div class="width-100 text-center pre-image" id="u-photo-btn">
+                <div class="width-100 text-center pre-image" id="u-photo-btn" style="margin-top: -60px;">
                   <button type="button" class="btn btn-purple" onclick="takePhoto('u')">ถ่ายภาพ</button>
                 </div>
                 <button type="button" class="close remove-img hide" id="del-u-image" onclick="removeImage('u')">&times</button>
@@ -117,6 +115,7 @@
               <input type="hidden" id="u-blob" value=""/>
               <input type="hidden" id="u-orientation" value="" />
 
+              <div class="divider-hidden"></div>
               <div class="divider-hidden"></div>
 
             </div><!-- row -->
@@ -138,20 +137,21 @@
                   </span>
                 </div>
                 <input type="hidden" id="i-pea" value="" />
+                <input type="hidden" id="c-pea" value="" />
               </div>
 
               <div class="divider-hidden"></div>
 
-              <div class="col-xs-6">
-                <label>หน่วยตั้งต้น(5หลัก)</label>
+              <div class="col-xs-4">
+                <label>หน่วยตั้งต้น</label>
                 <input type="number" pattern="[0-9]" inputmode="numeric"
                 class="form-control input-lg text-center" id="i-power-no"
-                onkeypress="return event.charCode >= 48 && event.charCode <= 57" value="00000"/>
+                onkeypress="return event.charCode >= 48 && event.charCode <= 57"/>
               </div>
 
 
-              <div class="col-xs-6">
-                <label class="display-block">เฟสของมิเตอร์</label>
+              <div class="col-xs-8">
+                <label class="display-block">เฟสมิเตอร์</label>
                 <select class="form-control input-lg" id="phase-selected">
                   <option value="A">A</option>
                   <option value="B">B</option>
@@ -207,16 +207,13 @@
                 <label class="display-block not-show">clearAlarm</label>
                 <button type="button" class="btn btn-lg btn-primary btn-block" id="btn-confrim-clear-alarm" onclick="showConfirmResetAlarm()">ยืนยัน</button>
               </div>
-
               <div class="divider-hidden"></div>
               <div class="divider-hidden"></div>
 
               <div class="col-xs-12 text-center padding-5">
-                <div class="width-100 text-center font-size-18 red">ภาพมิเตอร์ใหม่ก่อนติดตั้ง</div>
-              </div>
-              <div class="col-xs-12 text-center padding-5">
+                <div class="width-100 text-center font-size-18 red">ภาพถ่ายมิเตอร์ใหม่<br/>ถ่ายมิเตอร์ใหม่ก่อนติดตั้ง</div>
                 <div class="width-100 text-center image-preview hide" id="i-preview"></div>
-                <div class="width-100 text-center pre-image" id="i-photo-btn">
+                <div class="width-100 text-center pre-image" id="i-photo-btn" style="margin-top: -60px;">
                   <button type="button" id="btn-take-photo-i" class="btn btn-purple" onclick="takePhoto('i')" disabled>ถ่ายภาพ</button>
                 </div>
                 <button type="button" class="close remove-img hide" id="del-i-image" onclick="removeImage('i')">&times</button>
@@ -226,6 +223,7 @@
               <input type="hidden" id="i-blob" value=""/>
               <input type="hidden" id="i-orientation" value="" />
 
+              <div class="divider-hidden"></div>
               <div class="divider-hidden"></div>
             </div><!-- row -->
             <div class="row box">
@@ -265,8 +263,11 @@
             </div><!-- row -->
 
             <div class="row margin-top-15" style="margin-bottom:60px;">
-              <div class="col-xs-12 text-center">
-                <button type="button" class="btn btn-success btn-lg btn-100" style="border-radius:5px;" onclick="saveInstall()">บันทึก</button>
+              <div class="col-xs-6 text-center">
+                <button type="button" class="btn btn-danger btn-lg btn-100" style="border-radius:5px;" onclick="cancleJob()">ยกเลิก</button>
+              </div>
+              <div class="col-xs-6 text-center">
+                <button type="button" class="btn btn-success btn-lg btn-100" style="border-radius:5px;" onclick="saveUpdate()">บันทึก</button>
               </div>
             </div>
 
@@ -278,7 +279,7 @@
                     <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="work_list.html"><i class="fa fa-tasks fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
+                    <li><a href="work_list.html"><i class="fa fa-file-text-o fa-2x white"></i><span>ใบสั่งงาน</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
                     <li><a href="javascript:window.location.reload()"><i class="fa fa-refresh fa-2x white"></i><span>Refresh</span></a></li>
@@ -305,7 +306,7 @@
      <div class="modal-content">
          <div class="modal-header">
          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-         <h4 class="modal-title text-center" id="modal-title">รายการมิเตอร์</h4>
+         <h4 class="modal-title text-center">เลือกมิเตอร์</h4>
         </div>
         <div class="modal-body">
           <div class="row" id="meter-list" style="padding-left:12px; padding-right:12px; max-height:80vh; overflow:auto;">
@@ -320,13 +321,12 @@
   <script id="meter-list-template" type="text/x-handlebarsTemplate">
     {{#each this}}
       <div class="col-xs-12 margin-bottom-5" onclick="selected('{{peaNo}}')" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;">
-        <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;">
-        <i class="fa fa-file-text-o fa-3x" style="color:lightsalmon"></i>
-        </div>
+        <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;"><i class="fa fa-file-text-o fa-3x" style="color:lightsalmon"></i></div>
         <div class="col-xs-9-harf" style="padding: 5px 0;">
-        <p class="margin-bottom-0"><b>วันที่เบิก : </b>{{date}}</p>
-        <p class="margin-bottom-0"><b>PEA NO : </b>{{peaNo}}</p>
-        <p class="margin-bottom-0"><b>รายละเอียด : </b>{{name}}</p>
+          <p class="margin-bottom-0"><b>PEA No : </b>{{peaNo}}</p>
+          <p class="margin-bottom-0"><b>Serial : </b>{{serial}}</p>
+          <p class="margin-bottom-0"><b>Item : </b>{{code}}</p>
+          <p class="margin-bottom-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><b>Desc. : </b>{{name}}</p>
           <input type="hidden" id="pea-{{peaNo}}" value="{{peaNo}}">
           <input type="hidden" id="serial-{{peaNo}}" value="{{serial}}">
           <input type="hidden" id="code-{{peaNo}}" value="{{code}}">
@@ -336,43 +336,11 @@
     {{/each}}
   </script>
 
-  <script id="all-meter-list-template" type="text/x-handlebarsTemplate">
-    {{#each this}}
-      <div class="col-xs-12 margin-bottom-5" style="border:solid 1px #ccc; border-radius:5px; box-shadow:0px 1px 2px #f3ecec;">
-        <div class="col-xs-2-harf middle text-center" style="padding:24px 8px;">
-          {{#if status}}
-            <i class="fa fa-file-text-o fa-3x" style="color:lightsalmon"></i>
-          {{else}}
-            <i class="fa fa-file-o fa-3x" style="color:green"></i>
-            <i class="fa fa-check" style="position:absolute; left:28px; top:36px; color:green"></i>
-          {{/if}}
-        </div>
-        <div class="col-xs-9-harf" style="padding: 5px 0;">
-        <p class="margin-bottom-0"><b>วันที่เบิก : </b>{{date}}</p>
-        <p class="margin-bottom-0"><b>PEA NO : </b>{{peaNo}}</p>
-        <p class="margin-bottom-0"><b>รายละเอียด : </b>{{name}}</p>
-          <input type="hidden" id="pea-{{peaNo}}" value="{{peaNo}}">
-          <input type="hidden" id="serial-{{peaNo}}" value="{{serial}}">
-          <input type="hidden" id="code-{{peaNo}}" value="{{code}}">
-          <input type="hidden" id="name-{{peaNo}}" value="{{name}}">
-        </div>
-      </div>
-    {{/each}}
-  </script>
-
-
-  <script>
-
-    function show() {
-      swal("OK");
-    }
-
-  </script>
 
   <script src="assets/js/exif.js"></script>
   <script src="assets/js/signature_pad.js"></script>
   <script src="scripts/index.js"></script>
-  <script src="scripts/transfer/install.js"></script>
+  <script src="scripts/transfer/offline_detail.js"></script>
   <script src="scripts/transfer/signature.js"></script>
   <script src="assets/js/jquery.autosize.js"></script>
   </body>

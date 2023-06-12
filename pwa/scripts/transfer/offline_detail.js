@@ -1,22 +1,62 @@
 window.addEventListener('load', () => {
-  updateScanType();
   getData();
 });
 
 async function getData() {
   load_in();
+  await renderDamageList();
   let ds = await getWorkData();
-  if(ds.pea_no != undefined) {
-    $('#u-pea-no').val(ds.pea_no);
-    $('#use-age').val(ds.age_meter);
-    $('#cust-route').val(ds.cust_route);
-    let lat = ds.latitude ? parseFloat(ds.latitude).toFixed(6) : "No data";
-    let lng = ds.longitude ? parseFloat(ds.longitude).toFixed(6) : "No data";
-    $('#u-lat').html(lat);
-    $('#u-long').html(lng);
-    await renderDamageList();
+
+  if(ds.u_pea_no != undefined) {
+    console.log(ds);
+    $('#u-pea-no').val(ds.u_pea_no);
+    $('#use-age').val(ds.use_age);
+    $('#cust-route').val(ds.route);
+    $('#u-power-no').val(ds.u_power_no);
+    $('#u-dispose-id').val(ds.damage_id);
+    $('#u-lat').html(ds.u_lat);
+    $('#u-long').html(ds.u_lng);
+    $('#u-preview').html('<img id="u-image" src="'+ds.u_image+'" style="width:100%; border-radius:10px;" alt="Item image" />');
+    $('#u-photo-btn').addClass('hide');
+    $('#u-preview').removeClass('hide');
+    $('#del-u-image').removeClass('hide');
+    $('#u-blob').val(ds.u_image);
+    $('#u-orientation').val(ds.u_orientation);
+
+    $('#i-pea-no').val(ds.i_pea_no);
+    $('#i-pea').val(ds.i_pea_no);
+    $('#c-pea').val(ds.i_pea_no); //--- ไว้ใช้กรณีที่มีการเปลียนมิเตอร์ลูกใหม่
+    $('#i-power-no').val(ds.i_power_no);
+    $('#phase-selected').val(ds.phase);
+    $('#i-serial').val(ds.i_serial);
+    $('#from-doc').val(ds.fromDoc);
+    $('#item-code').val(ds.itemCode);
+    $('#item-name').val(ds.itemName);
+    let txt = `<p>Item Code: ${ds.itemCode}</p><p>Description: ${ds.itemName}</p><p>Serial: ${ds.i_serial}</p>`;
+    $('#i-result').html(txt);
+    $('#i-lat').html(ds.i_lat);
+    $('#i-long').html(ds.i_lng);
+    $('#remark').val(ds.remark);
+    $('#select-clear-alarm').val(ds.is_clear_alarm);
+    $('#is-clear-alarm').val(ds.is_clear_alarm);
+
+    $('#i-preview').html('<img id="i-image" src="'+ds.i_image+'" style="width:100%; border-radius:10px;" alt="Item image" />');
+    $('#i-photo-btn').addClass('hide');
+    $('#i-preview').removeClass('hide');
+    $('#del-i-image').removeClass('hide');
+    $('#i-blob').val(ds.i_image);
+    $('#i-orientation').val(ds.i_orientation);
+
+    toggleSign(ds.sign_status);
+    if(ds.sign_status == '0') {
+      signaturePad.fromDataURL(ds.signature_image, {ratio: 1, width: parentWidth, height: parentHeight});
+    }
+
+    $('#signature').val(ds.signature_image);
+
+    signaturePad.off();
+
     await suggest();
-    navigator.geolocation.getCurrentPosition(locationReadSuccess, locationReadError, locationOptions);
     load_out();
   }
   else {
@@ -31,11 +71,11 @@ async function getData() {
 
 function getWorkData() {
   return new Promise((resolve, reject) => {
-    let pea_no = localStorage.getItem('work_no');
-    localforage.getItem('work_list').then((data) => {
+    let pea_no = localStorage.getItem('offline_u_pea_no');
+    localforage.getItem('transfers').then((data) => {
       if(data != null && data != undefined) {
         let ds = data.filter((obj) => {
-          return obj.pea_no == pea_no;
+          return obj.u_pea_no == pea_no;
         });
         console.log(1);
         resolve(ds[0]);
@@ -68,6 +108,54 @@ function locationReadError(err) {
   console.warn(`ERROR(${err.code}): ${err.message}`);
 }
 
+function peaScan() {
+  let camId = localStorage.getItem('cameraId');
+
+  if(camId == "" || camId == undefined) {
+    $('#select-side').val('pea');
+    Html5Qrcode.getCameras().then(devices => {
+      if(devices && devices.length) {
+        let source = $('#cameras-list-template').html();
+        let output = $('#cameras-list');
+
+        render(source, devices, output);
+        showModal('cameras-modal');
+      }
+    })
+    .catch((error) => {
+      console.log('error', error);
+      swal({
+        title:'Oops!',
+        text: error,
+        type:'error'
+      });
+    });
+  }
+  else
+  {
+    $('#cam').removeClass('hide');
+    $('#btn-u-scan').addClass('hide');
+    $('#btn-pea-stop').removeClass('hide');
+    $('#space').addClass('hide');
+
+    scanner.start({deviceId: {exact: camId}}, config, (decodedText, decodedResult) => {
+      stopScan('pea');
+
+      $('#pea-no').val(decodedText);
+    });
+  }
+}
+
+function iSerialScan() {
+  let result = $('#scan-result').val();
+  $('#i-serial-code').val(result);
+
+}
+
+function uSerialScan() {
+  let result = $('#scan-result').val();
+  $('#u-serial-code').val(result);
+}
 
 function iPeaScan() {
   let result = $('#scan-result').val();
@@ -89,19 +177,12 @@ function getPeaNo() {
   localforage.getItem('inventory')
   .then((result) => {
     if(result != null && result != undefined) {
-      var filtered = result.filter((row) => {
-        return row.status == "P";
-      })
-
       if(peaNo.length) {
-        // let keys = ['peaNo'];
-        // var ds = result.filter((obj) => keys.some((key) => obj[key].includes(peaNo)));
-        var ds = filtered.filter((obj) => {
-          return obj.status == "P" && obj.peaNo.includes(peaNo);
-        })
+        let keys = ['peaNo'];
+        var ds = result.filter((obj) => keys.some((key) => obj[key].includes(peaNo)));
       }
       else {
-        var ds = filtered;
+        var ds = result;
       }
 
       if(ds.length == 1) {
@@ -121,8 +202,6 @@ function getPeaNo() {
           type:"info"
         });
 
-        $('#i-pea').val('');
-        $('#i-result').html('ไม่พบมิเตอร์');
         return;
       }
     }
@@ -133,8 +212,6 @@ function getPeaNo() {
         type:"info"
       });
 
-      $('#i-pea').val('');
-      $('#i-result').html('ไม่พบมิเตอร์');
       return;
     }
   });
@@ -245,16 +322,14 @@ function showMeterList(ds) {
   let source = $('#meter-list-template').html();
   let output = $('#meter-list');
   render(source, ds, output);
-  $('#modal-title').text('เลือกมิเตอร์');
   $('#meter-modal').modal('show');
 }
 
 async function showAllMeterList() {
   const data = await getMeterList();
-  let source = $('#all-meter-list-template').html();
+  let source = $('#meter-list-template').html();
   let output = $('#meter-list');
   await render(source, data, output);
-  $('#modal-title').text('รายการมิเตอร์');
   $('#meter-modal').modal('show');
 }
 
@@ -263,12 +338,6 @@ function getMeterList() {
     localforage.getItem('inventory')
     .then((result) => {
       if(result != null && result != undefined) {
-        result.forEach((item, i) => {
-          if(item.status == "I") {
-            result[i].status = null;
-          }
-        })
-
         resolve(result);
       }
       else {
@@ -381,9 +450,20 @@ function removeImage(side){
   $('#'+side+'-photo-btn').removeClass('hide');
   $("#"+side+"-preview").html('');
   $('#'+side+'-preview').addClass('hide');
+
+  if(side == 'i') {
+    let is_clear_alarm = $('#is-clear-alarm').val();
+
+    if(is_clear_alarm == 1) {
+      $('#btn-take-photo-i').removeAttr('disabled');
+    }
+    else {
+      $('#btn-take-photo-i').attr('disabled', 'disabled');
+    }
+  }
 }
 
-function saveInstall() {
+function saveUpdate() {
   let data = {};
   data.u_pea_no = $('#u-pea-no').val();
   data.route = $('#cust-route').val();
@@ -397,6 +477,7 @@ function saveInstall() {
 
   data.i_pea_no = $('#i-pea-no').val();
   data.i_pea = $('#i-pea').val();
+  data.c_pea = $('#c-pea').val();
   data.i_power_no = $('#i-power-no').val();
   data.phase = $('#phase-selected').val();
   data.i_lat = $('#i-lat').text();
@@ -415,9 +496,9 @@ function saveInstall() {
 
   data.sign_status = $('#sign-status').val();
   data.signature_image = $('#signature').val();
-  data.type = "install";
 
-  if(data.u_power_no.length < 4 || data.u_power_no.length > 5) {
+
+  if(data.u_power_no.length != 5) {
     $('#u-power-no').addClass('has-error').focus();
     swal({
       title:"ข้อผิดพลาด",
@@ -510,31 +591,31 @@ function saveInstall() {
     return false;
   }
 
-  addTransferOffline(data);
+  updateTransferOffline(data);
 }
 
-function getBack(){
+function goBack(){
   setTimeout(() => {
-    window.location.href = "work_list.html";
+    window.location.href = "temp.html";
   }, 1200);
 }
 
-
-function addTransferOffline(data) {
+function updateTransferOffline(data) {
   let ds = [];
   load_in();
-  localforage.getItem('transfers').then((result) => {
+  localforage.getItem('transfers')
+  .then((result) => {
     if(result != null && result != undefined) {
-      ds = result;
+      ds = result.filter((obj) => {
+        return obj.u_pea_no != data.u_pea_no;
+      });
     }
-
-    ds.push(data);
+      ds.push(data);
+  })
+  .then(() => {
     localforage.setItem('transfers', ds)
     .then(() => {
-      updateWorkListStatus(data.u_pea_no);
-    })
-    .then(() => {
-      updateMeterListStatus(data.i_pea_no);
+      updateMeterStatus(data.c_pea, data.i_pea);
     })
     .then(() => {
       load_out();
@@ -545,7 +626,7 @@ function addTransferOffline(data) {
       });
 
       setTimeout(() => {
-        window.location.href = "work_list.html";
+        window.location.href = "temp.html";
       }, 1200);
     })
     .catch((err) => {
@@ -569,42 +650,122 @@ function addTransferOffline(data) {
   });
 }
 
-function updateWorkListStatus(pea_no) {
-  var data = [];
-  localforage.getItem('work_list')
-  .then((res) => {
-    if(res !== null && res !== undefined) {
-      res.forEach((item, i) => {
-        if(item.pea_no == pea_no) {
-          res[i].status = "I";
-        }
-      })//--- end foreach
+function updateMeterStatus(c_pea, i_pea) {
+  return new Promise((resolve, reject) => {
+    //--- ถ้ามีการเปลี่ยนมิเตอร์
+    if(c_pea != i_pea) {
+      //----
+      localforage.getItem('inventory')
+      .then((res) => {
+        if(res !== null && res !== undefined) {
+          res.forEach((item, i) => {
+            if(item.peaNo == i_pea) {
+              res[i].status = "I";
+            }
 
-      data = res;
+            if(item.peaNo == c_pea) {
+              res[i].status = "P";
+            }
+          }); //-- foreach
+
+          localforage.setItem('inventory', res);
+        }
+
+        resolve('ok');
+      })
     }
-  }) //--- then
-  .then(() => {
-    localforage.setItem('work_list', data);
+    else {
+      resolve('noneedtoupdate');
+    }
   });
 }
 
-function updateMeterListStatus(pea_no) {
-  var data = [];
-  localforage.getItem('inventory')
-  .then((res) => {
-    if(res !== null && res !== undefined) {
-      res.forEach((item, i) => {
-        if(item.peaNo == pea_no) {
-          res[i].status = "I";
-        }
-      }) //--- end foreach
+function cancleJob() {
+  const u_pea_no = localStorage.getItem('offline_u_pea_no');
+  const i_pea_no = $('#c-pea').val();
 
-      data = res;
+  swal({
+    title:'ยกเลิกการติดตั้ง',
+    text:`ต้องการยกเลิกการติดตั้งใบงาน ${u_pea_no} นี้ใช่หรือไม่ ?`,
+    type:'warning',
+    showCancelButton:true,
+    confirmButtonColor:'#d15b47',
+    confirmButtonText:'ใช่',
+    cancelButtonText:'ไม่ใช่',
+    closeOnConfirm:true
+  }, function() {
+
+    if( u_pea_no.length && i_pea_no.length ) {
+      localforage.getItem('work_list')
+      .then((result) => {
+        //-- change status of work_list
+        if(result !== null && result !== undefined && result.length) {
+          result.forEach((item, i) => {
+            if(item.pea_no == u_pea_no) {
+              result[i].status = "P";
+            }
+          });
+
+          localforage.setItem('work_list', result);
+        }
+      })
+      .then(() => {
+        //--- change meter status
+        localforage.getItem('inventory')
+        .then((meters) => {
+          if(meters !== null && meters !== undefined && meters.length) {
+            meters.forEach((item, i) => {
+              if(item.peaNo == i_pea_no) {
+                meters[i].status = "P";
+              }
+            });
+
+            localforage.setItem('inventory', meters);
+          }
+        })
+      })
+      .then(() => {
+        localforage.getItem('transfers')
+        .then((rows) => {
+          let ds = [];
+          if(rows !== null && rows !== undefined && rows.length) {
+            ds = rows.filter((row) => {
+              return row.u_pea_no != u_pea_no;
+            });
+
+            if(ds.length == 0) {
+              localforage.removeItem('transfers');
+            }
+            else {
+              localforage.setItem('transfers', ds);
+            }
+          }
+        })
+      })
+      .then(() => {
+        setTimeout(() => {
+          swal({
+            title:'Success',
+            type:'success',
+            timer:1000
+          });
+
+          goBack();
+        }, 200);
+      })
+      //--- remove transfer
     }
-  })
-  .then(() => {
-    localforage.setItem('inventory', data);
-  })
+    else {
+      setTimeout(() => {
+        swal({
+          title:"Error !",
+          text: 'ไม่พลเลขที่ใบสั่งงาน',
+          type:'error'
+        });
+      }, 200);
+    }
+  });
+
 }
 
 function toggleIcon(option, name) {

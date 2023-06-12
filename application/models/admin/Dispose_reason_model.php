@@ -95,6 +95,18 @@ class Dispose_reason_model extends CI_Model
     return NULL;
   }
 
+  public function get_title($reason_id)
+  {
+    $rs = $this->db->select('title')->where('reason_id', $reason_id)->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row()->title;
+    }
+
+    return NULL;
+  }
+
 
   public function is_exists($pk_id)
   {

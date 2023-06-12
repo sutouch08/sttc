@@ -72,7 +72,7 @@ class Api
 		if($testMode)
 		{
 			$arr = array(
-				'status' => 1,
+				'sap_status' => 'S',
 				'docEntry' => 1,
 				'docNum' => "22000001"
 			);
@@ -116,7 +116,7 @@ class Api
           'LineNum' => 0,
           'ItemCode' => $doc->ItemCode,
           'Dscription' => $doc->ItemName,
-          'Quantity' => $doc->Qty,
+          'Quantity' => $doc->qty,
           'unitMsr' => NULL,
           'PriceBefDi' => 0.000000,
           'LineTotal' => 0.000000,
@@ -129,8 +129,8 @@ class Api
           'FromWhsCod' => $doc->fromWhsCode,
           'WhsCode' => $doc->toWhsCode,
           'FisrtBin' => NULL,
-          'F_FROM_BIN' => NULL,
-          'F_TO_BIN' => NULL,
+          'F_FROM_BIN' => $doc->fromBinCode,
+          'F_TO_BIN' => $doc->toBinCode,
           'AllocBinC' => NULL,
           'TaxStatus' => 'Y',
           'VatPrcnt' => 0.000000,
@@ -138,7 +138,7 @@ class Api
           'PriceAfVAT' => 0.000000,
           'VatSum' => 0.000000,
           'TaxType' => 'Y',
-          'SerialNum' => $doc->InstallSerialNum
+          'SerialNum' => $doc->i_serial
         )
       );
 
@@ -200,7 +200,7 @@ class Api
 				if($rs->status == 'success')
 				{
 					$arr = array(
-						'status' => 1,
+						'sap_status' => 'S',
 						'docEntry' => $rs->docEntry,
 						'docNum' => $rs->docNum
 					);
@@ -211,7 +211,7 @@ class Api
         elseif($rs->status == 'exists')
         {
           $arr = array(
-						'status' => 1,
+						'sap_status' => 'S',
 						'docEntry' => $rs->docEntry,
 						'docNum' => $rs->docNum
 					);
@@ -221,7 +221,7 @@ class Api
 				else
 				{
 					$arr = array(
-						'status' => 3,
+						'sap_status' => 'F',
 						'message' => $rs->message
 					);
 
@@ -248,7 +248,7 @@ class Api
 				$this->ci->error = "Export failed : {$response}";
 
 				$arr = array(
-					'status' => 3,
+					'sap_status' => 'F',
 					'message' => $response
 				);
 

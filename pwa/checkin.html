@@ -39,67 +39,66 @@
 		</div>
 		<div id="loader-backdrop" style="position: fixed; width:100vw; height:100vh; background-color:white; opacity:0.3; display:none; z-index:9;"></div>
     <div id="navbar" class="navbar navbar-default">
-      <div class="navbar-container" id="navbar-container">
-        <div class="navbar-header" id="title">รับมิเตอร์</div>
-        <div class="navbar-buttons navbar-header pull-right">
-          <div class="online-status" id="online-status">Online</div>
+			<div class="navbar-container" id="navbar-container">
+        <div class="navbar-header pull-left" style="position:absolute; padding-left:10px;">
+          <a href="index.html" class="font-size-24 white"><i class="fa fa-chevron-left"></i></a>
         </div>
-      </div>
-    </div>
+				<div class="navbar-header">รับมิเตอร์</div>
+        <div class="navbar-buttons navbar-header pull-right">
+					<div class="online-status" id="online-status">Online</div>
+				</div>
+			</div>
+		</div>
     <div class="main-container" id="main-container">
       <div class="main-content">
         <div class="main-content-inner">
           <div class="page-content">
-            <input type="hidden" id="scan-type" value="" />
-            <input type="hidden" id="code" value="" />
-            <div id="cam" class="hide" style="position: absolute; top:0; left:0; height: 100vh; width:100vw; z-index:10;">
-              <div id="reader" style="width:100%;"></div>
-            </div>
             <div class="row">
               <div class="col-xs-12 padding-5">
                 <div class="tabbable">
                   <div class="tab-content" style="border:none; padding:0; padding-top:15px;">
-                    <div id="home-tab" class="tab-pane">
-                      <div class="row">
+                    <div id="home-tab" class="tab-pane fade active in">
+                      <div style="position:fixed; top:45px; width:100%; margin-left:-14px; padding: 5px 12px; background-color:white; box-shadow: 0px 1px 7px #f3ecec; z-index:10;">
                         <div class="col-xs-12 text-center">
                           <div class="width-100">
                             <span class="width-100">
-                              <input type="text" class="form-control input-lg" id="doc-num" placeholder="เลขที่เอกสาร" style="padding-left:15px; padding-right:60px;" autofocus />
-                              <i class="fa fa-search grey fa-2x" style="position:absolute; top:9px; right:20px;" onclick="submitDocument()"></i>
+                              <input type="text" class="form-control input-lg" id="doc-num" placeholder="เลขที่เอกสาร" style="padding-left:20px; padding-right:80px;" autofocus />
+                              <i class="ace-icon fa fa-search fa-2x" id="search-icon" style="position:absolute; top:10px; right:50px; color:grey;" onclick="getTransferDetail()"></i>
+                              <i class="ace-icon fa fa-times fa-2x hide" id="clear-icon" style="position:absolute; top:10px; right:50px; color:grey;" onclick="clearSearch()"></i>
+                              <i class="ace-icon fa fa-qrcode fa-2x" style="position:absolute; top:10px; right:15px; color:grey;" onclick="startScan(scanResult)"></i>
                             </span>
-
                           </div>
                         </div>
                       </div>
                       <hr/>
-                      <div class="row">
+                      <div class="row margin-top-30">
                         <div class="col-xs-12 padding-5 table-responsive text-center" id="promt-text">
                           <h1 class="light-grey">สแกนเพื่อรับมิเตอร์</h1>
                         </div>
                         <div class="col-xs-12 padding-5 table-responsive text-center" id="result"></div>
 
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center hide" id="btn-save" style="margin-bottom:60px;">
-                          <button type="button" class="btn btn-sm btn-danger btn-100" onclick="clearItem()">เคลียร์</button>
-                          <button class="btn btn-sm btn-success btn-100" onclick="saveItem()">บันทึกลงโทรศัพท์</button>
+                          <button type="button" class="btn btn-lg btn-danger btn-100" onclick="clearItem()">เคลียร์</button>
+                          <button class="btn btn-lg btn-success btn-100" onclick="saveItem()">บันทึก</button>
                         </div>
                       </div>
 
                     </div><!-- home tab -->
 
-                    <div id="detail-tab" class="tab-pane fade active in" style="margin-top:-10px;">
+                    <div id="detail-tab" class="tab-pane" style="margin-top:-10px;">
                       <div class="row">
                         <div class="col-xs-12 table-responsive" id="doc-table" style="margin-bottom:5px;"></div>
                         <div class="col-xs-12 table-responsive padding-5" id="detail-table" style="margin-bottom:60px;"></div>
                       </div><!-- row -->
 
-                      <div onclick="scrollToTop()"
-                        style="width:25px; height:25px; color:white; background-color:#333333ee;
+                      <div class="sc" onclick="scrollToTop()"
+                        style="width:25px; height:25px; color:white; background-color:#33333370;
                         font-size:15px; text-align:center; vertical-align: middle; position:fixed;
-                        bottom:125px; right:5px; z-index:100;"><i class="fa fa-angle-double-up"></i></div>
-                      <div onclick="scrollToButtom()"
-                        style="width:25px; height:25px; color:white; background-color:#333333ee;
+                        bottom:125px; right:5px; z-index:10;"><i class="fa fa-angle-double-up"></i></div>
+                      <div class="sc" onclick="scrollToButtom()"
+                        style="width:25px; height:25px; color:white; background-color:#33333370;
                         font-size:15px; text-align:center; vertical-align: middle; position:fixed;
-                        bottom:80px; right:5px; z-index:100;"><i class="fa fa-angle-double-down"></i></div>
+                        bottom:80px; right:5px; z-index:10;"><i class="fa fa-angle-double-down"></i></div>
                     </div> <!-- detail tab -->
                   </div> <!-- tab content -->
                 </div> <!-- Tabable-->
@@ -115,27 +114,21 @@
                   <div class="footer-menu width-20">
                     <li><a href="javascript:home()"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
                   </div>
-                  <div class="footer-menu width-60 " id="scan-li">
-                    <li id="btn-scan" class=""><a href="javascript:startScan()"><i class="fa fa-qrcode fa-2x white"></i><span>สแกน</span></a></li>
-                    <li id="btn-stop" class="hide"><a href="javascript:stopScan()"><i class="fa fa-stop-circle fa-2x white"></i><span>หยุดสแกน</span></a></li>
-                  </div>
-                  <div class="footer-menu width-60 hide" id="sync-li">
-                    <li><a href="#" onclick="syncItem()"><i class="fa fa-refresh fa-2x white"></i><span>ซิงค์รายการ</span></a></li>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:syncItemList()"><i class="fa fa-refresh fa-2x white"></i><span>ซิงค์รายการ</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li id="home" class="hide"><a href="#" onclick="showTab('home')"><i class="fa fa-download fa-2x white"></i><span>รับมิเตอร์</span></a></li>
-                    <li id="detail" class=""><a href="#" onclick="showTab('detail')"><i class="fa fa-list fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                    <li><a href="javascript:showTab('home')"><i class="fa fa-plus fa-2x white"></i><span>รับมิเตอร์</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:showTab('detail')" ><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
+                  </div>
+                  <div class="footer-menu width-20">
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-bars fa-2x white"></i><span>การตั้งค่า</span></a></li>
                   </div>
                 </div>
               </div><!-- footer inner-->
             </div><!-- /.footer -->
-
-
-
-            <div class="col-xs-12 text-center">
-              <button type="button" class="btn btn-success btn-sm btn-100 margin-top-15 hide" id="btn-save-item" onclick="saveItem()">บันทึก</button>
-            </div>
-
 
           </div> <!-- pang content -->
       </div><!-- main content inner -->
@@ -165,19 +158,6 @@
      </div>
    </div>
   </div>
-
-  <script id="cameras-list-template" type="text/x-handlebarsTemplate">
-  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    {{#each this}}
-    <div class="radio">
-      <label>
-        <input type="radio" name="camera_id"  class="ace" maxlength="100"	value="{{id}}" />
-        <span class="lbl">{{label}}</span>
-      </label>
-    </div>
-    {{/each}}
-  </div>
-  </script>
 
   <script id="docnum-template" type="text/x-handlebarsTemplate">
   <table class="table table-striped border-1"style="margin-bottom:20px;">
@@ -212,13 +192,13 @@
         <th class="fix-width-100 text-center">docnum</th>
         <th class="fix-wisth-120">Item Code</th>
         <th class="min-width-250">Item Name</th>
-        <th class="fix-width-100 text-center">Warehouse</th>
+        <th class="fix-width-100 text-center">Warehousea</th>
       </tr>
     </thead>
     {{#each this}}
       <tr>
         <td class="text-center no"></td>
-        <td class="text-center">{{PeaNo}}</td>
+        <td class="text-center">{{peaNo}}</td>
         <td class="text-center">{{serial}}</td>
         <td class="text-center">{{docnum}}</td>
         <td>{{code}}</td>
@@ -240,7 +220,7 @@
         <th class="fix-width-100 text-center">DocNum</th>
         <th class="fix-wisth-120">Item Code</th>
         <th class="min-width-250">Item Name</th>
-        <th class="fix-width-100 text-center">Warehouse</th>
+        <th class="fix-width-100 text-center">Warehousex</th>
       </tr>
     </thead>
     {{#each this}}
@@ -260,16 +240,10 @@
   </table>
   </script>
 
+  <script src="scripts/index.js"></script>
   <script src="scripts/transfer/checkin.js"></script>
 
   <script>
-    function scrollToTop() {
-      window.scrollTo({top:0, behavior:'smooth'});
-    }
-
-    function scrollToButtom() {
-      window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
-    }
 
     function clearItem() {
       $('#result').html('');
@@ -296,9 +270,5 @@
     }
   </script>
 
-    <!-- ace scripts -->
-    <script src="assets/js/ace/ace.sidebar.js"></script>
-    <script src="assets/js/ace/ace.sidebar-scroll-1.js"></script>
-    <script src="assets/js/ace/ace.submenu-hover.js"></script>
   </body>
 </html>

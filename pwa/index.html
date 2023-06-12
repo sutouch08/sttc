@@ -33,6 +33,7 @@
     <script src="scripts/template.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/main.js"></script>
+    <script src="assets/js/html5-qrcode.min.js"></script>
     <script src="assets/js/localforage.js"></script>
   </head>
   <body class="no-skin">
@@ -62,14 +63,27 @@
               </div>
               <div class="divider"></div>
             </div>
-            <div class="row hide" id="first-menu" style="padding-left:20px; padding-right:20px;">
+            <div class="row hide" id="first-menu" style="padding: 0 20px 50px;">
               <div class="col-xs-12">
-                <a href="meter_list.html" class="row-button text-center hide" id="meter-list" style="background-color:#2a8bcb; color:white;">รายการมิเตอร์</a>
+                <a href="meter_list.html" class="row-button text-center hide" id="meter-list"
+                  style="background-color:#2a8bcb; color:white;">รายการมิเตอร์
+                  <span id="meter-list-qty" style="position:absolute; margin-left:5px; font-size:14px;" class="badge badge-danger">15</span>
+                </a>
                 <a href="checkin.html" class="row-button text-center hide" id="check-in" style="background-color:#2a8bcb; color:white;">เบิกมิเตอร์</a>
               </div>
               <div class="col-xs-12 text-center">
-                <a href="work_list.html" class="row-button text-center" style="background-color:#85b558; color:white;">ใบสั่งงาน</a>
+                <a href="work_list.html" class="row-button text-center"
+                  style="background-color:#85b558; color:white;">ใบสั่งงาน
+                  <span id="work-qty" style="position:absolute; margin-left:5px; font-size:14px;" class="badge badge-danger">0</span>
+                </a>
               </div>
+              <div class="col-xs-12 text-center">
+                <a href="temp.html" class="row-button text-center"
+                  style="background-color:#6fb3e0; color:white;">ผลการสับเปลี่ยน
+                  <span id="offline-qty" style="position:absolute; margin-left:5px; font-size:14px;" class="badge badge-danger">0</span>
+                </a>
+              </div>
+
               <div class="col-xs-12 text-center">
                 <a href="return.html" class="row-button text-center" style="background-color:#9585bf; color:white;">คืนมิเตอร์</a>
               </div>
@@ -80,7 +94,7 @@
               <div class="pg-footer-inner">
                 <div class="pg-footer-content text-right">
                   <div class="footer-menu width-20">
-                    <li><a href="return.html"><i class="fa fa-recycle fa-2x white"></i><span>คืนมิเตอร์</span></a></li>
+                    <li><a href="index.html"><i class="fa fa-home fa-2x white"></i><span>หน้าหลัก</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
                     <li><a href="transfer.html"><i class="fa fa-history fa-2x white"></i><span>ประวัติการติดตั้ง</span></a></li>
@@ -92,7 +106,7 @@
                     <li><a href="meter_list.html"><i class="fa fa-cubes fa-2x white"></i><span>รายการมิเตอร์</span></a></li>
                   </div>
                   <div class="footer-menu width-20">
-                    <li><a href="javascript:toggleMenu()"><i class="fa fa-cogs fa-2x white"></i><span>การตั้งค่า</span></a></li>
+                    <li><a href="javascript:toggleMenu()"><i class="fa fa-bars fa-2x white"></i><span>การตั้งค่า</span></a></li>
                   </div>
                 </div>
              </div>
@@ -115,6 +129,16 @@
         }
 
         init();
+
+        localforage.getItem('transfers')
+        .then((res) => {
+          len = 0;
+          if(res !== null && res !== undefined) {
+            len = res.length;
+          }
+
+          $('#offline-qty').html(len);
+        });
       });
 
     </script>

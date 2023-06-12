@@ -1,5 +1,9 @@
 var scanner;
 var config;
+var work_list_qty = 0;
+var meter_list_qty = 0;
+var inform_qty = 0;
+
 
 function readerInit() {
 
@@ -33,14 +37,12 @@ function readerInit() {
   scanner = new Html5Qrcode("reader", {formatsToSupport: formatToSupport});
   config = {
     fps: 60,
-    qrbox: {width: qrWidth, height: qrHeight},
+    qrbox: {width: qrWidth, height: qrHeight, center: (scanType === 'barcode')},
     experimentalFeatures: {
       useBarCodeDetectorIfSupported: true
     }
   };
 }
-
-
 
 function saveCameraId() {
   let camId = $("input[name='camera_id']:checked").val();
@@ -54,7 +56,6 @@ function saveCameraId() {
     closeModal('cameras-modal');
   }
 }
-
 
 function changeCameraId() {
   Html5Qrcode.getCameras().then(devices => {
@@ -76,7 +77,6 @@ function changeCameraId() {
     });
   });
 }
-
 
 async function updateScanType() {
   if(navigator.onLine) {
@@ -117,8 +117,6 @@ async function updateScanType() {
   }
 }
 
-
-
 function startScan(actionCallback) {
   let camId = localStorage.getItem('cameraId');
 
@@ -141,52 +139,10 @@ function startScan(actionCallback) {
       else {
         console.log(actionCallback);
       }
-    }).then(() => {
-      setTimeout(() => {
-        let overlayElement = document.getElementById('qr-shaded-region');
-        let childElements = overlayElement.querySelectorAll('div');
-
-        // Remove corners
-        for (let childElement of childElements) {
-          childElement.remove();
-        }
-
-        // Create own corner elements
-        let topLeftElement = document.createElement('div');
-        let leftTopElement = document.createElement('div');
-        let bottomLeftElement = document.createElement('div');
-        let leftBottomElement = document.createElement('div');
-        let topRightElement = document.createElement('div');
-        let rightTopElement = document.createElement('div');
-        let bottomRightElement = document.createElement('div');
-        let rightBottomElement = document.createElement('div');
-        let middleLineElement = document.createElement('div');
-
-        topLeftElement.classList.add('top-left');
-        leftTopElement.classList.add('left-top');
-        bottomLeftElement.classList.add('bottom-left');
-        leftBottomElement.classList.add('left-bottom');
-        topRightElement.classList.add('top-right');
-        rightTopElement.classList.add('right-top');
-        bottomRightElement.classList.add('bottom-right');
-        rightBottomElement.classList.add('right-bottom');
-        middleLineElement.classList.add('middle-line');
-
-        overlayElement.appendChild(topLeftElement);
-        overlayElement.appendChild(leftTopElement);
-        overlayElement.appendChild(bottomLeftElement);
-        overlayElement.appendChild(leftBottomElement);
-        overlayElement.appendChild(topRightElement);
-        overlayElement.appendChild(rightTopElement);
-        overlayElement.appendChild(bottomRightElement);
-        overlayElement.appendChild(rightBottomElement);
-        overlayElement.appendChild(middleLineElement);
-      }, 100)
     });
 
   }
 }
-
 
 function stopScan() {
 	scanner.stop().then((ignore) => {
@@ -201,15 +157,15 @@ async function syncAll() {
   return i;
 }
 
-
 async function init() {
-  if(navigator.onLine) {
-    load_in();
-    await syncAll();
-    await updateMenu();
-    load_out();
-  }
+  load_in();
+  await syncAll();
+  await updateMenu();
+  $('#work-qty').html(work_list_qty);
+  $('#meter-list-qty').html(meter_list_qty);
+  load_out();
 }
+
 
 
 function syncDamageList() {
@@ -247,7 +203,23 @@ function syncDamageList() {
   })
 }
 
-function syncItem() {
+
+function renderDamageList() {
+  return new Promise((resolve, reject) => {
+    localforage.getItem('damageList').then((data) => {
+      if(data != null && data != undefined) {
+        let source = $('#damage-list-template').html();
+        let output = $('#u-dispose-id');
+
+        render(source, data, output);
+      }
+
+      resolve('done');
+    });
+  });
+}
+
+function syncItem(actionCallback) {
   return new Promise((resolve, reject) => {
     if(navigator.onLine) {
       $('#loader-message').text('กำลังซิงค์ข้อมูลมิเตอร์..');
@@ -273,62 +245,100 @@ function syncItem() {
 
         if(ds.data != null || ds.data != "") {
           let data = [];
+          var promises = [];
 
           ds.data.forEach((item, i) => {
-            let serial = item.Serial;
-            let docnum = item.DocNum;
+            promises.push(
+              localforage.getItem('inventory')
+              .then((res) => {
+                var row = [];
+                if(res !== null && res !== undefined) {
+                  row = res.filter((obj) => {
+                    //console.log(obj.peaNo, item.PeaNo);
+                    return obj.peaNo == item.PeaNo && obj.status == "I";
+                  });
+                }
 
-            let arr = {
-              "docnum" : item.DocNum,
-              "peaNo" : item.PeaNo,
-              "serial" : item.Serial,
-              "code" : item.ItemCode,
-              "name" : item.ItemName,
-              "whCode" : item.WhsCode
-            };
+                if(row.length) {
+                  var arr = {
+                    "docnum" : item.DocNum,
+                    "peaNo" : item.PeaNo,
+                    "serial" : item.Serial,
+                    "code" : item.ItemCode,
+                    "name" : item.ItemName,
+                    "whCode" : item.WhsCode,
+                    "binCode" : item.BinCode,
+                    "date" : item.date,
+                    "state" : item.status,
+                    "state_label" : item.status_label,
+                    "state_color" : item.status_color,
+                    "status" : 'I'
+                  };
+                }
+                else {
+                  var arr = {
+                    "docnum" : item.DocNum,
+                    "peaNo" : item.PeaNo,
+                    "serial" : item.Serial,
+                    "code" : item.ItemCode,
+                    "name" : item.ItemName,
+                    "whCode" : item.WhsCode,
+                    "binCode" : item.BinCode,
+                    "date" : item.date,
+                    "state" : item.status,
+                    "state_label" : item.status_label,
+                    "state_color" : item.status_color,
+                    "status" : 'P'
+                  };
 
-            arr[serial] = serial;
-            arr[docnum] = docnum;
+                  meter_list_qty++;
+                }
 
-            data.push(arr);
+                data.push(arr);
+              })
+            ); //-- push
           });
 
-          if(data.length == 0) {
-            localforage.removeItem('inventory');
-          }
-          else {
-            localforage.setItem('inventory', data);
-          }
 
-          resolve(console.log('sync completed'));
+          Promise.all(promises)
+          .then(() => {
+            if(data.length == 0) {
+              localforage.removeItem('inventory')
+              .then(() => {
+                if(actionCallback != null && actionCallback != undefined) {
+                  actionCallback();
+                }
+              });
+            }
+            else {
+              localforage.setItem('inventory', data)
+              .then(() => {
+                if(actionCallback != null && actionCallback != undefined) {
+                  actionCallback();
+                }
+              });
+            }
+            resolve(console.log('sync completed'));
+          });
         }
       });
     }
     else {
-      resolve('offline');
+      localforage.getItem('inventory')
+      .then((data) => {
+        if(data !== null && data !== undefined && data.length) {
+          var ds = data.filter((obj) => {
+            return obj.status === "P";
+          });
+
+          meter_list_qty = ds.length;
+        }
+
+        resolve('offline');
+      })
     }
   })
 }
-
-
-function updateMenu () {
-  return new Promise((resolve, reject) => {
-    $('#check-in').addClass('hide');
-    $('#meter-list').addClass('hide');
-
-    if(canGetMeter == 1) {
-      $('#check-in').removeClass('hide');
-    }
-    else {
-      $('#meter-list').removeClass('hide');
-    }
-
-    $('#first-menu').removeClass('hide');
-
-    resolve(true);
-  });
-}
-
 
 function syncWorkList() {
   return new Promise((resolve, reject) => {
@@ -353,39 +363,185 @@ function syncWorkList() {
       .then(response => response.text())
       .then(result => {
         let ds = JSON.parse(result);
-
         if(ds.data != null || ds.data != "") {
+          var promises = [];
           let data = [];
 
           ds.data.forEach((item, i) => {
-            let arr = {
-              "id" : item.id,
-              "pea_no" : item.pea_no,
-              'cust_route' : item.cust_route,
-              "cust_no" : item.cust_no,
-              "ca_no" : item.ca_no,
-              "cust_name" : item.cust_name,
-              "cust_address" : item.cust_address,
-              "cust_tel" : item.cust_tel,
-              "age_meter" : item.age_meter
-            };
+            promises.push(
+              localforage.getItem('work_list')
+              .then((res) => {
+                let row = [];
+                if(res !== null && res !== undefined) {
+                  row = res.filter((obj) => {
+                    return obj.pea_no == item.pea_no && obj.status == "I";
+                  });
+                }
 
-            data.push(arr);
+                if(row.length) {
+                  var arr = {
+                    "id" : item.id,
+                    "pea_no" : item.pea_no,
+                    'cust_route' : item.cust_route,
+                    "cust_no" : item.cust_no,
+                    "ca_no" : item.ca_no,
+                    "cust_name" : item.cust_name,
+                    "cust_address" : item.cust_address,
+                    "cust_tel" : item.cust_tel,
+                    "age_meter" : item.age_meter,
+                    "latitude" : item.latitude,
+                    "longitude" : item.longitude,
+                    "state" : item.status,
+                    "state_label" : item.status_label,
+                    "state_color" : item.status_color,
+                    "status" : "I"
+                  };
+                }
+                else {
+                  var arr = {
+                    "id" : item.id,
+                    "pea_no" : item.pea_no,
+                    'cust_route' : item.cust_route,
+                    "cust_no" : item.cust_no,
+                    "ca_no" : item.ca_no,
+                    "cust_name" : item.cust_name,
+                    "cust_address" : item.cust_address,
+                    "cust_tel" : item.cust_tel,
+                    "age_meter" : item.age_meter,
+                    "latitude" : item.latitude,
+                    "longitude" : item.longitude,
+                    "state" : item.status,
+                    "state_label" : item.status_label,
+                    "state_color" : item.status_color,
+                    "status" : "P"
+                  };
+
+                  work_list_qty++;
+                }
+
+                data.push(arr);
+              }) //-- then
+            ); //-- promises.push
+
+          }); //-- foreach
+
+          Promise.all(promises)
+          .then(() => {
+
+            if(data.length == 0) {
+              localforage.removeItem('work_list');
+            }
+            else {
+              localforage.setItem('work_list', data);
+            }
+
+            resolve(console.log('sync completed'));
           });
-
-          if(data.length == 0) {
-            localforage.removeItem('work_list');
-          }
-          else {
-            localforage.setItem('work_list', data);
-          }
         }
-
-        resolve(console.log('sync completed'));
       });
     }
     else {
-      resolve("offline");
+      localforage.getItem('work_list')
+      .then((data) => {
+        if(data !== null && data !== undefined && data.length) {
+          var ds = data.filter((obj) => {
+            return obj.status === "P";
+          })
+        }
+
+        work_list_qty = ds.length;
+
+        resolve("offline");
+      })
     }
   });
+}
+
+function updateMenu () {
+  return new Promise((resolve, reject) => {
+    $('#check-in').addClass('hide');
+    $('#meter-list').addClass('hide');
+
+    if(canGetMeter == 1) {
+      $('#check-in').removeClass('hide');
+    }
+    else {
+      $('#meter-list').removeClass('hide');
+    }
+
+    $('#first-menu').removeClass('hide');
+
+    resolve(true);
+  });
+}
+
+
+function suggest(id) {
+
+  let cond = (id === undefined) ? $('#u-dispose-id').val() : id;
+  let age = parseDefault(parseInt($('#use-age').val()), 0);
+  let color = "red";
+  let text = `ใช้งานมาแล้ว ${age} ปี ติดสติ๊กเกอร์สีแดง`;
+
+  if( age <= 10 )
+  {
+    if( cond != '0' && age > 3) {
+      color = "orange";
+      text =  `ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีส้ม`;
+    }
+
+    if( cond != '0' && age <= 3) {
+      color = "blue";
+      text =  `ใช้งานมาแล้ว ${age} ปี สภาพชำรุด ติดสติ๊กเกอร์สีน้ำเงิน`;
+    }
+
+    if( cond == '0') {
+      color = "green";
+      text =  `ใช้งานมาแล้ว ${age} ปี สภาพดี ติดสติ๊กเกอร์สีเขียว`;
+    }
+  }
+
+  let label = `<div class="alert" style="background-color:${color}; color:white; min-height:60px; font-size:18px;">${text}</div>`;
+
+  $('#suggest-label').html(label);
+}
+
+function scrollToTop() {
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function scrollToButtom() {
+  window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+}
+
+function reload() {
+  window.location.reload();
+}
+
+
+function resetMeter() {
+  localforage.getItem('inventory')
+  .then((data) => {
+    if(data !== null && data !== undefined && data.length) {
+      data.forEach((item, i) => {
+        data[i].status = "P";
+      })
+
+      localforage.setItem('inventory', data);
+    }
+  })
+}
+
+
+function resetWorkList() {
+  localforage.getItem('work_list')
+  .then((data) => {
+    if(data !== null && data !== undefined && data.length) {
+      data.forEach((item, i) => {
+        data[i].status = "P";
+      })
+
+      localforage.setItem('work_list', data);
+    }
+  })
 }

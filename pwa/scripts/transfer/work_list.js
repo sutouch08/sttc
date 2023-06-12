@@ -1,8 +1,12 @@
 
 window.addEventListener('load', function() {
-  getWorkList();
+  load_in();
+  Promise.all([syncWorkList(), syncItem()])
+  .then(() => {
+    getWorkList();
+    load_out();
+  })
 });
-
 
 function getSearch() {
   let txt = $('#scan-result').val();
@@ -12,15 +16,6 @@ function getSearch() {
   setTimeout(() => {
     searchText();
   }, 100);
-}
-
-
-function stopScan() {
-	scanner.stop().then((ignore) => {
-		$('#cam').addClass('hide');
-    $('#reader-backdrop').addClass('hide');
-    $('.sc').removeClass('hide');
-	});
 }
 
 
@@ -51,6 +46,24 @@ function clearSearch() {
   load_out();
 }
 
+
+$('#search-text').keyup(function(e) {
+  activeSearch();
+
+  if(e.keyCode == 13) {
+    searchText();
+  }
+})
+
+
+
+function activeSearch() {
+  $('#clear-icon').addClass('hide');
+  $('#search-icon').removeClass('hide');
+}
+
+
+
 async function updateWorkList() {
   load_in();
   syncWorkList().then((result) => {
@@ -75,13 +88,16 @@ function getWorkList() {
   localforage.getItem('work_list').then((data) => {
     let ds = [];
     if(data != null && data != undefined) {
+      var pending = data.filter((obj) => {
+        return obj.status == "P";
+      })
+
       if(search != "") {
-        const keys = ['pea_no'];
-        ds = data.filter((obj) => keys.some((key) => obj[key].includes(search)));
-        console.log(ds);
+        const keys = ['pea_no', 'cust_route', 'cust_address'];
+        ds = pending.filter((obj) => keys.some((key) => obj[key].includes(search)));
       }
       else {
-        ds = data;
+        ds = pending;
       }
 
       let source = $('#stock-template').html();
@@ -179,4 +195,15 @@ function getSelectedWorkList(pea_no) {
 function goInstall(pea_no) {
   localStorage.setItem('work_no', pea_no);
   window.location.href = "install.html";
+}
+
+function goInform(pea_no) {
+  if(pea_no !== null && pea_no !== undefined && pea_no != "") {
+    localStorage.setItem('inform_no', pea_no);
+  }
+  else {
+    localStorage.removeItem('inform_no');
+  }
+  
+  window.location.href = "inform.html";
 }

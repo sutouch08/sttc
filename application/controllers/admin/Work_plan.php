@@ -13,6 +13,7 @@ class Work_plan extends PS_Controller
     parent::__construct();
     $this->home = base_url().'admin/work_plan';
     $this->load->model('admin/work_plan_model');
+    $this->load->helper('work_list');
     $this->load->helper('team');
   }
 
@@ -28,6 +29,7 @@ class Work_plan extends PS_Controller
       'cust_route' => get_filter('cust_route', 'cust_route', ''),
       'plan_table_name' => get_filter('plan_table_name', 'plan_table_name', ''),
       'team_id' => get_filter('team_id', 'w_team_id', 'all'),
+      'status' => get_filter('status', 'w_status', 'all'),
       'from_date' => get_filter('from_date', 'w_from_date', ''),
       'to_date' => get_filter('to_date', 'w_to_date', '')
 		);
@@ -168,6 +170,7 @@ class Work_plan extends PS_Controller
       'cust_route',
       'plan_table_name',
       'w_team_id',
+      'w_status',
       'w_from_date',
       'w_to_date'
 		);

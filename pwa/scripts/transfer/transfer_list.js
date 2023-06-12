@@ -1,168 +1,147 @@
 
-function viewDetail(id) {
-  localStorage.setItem('transfer_id', id);
-  localStorage.setItem('isOnline', 1);
-  setTimeout(() => {
-    window.location.href = "transfer_detail.html";
-  }, 200);
-}
-
-
-function viewOfflineDetail(id) {
-  localStorage.setItem('transfer_id', id);
-  localStorage.setItem('isOnline', 0);
-
-  setTimeout(() => {
-    window.location.href = "transfer_detail.html";
-  }, 200);
-}
-
-
 window.addEventListener('load', () => {
-  let code = getCookie('trCode');
-  let serial = getCookie('trSerial');
-  let from = getCookie('trFrom');
-  let to = getCookie('trTo');
-  let status = getCookie('trStatus');
-  let perpage = $('#perpage').val();
-  let offset = $('#offset').val();
-
-  $('#code').val(code);
-  $('#serial').val(serial);
-  $('#fromDate').val(from);
-  $('#toDate').val(to);
-  $('#status').val((status == "" ? "all" : status));
-
-  localforage.getItem('inventory').then((data) => {
-    let ds = [];
-    if(data != null || data != undefined) {
-      $('#n-install').addClass('hide');
-      $('#i-install').removeClass('hide');
-    }
-  });
-
-   setTimeout(() => {
-     loadPage();
-   }, 200);
+  loadPage();
 });
 
-function noDataAlert() {
-  swal({
-    title:'',
-    text:'<center>ไม่พบข้อมูลมิเตอร์ในเครื่อง<br/>กรุณา Check in ก่อนติดตั้งมิเตอร์</center>',
-    type:'info',
-    html:true
-  });
-}
-
-function clearFilterList() {
-  setCookie('trCode', '');
-  setCookie('trSerial', '');
-  setCookie('trFrom', '');
-  setCookie('trTo', '');
-  setCookie('trStatus', 'all');
-  // setCookie('trPerpage', 20);
-  // setCookie('trOffset', 0);
-
-  window.location.reload();
-}
 
 async function loadPage() {
-  await updateOfflineList();
+  load_in();
+  await getFilterList();
+  load_out();
+}
+
+function clearSearch() {
+  $('#search-text').val('');
+  activeSearch();
+  setTimeout(() => {
+    searchText();
+  }, 500);
+}
+
+function activeSearch() {
+  $('#clear-icon').addClass('hide');
+  $('#search-icon').removeClass('hide');
+}
+
+$('#search-text').keyup(function(e) {
+  activeSearch();
+
+  if(e.keyCode == 13) {
+    searchText();
+  }
+})
+
+async function getSearch() {
+  $('#offset').val(0);
+  $('#rows').text(0);
+  $('#show_rows').text(0);
+  $('#offline-job').val('');
+  $('#online-job').html('');
+
+  //await getOfflineList();
   await getFilterList();
 }
 
+function getSearch() {
+  let txt = $('#scan-result').val();
+  $('#search-text').val(txt);
 
-async function getFilterList() {
-  let code = $('#code').val();
-  let serial = $('#serial').val();
-  let fromDate = $('#fromDate').val();
-  let toDate = $('#toDate').val();
-  let status = $('#status').val();
-  let perpage = $('#perpage').val();
-  let offset = $('#offset').val();
-
-  setCookie('trCode', code);
-  setCookie('trSerial', serial);
-  setCookie('trFrom', fromDate);
-  setCookie('trTo', toDate);
-  setCookie('trStatus', status);
-
-  if(navigator.onLine) {
-    load_in();
-    let requestUri = URI + 'get_transfer_list';
-    let header = new Headers();
-    header.append('X-API-KEY', API_KEY);
-    header.append('Authorization', AUTH);
-    header.append('Content-type', 'application/json');
-
-    let json = JSON.stringify({
-      "code" : code,
-      "serial" : serial,
-      "fromDate" : fromDate,
-      "toDate" : toDate,
-      "status" : status,
-      "perpage" : perpage,
-      "offset" : offset
-    });
-
-    let requestOptions = {
-      method : 'POST',
-      headers : header,
-      body : json,
-      redirect : 'follow'
-    };
-
-    fetch(requestUri, requestOptions)
-    .then(response => response.text())
-    .then(result => {
-      load_out();
-      if(isJson(result)) {
-        let ds = JSON.parse(result);
-        $('#code').val(ds.code);
-        $('#serial').val(ds.serial);
-        $('#fromDate').val(ds.from_date);
-        $('#toDate').val(ds.to_date);
-        $('#status').val(ds.status);
-        $('#num_rows').text(addCommas(ds.rows));
-        $('#limit').val(ds.rows);
-
-        if(ds.data.length) {
-          let source = $('#online-template').html();
-          let output = $('#online-job');
-          render_append(source, ds.data, output);
-          offset = offset == 0 ? 1 * perpage : offset * perpage;
-          $('#offset').val(offset);
-          let rows = $('#show_rows').text();
-          rows = removeCommas(rows);
-          rows = parseDefault(parseInt(rows), 0);
-          rows = rows + ds.data.length;
-          $('#show_rows').text(addCommas(rows));
-          $('#show').val(rows);
-        }
-        else {
-          console.log('nodata');
-          noData();
-        }
-      }
-      else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
-      }
-    })
-    .catch(error => console.log('error', error));
-  }
-  else {
-    load_out();
-    noData();
-  }
+  setTimeout(() => {
+    searchText();
+  }, 500);
 }
 
+async function searchText() {
+  load_in();
+  let txt = $('#search-text').val();
 
-function noData() {
+  if(txt.length) {
+    $('#search-icon').addClass('hide');
+    $('#clear-icon').removeClass('hide');
+  }
+
+  $('#offset').val(0);
+  $('#limit').val(20);
+  $('#show').val(0);
+  $('#show_rows').text('0');
+  $('#online-job').html('');
+
+  await getFilterList();
+  load_out();
+}
+
+function getFilterList() {
+  return new Promise((resolve) => {
+    if(navigator.onLine) {
+      let searchText = $('#search-text').val();
+      let perpage = $('#perpage').val();
+      let offset = $('#offset').val();
+      let requestUri = URI + 'get_transfer_history';
+      let header = new Headers();
+      header.append('X-API-KEY', API_KEY);
+      header.append('Authorization', AUTH);
+      header.append('Content-type', 'application/json');
+
+      let json = JSON.stringify({
+        "search_text" : searchText,
+        "perpage" : perpage,
+        "offset" : offset
+      });
+
+      let requestOptions = {
+        method : 'POST',
+        headers : header,
+        body : json,
+        redirect : 'follow'
+      };
+
+      fetch(requestUri, requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        load_out();
+        if(isJson(result)) {
+          let ds = JSON.parse(result);
+          $('#num_rows').text(addCommas(ds.rows));
+          $('#limit').val(ds.rows);
+
+          if(ds.data.length) {
+            let source = $('#online-template').html();
+            let output = $('#online-job');
+            render_append(source, ds.data, output);
+            offset = offset == 0 ? 1 * perpage : offset * perpage;
+            $('#offset').val(offset);
+            let rows = parseDefault(parseInt($('#show').val()), 0) + ds.data.length;
+            $('#show_rows').text(addCommas(rows));
+            $('#show').val(rows);
+          }
+          else {
+            noData();
+          }
+
+          resolve(true);
+        }
+        else {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          });
+
+          resolve();
+        }
+      })
+      .catch((error) => {
+        console.log('error', error);
+      });
+    }
+    else {
+      noData();
+      resolve(true);
+    }
+  })
+}
+
+function noData(){
   $('#no-list').css('display', 'block');
   $('#no-list-label').animate({opacity:0.9},500);
 
@@ -175,140 +154,82 @@ function noData() {
   }, 1000);
 }
 
-async function updateOfflineList() {
-  return new Promise((resolve, reject) => {
-    let source = $('#offline-template').html();
-    let output = $('#offline-job');
+function showDetail(id) {
+  if(navigator.onLine) {
+    load_in();
+    let json = JSON.stringify({"id" : id});
+    let requestUri = URI + 'view_detail';
+    let header = new Headers();
+    header.append('X-API-KEY', API_KEY);
+    header.append('Authorization', AUTH);
+    header.append('Content-type', 'application/json');
 
-    localforage.getItem('transfers').then((data) => {
-      if(data != null && data != undefined) {
-        //--- send data to server if online
-        if(navigator.onLine) {
-          data.forEach((ds, index, array) => {
-            let json = JSON.stringify({
-              "itemCode" : ds.itemCode,
-              "itemName" : ds.itemName,
-              "fromWhsCode" : ds.fromWhsCode,
-              "toWhsCode" : ds.toWhsCode,
-              "remark" : ds.remark,
-              "uSerial" : ds.uSerial,
-              "iSerial" : ds.iSerial,
-              "peaNo" : ds.peaNo,
-              "runNo" : ds.runNo,
-              "mYear" : ds.mYear,
-              "cond" : ds.cond,
-              "damage_id" : ds.damage_id,
-              "usageAge" : ds.usageAge,
-              "uImage" : ds.uImage,
-              "iImage" : ds.iImage,
-              "uOrientation" : ds.uOrientation,
-              "iOrientation" : ds.iOrientation,
-              "fromDoc" : ds.fromDoc
-            });
+    let requestOptions = {
+      method : 'POST',
+      headers : header,
+      body : json,
+      redirect : 'follow'
+    };
 
-            let requestUri = URI + 'add_transfer';
-            let header = new Headers();
-            header.append('X-API-KEY', API_KEY);
-            header.append('Authorization', AUTH);
-            header.append('Content-type', 'application/json');
+    fetch(requestUri, requestOptions)
+    .then(response => response.text())
+    .then((result) => {
+      let ds = JSON.parse(result);
+      $('#u-pea-no').val(ds.u_pea_no);
+      $('#use-age').val(ds.use_age);
+      $('#cust-route').val(ds.route);
+      $('#u-power-no').val(ds.u_power_no);
+      $('#u-dispose-id').val(ds.damage_name);
+      $('#u-lat').html(ds.u_lat);
+      $('#u-long').html(ds.u_lng);
+      $('#u-preview').html('<img id="u-image" src="'+ds.u_image+'" style="width:100%; border-radius:10px;" alt="Item image" />');
 
-            let requestOptions = {
-              method : 'POST',
-              headers : header,
-              body : json,
-              redirect : 'follow'
-            };
 
-            fetch(requestUri, requestOptions)
-            .then(response => response.text())
-            .then(result => {
-              if(isJson(result)) {
-                let rs = JSON.parse(result);
-                if(rs.status == 'success') {
-                  deleteOfflineTransfer(ds.iSerial);
-                }
-              }
-              else {
-                swal({
-                  title:'Error!',
-                  text:rs,
-                  type:'error'
-                });
-              }
-            })
-            .catch(error => console.log('error', error));
+      $('#i-pea-no').val(ds.i_pea_no);
+      $('#i-power-no').val(ds.i_power_no);
+      $('#phase-selected').val(ds.phase);
+      let txt = `<p>Item Code: ${ds.ItemCode}</p><p>Description: ${ds.ItemName}</p><p>Serial: ${ds.i_serial}</p>`;
+      $('#i-result').html(txt);
+      $('#i-lat').html(ds.latitude);
+      $('#i-long').html(ds.longitude);
+      $('#remark').val(ds.remark);
 
-            if(index === array.length -1) {
-              resolve();
-            }
-          });
-        }
-        else {
-          render(source, data, output);
-          resolve();
-        }
+      $('#i-preview').html('<img id="i-image" src="'+ds.i_image+'" style="width:100%; border-radius:10px;" alt="Item image" />');
+
+      toggleSign(ds.sign_status);
+
+      if(ds.sign_status == '0') {
+        signaturePad.fromDataURL(ds.signature_image, {ratio: 1, width: parentWidth, height: parentHeight});
       }
-      else {
-        data = [];
-        render(source, data, output);
-        resolve();
-      }
+
+
+      signaturePad.off();
+
+      suggest();
+      load_out();
+
+      $('body').addClass('noscroll');
+      $('#cover').addClass('slide-in');
+      $('#close-cover').removeClass('hide');
+    })
+  }
+  else {
+    swal({
+      title:'Offline',
+      text:'ไม่สามารถแสดงรายการได้ในขณะออฟไลน์',
+      type:'info'
     });
+  }
 
-  });
+
 }
 
 
-function deleteOfflineTransfer(serial) {
-  localforage.getItem('transfers').then((data) => {
-    if(data != null && data != undefined) {
-      let items = data.filter((el) => {
-        return el.iSerial != serial;
-      });
-      console.log(items);
-      if(items.length == 0) {
-        localforage.removeItem('transfers');
-      }
-      else {
-        localforage.setItem('transfers', items);
-      }
-    }
-  });
+function closeCover() {
+  $('body').removeClass('noscroll');
+  $('#close-cover').addClass('hide');
+  $('#cover').removeClass('slide-in');
 }
-
-
-
-function addNew() {
-  window.location.href = 'transfer_add.html';
-}
-
-
-async function getTransfer(id) {
-  return new Promise(resolve => {
-    var data = {};
-    let db = localStorage.getItem('transfer');
-    if(db.length) {
-      data = JSON.parse(db);
-      let row = data[id];
-      console.log(row);
-      resolve(row);
-    }
-  });
-}
-
-
-function getSearch() {
-  $('#offset').val(0);
-  $('#rows').text(0);
-  $('#show_rows').text(0);
-  $('#online-job').html('');
-  getFilterList();
-}
-
-function loadMore() {
-  getFilterList();
-}
-
 
 var throttleTimer;
 const throttle = (callback, time) => {
@@ -320,22 +241,23 @@ const throttle = (callback, time) => {
   }, time);
 };
 
-
-function morePage() {
+function loadMore() {
   throttle(() => {
     const endOfPage = window.innerHeight + window.pageYOffset >= document.body.offsetHeight;
     if(endOfPage) {
       let limit = parseDefault(parseInt($('#limit').val()), 0);
       let show = parseDefault(parseInt($('#show').val()), 0)
-
+      console.log('load');
       if(show < limit) {
         getFilterList();
       }
+      else {
+        noData();
+      }
     }
-  }, 1000);
+  }, 500);
 };
 
-
 window.addEventListener('scroll', () => {
-  morePage();
+  loadMore();
 });

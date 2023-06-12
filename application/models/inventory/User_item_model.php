@@ -12,19 +12,30 @@ class User_item_model extends CI_Model
   public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
   {
     $this->db
-    ->select('item.*, g.name AS team_group_name, t.name AS team_name')
+    ->select('item.*, g.name AS team_group_name, t.name AS team_name, u.uname, u.name AS display_name')
     ->from('user_item AS item')
     ->join('team AS t', 'item.team_id = t.id', 'left')
-    ->join('team_group AS g', 'item.team_group_id = g.id', 'left');
+    ->join('team_group AS g', 'item.team_group_id = g.id', 'left')
+    ->join('user AS u', 'item.install_by = u.id', 'left');
 
     if(isset($ds['code']) && $ds['code'] != '' && $ds['code'] != NULL)
     {
       $this->db
       ->group_start()
       ->like('item.ItemCode', $ds['code'])
-      ->or_like($ds['item.ItemName'], $ds['code'])
+      ->or_like('item.ItemName', $ds['code'])
       ->group_end();
     }
+
+    if(isset($ds['user']) && $ds['user'] != "")
+    {
+      $this->db
+      ->group_start()
+      ->like('u.uname', $ds['user'])
+      ->or_like('u.name', $ds['user'])
+      ->group_end();
+    }
+
 
     if(isset($ds['pea_no']) && $ds['pea_no'] != "")
     {
@@ -97,14 +108,15 @@ class User_item_model extends CI_Model
     $this->db
     ->from('user_item AS item')
     ->join('team AS t', 'item.team_id = t.id', 'left')
-    ->join('team_group AS g', 'item.team_group_id = g.id', 'left');
+    ->join('team_group AS g', 'item.team_group_id = g.id', 'left')
+    ->join('user AS u', 'item.install_by = u.id', 'left');
 
     if(isset($ds['code']) && $ds['code'] != '' && $ds['code'] != NULL)
     {
       $this->db
       ->group_start()
       ->like('item.ItemCode', $ds['code'])
-      ->or_like($ds['item.ItemName'], $ds['code'])
+      ->or_like('item.ItemName', $ds['code'])
       ->group_end();
     }
 
@@ -116,6 +128,15 @@ class User_item_model extends CI_Model
     if(isset($ds['serial']) && $ds['serial'] != '' && $ds['serial'] != NULL)
     {
       $this->db->like('item.serial', $ds['serial']);
+    }
+
+    if(isset($ds['user']) && $ds['user'] != "")
+    {
+      $this->db
+      ->group_start()
+      ->like('u.uname', $ds['user'])
+      ->or_like('u.name', $ds['user'])
+      ->group_end();
     }
 
     if(isset($ds['team_group']) && $ds['team_group'] != "")
@@ -178,18 +199,6 @@ class User_item_model extends CI_Model
     return FALSE;
   }
 
-  //
-  // public function get_open_user_items($team_group_id)
-  // {
-  //   $rs = $this->db->where('team_group_id', $team_group_id)->where('status', 0)->get($this->tb);
-  //
-  //   if( $rs->num_rows() > 0)
-  //   {
-  //     return $rs->result();
-  //   }
-  //
-  //   return NULL;
-  // }
 
 
   public function get_open_team_group_items($team_group_id)
@@ -216,6 +225,63 @@ class User_item_model extends CI_Model
     if( ! empty($ds))
     {
       return $this->db->where('id', $id)->update($this->tb, $ds);
+    }
+
+    return FALSE;
+  }
+
+
+  public function add_user_item(array $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      return $this->db->insert($this->tb, $ds);
+    }
+
+    return FALSE;
+  }
+
+
+  public function get_item_by_pea_no($pea_no)
+  {
+    $rs = $this->db->where('pea_no', $pea_no)->get($this->tb);
+
+    if($rs->num_rows() == 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
+  public function update_by_id($id, $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      return $this->db->where('id', $id)->update($this->tb, $ds);
+    }
+
+    return FALSE;
+  }
+
+
+  public function update_by_pea_no($pea_no, $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      return $this->db->where('pea_no', $pea_no)->update($this->tb, $ds);
+    }
+
+    return FALSE;
+  }
+
+
+  public function set_status($pea_no, $status)
+  {
+    if( ! empty($pea_no))
+    {
+      return $this->db->set('status', $status)->where('pea_no', $pea_no)->update($this->tb);
     }
 
     return FALSE;
