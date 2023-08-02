@@ -43,5 +43,6 @@ class Permission_model extends CI_Model
       return $ds;
     }
   }
+}
 
  ?>

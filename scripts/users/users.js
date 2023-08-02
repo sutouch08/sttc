@@ -2,7 +2,6 @@ var validUname = true;
 var validDname = true;
 var validUgroup = true;
 var validTeam = true;
-var validGroup = true;
 var validWh = true;
 var validPwd = true;
 
@@ -36,33 +35,34 @@ function getReset(id) {
 function saveAdd() {
 	validUserName();
 	validDisplayName();
-	validUserGroup();
-  validUserTeam();
-  validTeamGroup();
 	validPWD();
 
-	if( !validUname || !validDname || !validUgroup || !validTeam || !validGroup || !validPwd ) {
+	if( !validUname || !validDname || !validPwd ) {
 		return false;
 	}
 
 	const uname = $('#uname').val();
 	const dname = $('#dname').val();
 	const team_id = $('#team_id').val();
-  const group_id = $('#group_id').val();
 	const pwd = $('#pwd').val();
 	const ugroup = $('#ugroup').val();
 	const active = $('#active').is(':checked') ? 1 : 0;
 	const force_reset = $('#force_reset').is(':checked') ? 1 : 0;
   const can_get_meter = $('#can_get_meter').is(':checked') ? 1 : 0;
+  const fromWhsCode = $('#fromWhsCode').val();
+  const toWhsCode = $('#toWhsCode').val();
 
-  let teamList = [];
+  if(team_id != "") {
+    if(fromWhsCode.length == 0 || toWhsCode.length == 0) {
+      swal({
+        title:'Required',
+        text:'กรุณาระบุคลังสำเร็จและคลังลงลัง',
+        typs:'warning'
+      });
 
-  $('.chk-area').each(function() {
-    if($(this).is(':checked')) {
-      teamList.push($(this).val());
+      return false;
     }
-  });
-
+  }
 
 	load_in();
 
@@ -75,9 +75,8 @@ function saveAdd() {
 			'dname' : dname,
       'ugroup' : ugroup,
 			'team_id' : team_id,
-      'group_id' : group_id,
-      'can_get_meter': can_get_meter,
-      'team_list' : JSON.stringify(teamList),
+      'fromWhsCode' : fromWhsCode,
+      'toWhsCode' : toWhsCode,
 			'pwd' : pwd,
 			'active' : active,
 			'force_reset' : force_reset
@@ -122,11 +121,8 @@ function saveAdd() {
 
 function update() {
 	validDisplayName();
-	validUserGroup();
-	validUserTeam();
-  validTeamGroup();
 
-	if( !validDname || !validUgroup || !validTeam || !validGroup ) {
+	if( ! validDname ) {
 		return false;
 	}
 
@@ -136,16 +132,20 @@ function update() {
 	const team_id = $('#team_id').val();
 	const ugroup = $('#ugroup').val();
 	const active = $('#active').is(':checked') ? 1 : 0;
-  const group_id = $('#group_id').val();
-  const can_get_meter = $('#can_get_meter').is(':checked') ? 1 : 0;
+  const fromWhsCode = $('#fromWhsCode').val();
+  const toWhsCode = $('#toWhsCode').val();
 
-  let teamList = [];
+  if(team_id != "") {
+    if(fromWhsCode.length == 0 || toWhsCode.length == 0) {
+      swal({
+        title:'Required',
+        text:'กรุณาระบุคลังสำเร็จและคลังลงลัง',
+        typs:'warning'
+      });
 
-  $('.chk-area').each(function() {
-    if($(this).is(':checked')) {
-      teamList.push($(this).val());
+      return false;
     }
-  });
+  }
 
 	load_in();
 
@@ -158,10 +158,9 @@ function update() {
       'uname' : uname,
 			'dname' : dname,
 			'team_id' : team_id,
-      'group_id' : group_id,
-      'can_get_meter': can_get_meter,
-      'team_list' : JSON.stringify(teamList),
 			'ugroup' : ugroup,
+      'fromWhsCode' : fromWhsCode,
+      'toWhsCode' : toWhsCode,
 			'active' : active
 		},
 		success:function(rs) {
@@ -413,108 +412,6 @@ function validDisplayName() {
 }
 
 
-function validUserTeam() {
-  let er = 0;
-  let ugroup = $('#ugroup');
-
-  if(ugroup.val() == "") {
-    er++;
-  }
-
-  if(ugroup.val() == 3) {
-    let el = $('#team_id');
-    let label = $('#team-error');
-    if(el.val() == "") {
-      set_error(el, label, "ต้องระบุเขต/พื้นที");
-      er++;
-    }
-    else {
-      clear_error(el, label);
-    }
-  }
-
-
-  if(ugroup.val() == 2) {
-    let el = $('#area-list');
-    let label = $('#area-error');
-    let areaList = 0;
-
-    $('.chk-area').each(function() {
-      if($(this).is(':checked')) {
-        areaList++;
-      }
-    });
-
-    if(areaList == 0) {
-      set_error(el, label, "ต้องระบุเขต/พื้นที่");
-      er++;
-    }
-    else {
-      clear_error(el, label);
-    }
-  }
-
-  if(er > 0) {
-    validTeam = false;
-  }
-  else {
-    validTeam = true;
-  }
-}
-
-
-function validTeamGroup() {
-  let er = 0;
-  let ugroup = $('#ugroup');
-
-  if(ugroup.val() == "") {
-    er++;
-  }
-
-  if(ugroup.val() == 3) {
-    let el = $('#group_id');
-    let label = $('#team-group-error');
-    if(el.val() == "") {
-      set_error(el, label, "ต้องระบุทีมติดตั้ง");
-      er++;
-    }
-    else {
-      clear_error(el, label);
-    }
-  }
-
-
-  if(er > 0) {
-    validGroup = false;
-  }
-  else {
-    validGroup = true;
-  }
-}
-
-
-function validUserGroup() {
-  let er = 0;
-	let el = $('#ugroup');
-	let label = $('#ugroup-error');
-
-	if(el.val() == "") {
-		set_error(el, label, "ต้องเลือกกลุ่มผู้ใช้งาน !");
-		er++;
-	}
-	else {
-		clear_error(el, label);
-	}
-
-  if(er > 0) {
-    validUgroup = false;
-  }
-  else {
-    validUgroup = true;
-  }
-}
-
-
 
 $('#dname').focusout(function(){
   validDisplayName();
@@ -524,15 +421,6 @@ $('#dname').focusout(function(){
 $('#uname').focusout(function(){
   validUserName();
 });
-
-$('#ugroup').focusout(function() {
-  validUserGroup();
-});
-
-$('#team_id').focusout(function() {
-  validUserTeam();
-});
-
 
 $('#pwd').focusout(function(){
   validPWD();
@@ -546,34 +434,6 @@ $('#cm-pwd').keyup(function(e){
 $('#cm-pwd').focusout(function(){
   validPWD();
 });
-
-function toggleArea() {
-  let ugroup = $('#ugroup').val();
-
-  if(ugroup == 1) {
-    $('#team-table').addClass('hide');
-    $('#area-table').addClass('hide');
-    $('#team-group-table').addClass('hide');
-    $('#get-meter-table').addClass('hide');
-    return;
-  }
-
-  if(ugroup == 2) {
-    $('#team-table').addClass('hide');
-    $('#team-group-table').addClass('hide');
-    $('#area-table').removeClass('hide');
-    $('#get-meter-table').addClass('hide');
-    return;
-  }
-
-  if(ugroup == 3) {
-    $('#team-table').removeClass('hide');
-    $('#team-group-table').removeClass('hide');
-    $('#area-table').addClass('hide');  
-    $('#get-meter-table').removeClass('hide');
-    return;
-  }
-}
 
 
 function getPermission(id) {
@@ -752,41 +612,23 @@ function savePermission(){
 }
 
 
-function getTeamGroupList() {
-  let team_id = $('#team_id').val();
-  let data = [];
-  let source = $('#group-template').html();
-  let output = $('#group_id');
-
-  if(team_id == "") {
-    $('#team_id').addClass('has-error');
-    $('#team-error').text('ต้องระบุเขต/พื้นที่');
-  }
-  else {
-    $('#team_id').removeClass('has-error');
-    $('#team-error').text('');
-  }
+function updateWhsList() {
+  let area = $('#team_id').val();
 
   $.ajax({
-    url:BASE_URL + 'admin/group/get_team_group_by_team_id',
-    type:'GET',
+    url:HOME + 'get_warehouse_list_by_area',
+    type:'POST',
     cache:false,
     data:{
-      'team_id' : team_id
+      'area' : area
     },
     success:function(rs) {
       if(isJson(rs)) {
-        data = JSON.parse(rs);
-        source = $('#group-template').html();
-        output = $('#group_id');
+        let ds = JSON.parse(rs);
 
-        render(source, data, output);
-      }
-      else {
-        console.log(rs);
-        render(source, data, output);
+        $('#fromWhsCode').html(ds.fromWhs);
+        $('#toWhsCode').html(ds.toWhs);
       }
     }
-  });
-
+  })
 }

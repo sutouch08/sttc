@@ -9,6 +9,19 @@ class Warehouse_model extends CI_Model
   }
 
 
+  public function get($id)
+  {
+    $rs = $this->db->where('id', $id)->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
   public function get_all()
   {
     $rs = $this->db->where('status', 1)->get($this->tb);
@@ -25,6 +38,36 @@ class Warehouse_model extends CI_Model
   public function get_listed()
   {
     $rs = $this->db->where('status', 1)->where('listed', 1)->get($this->tb);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
+
+  public function get_listed_warehouse_by_role($role = 0)
+  {
+    $rs = $this->db->where('status', 1)->where('listed', 1)->where('role', $role)->get($this->tb);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
+  public function get_listed_warehouse_by_role_and_area($role, $area)
+  {
+    $rs = $this->db
+    ->where('status', 1)
+    ->where('listed', 1)
+    ->where('role', $role)
+    ->where('team_id', $area)
+    ->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -110,53 +153,110 @@ class Warehouse_model extends CI_Model
 
   public function count_rows(array $ds = array())
   {
+    $this->db
+    ->from('warehouse AS w')
+    ->join('team AS t', 'w.team_id = t.id', 'left');
+
     if(isset($ds['code']) && $ds['code'] !== "" && $ds['code'] !== NULL)
     {
-      $this->db->like('code', $ds['code']);
+      $this->db->like('w.code', $ds['code']);
     }
 
     if(isset($ds['name']) && $ds['name'] !== "" && $ds['name'] !== NULL)
     {
-      $this->db->like('name', $ds['name']);
+      $this->db->like('w.name', $ds['name']);
+    }
+
+    if(isset($ds['area']) && $ds['area'] != 'all')
+    {
+      if($ds['area'] == 'NULL')
+      {
+        $this->db->where('w.team_id IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('w.team_id', $ds['area']);
+      }
+    }
+
+    if(isset($ds['role']) && $ds['role'] !== 'all')
+    {
+      if($ds['role'] == 'NULL')
+      {
+        $this->db->where('w.role IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('w.role', $ds['role']);
+      }
     }
 
     if(isset($ds['status']) && $ds['status'] !== "all")
     {
-      $this->db->where('status', $ds['status']);
+      $this->db->where('w.status', $ds['status']);
     }
 
     if( isset($ds['listed']) && $ds['listed'] !== 'all')
     {
-      $this->db->where('listed', $ds['listed']);
+      $this->db->where('w.listed', $ds['listed']);
     }
 
-    return $this->db->count_all_results($this->tb);
+    return $this->db->count_all_results();
   }
 
 
   public function get_list(array $ds = array(), $limit = 20, $offset = 0)
   {
+    $this->db
+    ->select('w.*, t.code AS area_code, t.name AS area_name')
+    ->from('warehouse AS w')
+    ->join('team AS t', 'w.team_id = t.id', 'left');
+
     if(isset($ds['code']) && $ds['code'] !== "" && $ds['code'] !== NULL)
     {
-      $this->db->like('code', $ds['code']);
+      $this->db->like('w.code', $ds['code']);
     }
 
     if(isset($ds['name']) && $ds['name'] !== "" && $ds['name'] !== NULL)
     {
-      $this->db->like('name', $ds['name']);
+      $this->db->like('w.name', $ds['name']);
+    }
+
+    if(isset($ds['area']) && $ds['area'] != 'all')
+    {
+      if($ds['area'] == 'NULL')
+      {
+        $this->db->where('w.team_id IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('w.team_id', $ds['area']);
+      }
+    }
+
+    if(isset($ds['role']) && $ds['role'] !== 'all')
+    {
+      if($ds['role'] == 'NULL')
+      {
+        $this->db->where('w.role IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('w.role', $ds['role']);
+      }
     }
 
     if(isset($ds['status']) && $ds['status'] !== "all")
     {
-      $this->db->where('status', $ds['status']);
+      $this->db->where('w.status', $ds['status']);
     }
 
     if( isset($ds['listed']) && $ds['listed'] !== 'all')
     {
-      $this->db->where('listed', $ds['listed']);
+      $this->db->where('w.listed', $ds['listed']);
     }
 
-    $rs = $this->db->order_by('code', 'ASC')->limit($limit, $offset)->get($this->tb);
+    $rs = $this->db->order_by('code', 'ASC')->limit($limit, $offset)->get();
 
     if($rs->num_rows() > 0)
     {
@@ -171,7 +271,7 @@ class Warehouse_model extends CI_Model
   public function getSyncData()
   {
     $this->ms = $this->load->database('ms', TRUE);
-    
+
     $qr = "SELECT WhsCode AS code, WhsName AS name, Inactive FROM OWHS";
     $rs = $this->ms->query($qr);
 
@@ -194,6 +294,18 @@ class Warehouse_model extends CI_Model
     }
 
     return FALSE;
+  }
+
+  public function get_name($code)
+  {
+    $rs = $this->db->select('name')->where('code', $code)->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row()->name;
+    }
+
+    return NULL;
   }
 
   public function add(array $ds = array())

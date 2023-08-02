@@ -41,3 +41,73 @@ function syncData() {
     }
   });
 }
+
+
+function getEdit(id) {
+  $.ajax({
+    url:HOME + 'get_data/'+id,
+    type:'GET',
+    cache:false,
+    success:function(rs) {
+      if(isJson(rs)) {
+        let ds = JSON.parse(rs);
+        $('#edit-id').val(id);
+        $('#edit-code').val(ds.code);
+        $('#edit-name').val(ds.name);
+        $('#edit-area').val(ds.area);
+        $('#edit-role').val(ds.role);
+
+        $('#edit-modal').modal('show');
+      }
+      else {
+        swal({
+          title:'Error',
+          text:rs,
+          type:'error'
+        });
+      }
+    }
+  })
+}
+
+
+function update() {
+  let id = $('#edit-id').val();
+  let area = $('#edit-area').val();
+  let areaName = $('#edit-area option:selected').text();
+  let role = $('#edit-role').val();
+  let roleName = $('#edit-role option:selected').text();
+
+  $('#edit-modal').modal('hide');
+
+  setTimeout(() => {
+    load_in();
+
+    $.ajax({
+      url:HOME + 'update',
+      type:'POST',
+      cache:false,
+      data:{
+        'id' : id,
+        'area' : area,
+        'role' : role
+      },
+      success:function(rs) {
+        load_out();
+        if(rs == 'success') {
+          $('#area-'+id).text(areaName);
+          $('#role-'+id).text(roleName);
+        }
+        else {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          }, function() {
+            $('#edit-modal').modal('show');
+          });
+        }
+      }
+    })
+  }, 200);
+}

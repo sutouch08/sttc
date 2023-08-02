@@ -1,11 +1,11 @@
 var HOME = BASE_URL + 'admin/team/';
 
 $('#add-modal').on('shown.bs.modal', function() {
-  $('#add-name').focus();
+  $('#add-code').focus();
 });
 
 $('#edit-modal').on('shown.bs.modal', function() {
-  $('#edit-name').focus();
+  $('#edit-code').focus();
 });
 
 
@@ -20,6 +20,8 @@ function openModal(name) {
 
 
 function addNew() {
+  $('#add-code').val('');
+  $('#add-code-error').val('');
   $('#add-name').val('');
   $('#add-name-error').text('');
   $('#add-active').prop('checked', true);
@@ -29,8 +31,17 @@ function addNew() {
 
 
 function saveAdd() {
+  let code = $('#add-code').val();
   let name = $('#add-name').val();
   let status = $('#add-active').is(':checked') ? 1 : 0;
+
+  if(code.length == 0) {
+    $('#add-code-error').text('required');
+    return false;
+  }
+  else {
+    $('#add-code-error').text('');
+  }
 
   if(name.length == 0) {
     $('#add-name-error').text('required');
@@ -40,17 +51,19 @@ function saveAdd() {
     $('#add-name-error').text('');
   }
 
+  closeModal('add-modal');
+
   $.ajax({
     url:HOME + 'add',
     type:'POST',
     cache:false,
     data:{
+      'code' : code,
       'name' : name,
       'status' : status
     },
     success:function(rs) {
       if(isJson(rs)) {
-        closeModal('add-modal');
         setTimeout(function() {
           swal({
             title:'Success',
@@ -68,7 +81,15 @@ function saveAdd() {
         reIndex();
       }
       else {
-        $('#add-name-error').text(rs);
+        setTimeout(function() {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          }, function() {
+            $('#add-modal').modal('show');
+          });
+        }, 200);
       }
     }
   });
@@ -84,6 +105,7 @@ function getEdit(id) {
       if(isJson(rs)) {
         let ds = $.parseJSON(rs);
         $('#edit-id').val(ds.id);
+        $('#edit-code').val(ds.code);
         $('#edit-name').val(ds.name);
 
         if(ds.status == 1) {
@@ -93,6 +115,7 @@ function getEdit(id) {
           $('#edit-active').prop('checked', false);
         }
 
+        $('#edit-code-error').text('');
         $('#edit-name-error').text('');
         openModal('edit-modal');
       }
@@ -110,8 +133,17 @@ function getEdit(id) {
 
 function update() {
   let id = $('#edit-id').val();
+  let code = $('#edit-code').val();
   let name = $('#edit-name').val();
   let status = $('#edit-active').is(':checked') ? 1 : 0;
+
+  if(code.length == 0) {
+    $('#edit-code-error').text('Required');
+    return false;
+  }
+  else {
+    $('#edit-code-error').text('');
+  }
 
   if(name.length == 0) {
     $('#edit-name-error').text('Required');
@@ -121,18 +153,21 @@ function update() {
     $('#edit-name-error').text('');
   }
 
+  closeModal('edit-modal');
+
   $.ajax({
     url:HOME + 'update',
     type:'POST',
     cache:false,
     data:{
       'id' : id,
+      'code' : code,
       'name' : name,
       'status' : status
     },
     success:function(rs) {
       if(isJson(rs)) {
-        closeModal('edit-modal');
+
         setTimeout(function() {
           swal({
             title:'Success',
@@ -150,11 +185,19 @@ function update() {
         reIndex();
 
         $('#edit-id').val('');
+        $('#edit-code').val('');
+        $('#edit-code-error').text('');
         $('#edit-name').val('');
         $('#edit-name-error').text('');
       }
       else {
-        $('#edit-name-error').text(rs);
+        setTimeout(function() {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          });
+        }, 200);
       }
     }
   });

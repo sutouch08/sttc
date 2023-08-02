@@ -12,6 +12,7 @@ class Warehouse extends PS_Controller {
     parent::__construct();
     $this->home = base_url().'admin/warehouse';
     $this->load->model('admin/warehouse_model');
+		$this->load->helper('area');
   }
 
 
@@ -20,6 +21,8 @@ class Warehouse extends PS_Controller {
   {
 		$filter = array(
 			'code' => get_filter('code', 'wh_code', ''),
+			'role' => get_filter('role', 'wh_role', 'all'),
+			'area' => get_filter('area', 'wh_area', 'all'),
 			'name' => get_filter('name', 'wh_name', ''),
 			'listed' => get_filter('listed', 'wh_listed', 'all'),
       'status' => get_filter('status', 'wh_status', 'all')
@@ -96,10 +99,57 @@ class Warehouse extends PS_Controller {
 		}
 	}
 
+	public function get_data($id)
+	{
+		$sc = TRUE;
+		$ds = array();
+		$wh = $this->warehouse_model->get($id);
+
+		if( ! empty($wh))
+		{
+			$ds = array(
+				'id' => $wh->id,
+				'code' => $wh->code,
+				'name' => $wh->name,
+				'area' => $wh->team_id,
+				'role' => $wh->role
+			);
+		}
+		else
+		{
+			$sc = FALSE;
+			$this->error = "Not found";
+		}
+
+		echo $sc === TRUE ? json_encode($ds) : $this->error;
+	}
+
+
+	public function update()
+	{
+		$sc = TRUE;
+		$id = $this->input->post('id');
+		$area = get_null($this->input->post('area'));
+		$role = get_null($this->input->post('role'));
+
+		$arr = array(
+			'team_id' => $area,
+			'role' => $role
+		);
+
+		if( ! $this->warehouse_model->update($id, $arr))
+		{
+			$sc = FALSE;
+			$this->error = "Update failed";
+		}
+
+		echo $sc === TRUE ? 'success' : $this->error;
+	}
+
 
   public function clear_filter()
   {
-    $filter = array("wh_code", "wh_name", "wh_status", "wh_listed");
+    $filter = array("wh_code", "wh_name", "wh_status", "wh_listed", "wh_area", "wh_role");
 
     return clear_filter($filter);
   }

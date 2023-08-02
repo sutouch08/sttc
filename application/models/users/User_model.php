@@ -51,11 +51,9 @@ class User_model extends CI_Model
   {
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
-		->select('tg.name AS team_group_name')
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
-		->join('team AS t', 'u.team_id = t.id', 'left')
-		->join('team_group AS tg', 'u.team_group_id = tg.id', 'left');
+		->join('team AS t', 'u.team_id = t.id', 'left');
 
     $rs = $this->db->where('u.id', $id)->get();
 
@@ -72,14 +70,9 @@ class User_model extends CI_Model
   {
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
-		->select('tg.name AS team_group_name, tg.fromWhsCode, tg.toWhsCode')
-		->select('fw.name AS from_warehouse_name, tw.name AS to_warehouse_name')
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
-		->join('team AS t', 'u.team_id = t.id', 'left')
-		->join('team_group AS tg', 'u.team_group_id = tg.id', 'left')
-		->join('warehouse AS fw', 'tg.fromWhsCode = fw.code', 'left')
-		->join('warehouse AS tw', 'tg.toWhsCode = tw.code', 'left');
+		->join('team AS t', 'u.team_id = t.id', 'left');
 
     $rs = $this->db->where('u.uid', $uid)->get();
 
@@ -96,14 +89,9 @@ class User_model extends CI_Model
 	{
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
-		->select('tg.name AS team_group_name, tg.fromWhsCode, tg.toWhsCode')
-		->select('fw.name AS from_warehouse_name, tw.name AS to_warehouse_name')
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
-		->join('team AS t', 'u.team_id = t.id', 'left')
-		->join('team_group AS tg', 'u.team_group_id = tg.id', 'left')
-		->join('warehouse AS fw', 'tg.fromWhsCode = fw.code', 'left')
-		->join('warehouse AS tw', 'tg.toWhsCode = tw.code', 'left');
+		->join('team AS t', 'u.team_id = t.id', 'left');
 
     $rs = $this->db->where('u.uname', $uname)->get();
 
@@ -218,11 +206,9 @@ class User_model extends CI_Model
 	{
 		$this->db
 		->select('u.*, u.name AS display_name, g.name AS group_name, t.name AS team_name')
-		->select('tg.name AS team_group_name')
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
 		->join('team AS t', 'u.team_id = t.id', 'left')
-		->join('team_group AS tg', 'u.team_group_id = tg.id', 'left')
 		->where('u.id >', 0);
 
 		if( ! empty($ds['uname']))
@@ -233,11 +219,6 @@ class User_model extends CI_Model
 		if( ! empty($ds['dname']))
 		{
 			$this->db->like('u.name', $ds['dname']);
-		}
-
-		if( ! empty($ds['team_group']))
-		{
-			$this->db->like('tg.name', $ds['team_group']);
 		}
 
 		if(isset($ds['ugroup']) && $ds['ugroup'] != 'all')
@@ -257,14 +238,33 @@ class User_model extends CI_Model
 			}
 		}
 
+		if(isset($ds['fromWhs']) && $ds['fromWhs'] != 'all')
+		{
+			if( $ds['fromWhs'] == "NULL")
+			{
+				$this->db->where('u.fromWhsCode IS NULL', NULL, FALSE);
+			}
+			else
+			{
+				$this->db->where('u.fromWhsCode', $ds['fromWhs']);
+			}
+		}
+
+		if(isset($ds['toWhs']) && $ds['toWhs'] != 'all')
+		{
+			if( $ds['toWhs'] == "NULL")
+			{
+				$this->db->where('u.toWhsCode IS NULL', NULL, FALSE);
+			}
+			else
+			{
+				$this->db->where('u.toWhsCode', $ds['toWhs']);
+			}
+		}
+
 		if(isset($ds['active']) && $ds['active'] != 'all')
 		{
 			$this->db->where('u.active', $ds['active']);
-		}
-
-		if(isset($ds['get_meter']) && $ds['get_meter'] != 'all')
-		{
-			$this->db->where('u.can_get_meter', $ds['get_meter']);
 		}
 
 		$rs = $this->db->order_by('u.uname', 'ASC')->limit($perpage, $offset)->get();
@@ -284,7 +284,6 @@ class User_model extends CI_Model
 		->from('user AS u')
 		->join('user_group AS g', 'u.ugroup = g.id', 'left')
 		->join('team AS t', 'u.team_id = t.id', 'left')
-		->join('team_group AS tg', 'u.team_group_id = tg.id', 'left')
 		->where('u.id >', 0);
 
 		if( ! empty($ds['uname']))
@@ -295,11 +294,6 @@ class User_model extends CI_Model
 		if( ! empty($ds['dname']))
 		{
 			$this->db->like('u.name', $ds['dname']);
-		}
-
-		if( ! empty($ds['team_group']))
-		{
-			$this->db->like('tg.name', $ds['team_group']);
 		}
 
 		if(isset($ds['ugroup']) && $ds['ugroup'] != 'all')
@@ -319,14 +313,33 @@ class User_model extends CI_Model
 			}
 		}
 
+		if(isset($ds['fromWhs']) && $ds['fromWhs'] != 'all')
+		{
+			if( $ds['fromWhs'] == "NULL")
+			{
+				$this->db->where('u.fromWhsCode IS NULL', NULL, FALSE);
+			}
+			else
+			{
+				$this->db->where('u.fromWhsCode', $ds['fromWhs']);
+			}
+		}
+
+		if(isset($ds['toWhs']) && $ds['toWhs'] != 'all')
+		{
+			if( $ds['toWhs'] == "NULL")
+			{
+				$this->db->where('u.toWhsCode IS NULL', NULL, FALSE);
+			}
+			else
+			{
+				$this->db->where('u.toWhsCode', $ds['toWhs']);
+			}
+		}
+
 		if(isset($ds['active']) && $ds['active'] != 'all')
 		{
 			$this->db->where('u.active', $ds['active']);
-		}
-
-		if(isset($ds['get_meter']) && $ds['get_meter'] != 'all')
-		{
-			$this->db->where('u.can_get_meter', $ds['get_meter']);
 		}
 
     return $this->db->count_all_results();
@@ -450,6 +463,21 @@ class User_model extends CI_Model
 	public function add_permission(array $ds = array())
 	{
 		return $this->db->insert('permission', $ds);
+	}
+
+
+	public function get_user_in($text)
+	{
+		$qr = "SELECT id FROM user WHERE uname LIKE '%{$text}%' OR name LIKE '%{$text}%'";
+
+		$rs = $this->db->query($qr);
+
+		if($rs->num_rows() > 0)
+		{
+			return $rs->result_array();
+		}
+
+		return NULL;
 	}
 
 } //---- End class

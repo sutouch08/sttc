@@ -49,53 +49,27 @@
     </div>
     <div class="divider-hidden"></div>
 
-    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">SCS Username</span></div>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">จำกัดจำนวนในการแพ็ค/ลัง (1 เฟส)</span></div>
     <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
-      <input type="text" class="form-control input-sm input-large" name="SCS_USER" value="<?php echo $SCS_USER; ?>" <?php echo ($this->_SuperAdmin ? "" : 'disabled'); ?>/>
-      <span class="help-block">Username สำหรับใช้ login ระบบ SCS หากต้องเปลี่ยนแปลงกรุณาติดต่อผู้ดูแลระบบ</span>
+      <input type="number" class="form-control input-sm input-small text-center" name="PACK_LIMIT_1_PHASE" value="<?php echo $PACK_LIMIT_1_PHASE; ?>" />
+      <span class="help-block">ตั้งค่าจำกัดจำนวนมิเตอร์ 1 เฟส ที่สามารถแพ็คลงลังได้ต่อ 1 ลังไม่เกินจำนวนที่กำหนด</span>
     </div>
     <div class="divider-hidden"></div>
 
-    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">SCS Password</span></div>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">จำกัดจำนวนในการแพ็ค/ลัง (3 เฟส)</span></div>
     <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
-      <input type="text" class="form-control input-sm input-large" name="SCS_PWD" id="" value="<?php echo $SCS_PWD; ?>" <?php echo ($this->_SuperAdmin ? "" : 'disabled'); ?>/>
-      <span class="help-block">Password สำหรับใช้ login ระบบ SCS หากต้องเปลี่ยนแปลงกรุณาติดต่อผู้ดูแลระบบ</span>
+      <input type="number" class="form-control input-sm input-small text-center" name="PACK_LIMIT_3_PHASE" value="<?php echo $PACK_LIMIT_3_PHASE; ?>" />
+      <span class="help-block">ตั้งค่าจำกัดจำนวนมิเตอร์ 3 เฟส ที่สามารถแพ็คลงลังได้ต่อ 1 ลังไม่เกินจำนวนที่กำหนด</span>
     </div>
     <div class="divider-hidden"></div>
 
-    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">SCS Current Token</span></div>
-    <div class="col-lg-4 col-md-5 col-sm-5 col-xs-8">
-      <input type="text" class="form-control input-sm" name="SCS_TOKEN" id="token" value="<?php echo $SCS_TOKEN; ?>" <?php echo ($this->_SuperAdmin ? "" : 'disabled'); ?> />
-    </div>
-    <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4">
-      <button type="button" class="btn btn-xs btn-primary btn-block" onclick="refresh_token()">Refresh token</button>
-    </div>
-    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">&nbsp;</div>
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">จำนวนบรรทัดการพิมพ์/กล่อง</span></div>
     <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
-      <span class="help-block">Password สำหรับใช้ login ระบบ SCS หากต้องเปลี่ยนแปลงกรุณาติดต่อผู้ดูแลระบบ</span>
+      <input type="number" class="form-control input-sm input-small text-center" name="PRINT_SPLIT_ROWS" value="<?php echo $PRINT_SPLIT_ROWS; ?>" />
+      <span class="help-block"></span>
     </div>
     <div class="divider-hidden"></div>
-
-    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Barcode Format</span></div>
-    <div class="col-lg-9 col-md-3 col-sm-4 col-xs-12">
-      <select class="form-control input-sm input-medium" name="SCANTYPE">
-        <option value="qrcode" <?php echo is_selected('qrcode', $SCANTYPE); ?>>QR CODE</option>
-        <option value="barcode" <?php echo is_selected('barcode', $SCANTYPE); ?>>BARCODE</option>
-        <option value="both" <?php echo is_selected('both', $SCANTYPE); ?>>BOTH</option>
-      </select>
-      <span class="help-block">กำหนดค่าการ Scan QR CODE หรือ BARCODE กรณีเลือก BOTH จะสามารถ Scan ได้ทั้งคู่ แต่จะทำให้ Performance ลดลง</span>
-    </div>
-    <div class="divider-hidden"></div>
-
-    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Return Checkbox</span></div>
-    <div class="col-lg-9 col-md-3 col-sm-4 col-xs-12">
-      <div class="btn-group input-medium">
-        <button type="button" class="btn btn-sm <?php echo $checkboxOn; ?>" style="width:50%;" id="btn-check-on" onClick="toggleReturnCheckbox(1)">เปิด</button>
-        <button type="button" class="btn btn-sm <?php echo $checkboxOff; ?>" style="width:50%;" id="btn-check-off" onClick="toggleReturnCheckbox(0)">ปิด</button>
-      </div>
-      <input type="hidden" name="RETURN_CHECKBOX" id="return-checkbox" value="<?php echo $RETURN_CHECKBOX; ?>" />
-      <span class="help-block">อนุญาติให้ใช้การติ๊ก checkbox เพื่อยืนยันการรับคืนสินค้าใน เอกสาร Return ได้(หลังบ้าน)</span>
-    </div>
+    
     <div class="divider-hidden"></div>
 		<div class="divider-hidden"></div>
 		<div class="divider-hidden"></div>

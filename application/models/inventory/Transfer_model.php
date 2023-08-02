@@ -1,12 +1,53 @@
 <?php
 class Transfer_model extends CI_Model
 {
-  private $tb = "transfer";
+  public $tb = "transfer";
+  public $td = "transfer_detail";
 
   public function __construct()
   {
     parent::__construct();
   }
+
+
+  public function get($id)
+  {
+    $rs = $this->db->where('id', $id)->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
+  public function get_detail($id)
+  {
+    $rs = $this->db->where('id', $id)->get($this->td);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
+  public function get_details($transfer_id)
+  {
+    $rs = $this->db->where('transfer_id', $transfer_id)->get($this->td);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
 
   public function add(array $ds = array())
   {
@@ -22,6 +63,16 @@ class Transfer_model extends CI_Model
   }
 
 
+  public function add_detail(array $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      return $this->db->insert($this->td, $ds);
+    }
+
+    return FALSE;
+  }
+
 
   public function update($id, array $ds = array())
   {
@@ -34,147 +85,92 @@ class Transfer_model extends CI_Model
   }
 
 
-  public function get($id)
+  public function update_detail($id, array $ds = array())
   {
-    $rs = $this->db
-    ->select('tr.*')
-    ->select('fwh.name AS from_warehouse_name, twh.name AS to_warehouse_name')
-    ->select('u.uname, u.name AS display_name, t.name AS team_name, tg.name AS team_group_name')
-    ->from('transfer AS tr')
-    ->join('warehouse AS fwh', 'tr.fromWhsCode = fwh.code', 'left')
-    ->join('warehouse AS twh', 'tr.toWhsCode = twh.code', 'left')
-    ->join('user AS u', 'tr.create_by = u.id', 'left')
-    ->join('team AS t', 'tr.team_id = t.id', 'left')
-    ->join('team_group AS tg', 'tr.team_group_id = tg.id', 'left')
-    ->where('tr.id', $id)
-    ->get();
-
-    if($rs->num_rows() > 0)
+    if( ! empty($ds))
     {
-      return $rs->row();
+      return $this->db->where('id', $id)->update($this->td, $ds);
     }
 
-    return NULL;
+    return FALSE;
   }
 
 
-
-  public function cancle_document($id)
+  public function update_details($transfer_id, array $ds = array())
   {
-    $arr = array(
-      'status' => 'C',
-      'update_at' => now(),
-      'update_by' => $this->_user->id
-    );
+    if( ! empty($ds))
+    {
+      return $this->db->where('transfer_id', $transfer_id)->update($this->td, $ds);
+    }
 
-    return $this->db->where('id', $id)->update($this->tb, $arr);
+    return FALSE;
   }
 
 
-
-  public function get_list(array $ds = array(), $limit = 20, $offset = 0)
+  public function change_to_warehouse_code($transfer_id, $toWhsCode)
   {
-    $this->db
-    ->select('tr.*')
-    ->select('wf.name AS fromWhsName, wt.name AS toWhsName')
-    ->select('u.uname, u.name AS display_name, t.name AS team_name, tg.name AS team_group_name')
-    ->from('transfer AS tr')
-    ->join('warehouse AS wf', 'tr.fromWhsCode = wf.code', 'left')
-    ->join('warehouse AS wt', 'tr.toWhsCode = wt.code', 'left')
-    ->join('user AS u', 'tr.create_by = u.id', 'left')
-    ->join('team AS t', 'tr.team_id = t.id', 'left')
-    ->join('team_group AS tg', 'tr.team_group_id = tg.id', 'left');
+    return $this->db->set('toWhsCode', $toWhsCode)->where('transfer_id', $transfer_id)->update($this->td);
+  }
 
+
+  public function delete_detail($id)
+  {
+    return $this->db->where('id', $id)->delete($this->td);
+  }
+
+
+  public function delete_details($transfer_id)
+  {
+    return $this->db->where('transfer_id', $transfer_id)->delete($this->td);
+  }
+
+
+  public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
+  {
     if( ! empty($ds['code']))
     {
-      $this->db->like('tr.code', $ds['code']);
+      $this->db->like('code', $ds['code']);
     }
 
-    if( ! empty($ds['u_pea_no']))
+    if( ! empty($ds['from_warehouse']) && $ds['from_warehouse'] != 'all')
     {
-      $this->db->like('tr.u_pea_no', $ds['u_pea_no']);
+      $this->db->where('fromWhsCode', $ds['from_warehouse']);
     }
 
-    if( ! empty($ds['i_pea_no']))
+    if( ! empty($ds['to_warehouse']) && $ds['to_warehouse'] != 'all')
     {
-      $this->db->like('tr.i_pea_no', $ds['i_pea_no']);
-    }
-
-    if( ! empty($ds['serial']))
-    {
-      $this->db->like('tr.i_serial', $ds['serial']);
+      $this->db->where('toWhsCode', $ds['to_warehouse']);
     }
 
     if( ! empty($ds['user']))
     {
-      $this->db
-      ->group_start()
-      ->like('u.uname', $ds['user'])
-      ->or_like('u.name', $ds['user'])
-      ->group_end();
-    }
-
-    if($ds['team_group_id'] != 'all')
-    {
-      $this->db->where('tr.team_group_id', $ds['team_group_id']);
-    }
-
-    if($ds['team_id'] != 'all')
-    {
-      $this->db->where('tr.team_id', $ds['team_id']);
-    }
-
-    if($ds['status'] != 'all')
-    {
-      $this->db->where('tr.status', $ds['status']);
-    }
-
-    if($ds['sap_status'] != 'all')
-    {
-      $this->db->where('tr.sap_status', $ds['sap_status']);
-    }
-
-    if($ds['pea_status'] != 'all')
-    {
-      $this->db->where('tr.pea_status', $ds['pea_status']);
-    }
-
-    if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
-    {
-      $this->db
-      ->where('tr.date_add >=', from_date($ds['from_date']))
-      ->where('tr.date_add <=', to_date($ds['to_date']));
-    }
-
-
-    if( ! $this->_Admin && ! $this->_SuperAdmin && ! $this->_Lead)
-    {
-      $this->db->where('tr.create_by', $this->_user->id);
-    }
-
-    if($this->_Lead)
-    {
-      $team_in = array();
-
-      $teams = $this->user_model->get_user_team($this->_user->id);
-
-      if( ! empty($teams))
+      if(is_array($ds['user_in']) && ! empty($ds['user_in']))
       {
-        foreach($teams as $team)
-        {
-          $team_in[] = $team->team_id;
-        }
-
-        $this->db->where_in('tr.team_id', $team_in);
-      }
-      else
-      {
-        $this->db->where('tr.team_id', 0);
+        $this->db->where_in('user', $ds['user_in']);
       }
     }
 
-    $this->db->order_by('tr.code', 'DESC')->limit($limit, $offset);
-    $rs = $this->db->get();
+    if( ! empty($ds['status']) && $ds['status'] != 'all')
+    {
+      $this->db->where('status', $ds['status']);
+    }
+
+    if( ! empty($ds['export_status']) && $ds['export_status'] != 'all')
+    {
+      $this->db->where('export_status', $ds['export_status']);
+    }
+
+    if( ! empty($ds['from_date']))
+    {
+      $this->db->where('date_add >=', from_date($ds['from_date']));
+    }
+
+    if( ! empty($ds['to_date']))
+    {
+      $this->db->where('date_add <=', to_date($ds['to_date']));
+    }
+
+    $rs = $this->db->order_by('code', 'DESC')->limit($perpage, $offset)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -185,151 +181,66 @@ class Transfer_model extends CI_Model
   }
 
 
-
   public function count_rows(array $ds = array())
   {
-    $this->db
-    ->from('transfer AS tr')
-    ->join('warehouse AS wf', 'tr.fromWhsCode = wf.code', 'left')
-    ->join('warehouse AS wt', 'tr.toWhsCode = wt.code', 'left')
-    ->join('user AS u', 'tr.create_by = u.id', 'left')
-    ->join('team AS t', 'tr.team_id = t.id', 'left')
-    ->join('team_group AS tg', 'tr.team_group_id = tg.id', 'left');
-
     if( ! empty($ds['code']))
     {
-      $this->db->like('tr.code', $ds['code']);
+      $this->db->like('code', $ds['code']);
     }
 
-    if( ! empty($ds['u_pea_no']))
+    if( ! empty($ds['from_warehouse']) && $ds['from_warehouse'] != 'all')
     {
-      $this->db->like('tr.u_pea_no', $ds['u_pea_no']);
+      $this->db->where('fromWhsCode', $ds['from_warehouse']);
     }
 
-    if( ! empty($ds['i_pea_no']))
+    if( ! empty($ds['to_warehouse']) && $ds['to_warehouse'] != 'all')
     {
-      $this->db->like('tr.i_pea_no', $ds['i_pea_no']);
-    }
-
-    if( ! empty($ds['serial']))
-    {
-      $this->db->like('tr.i_serial', $ds['serial']);
+      $this->db->where('toWhsCode', $ds['to_warehouse']);
     }
 
     if( ! empty($ds['user']))
     {
-      $this->db
-      ->group_start()
-      ->like('u.uname', $ds['user'])
-      ->or_like('u.name', $ds['user'])
-      ->group_end();
-    }
-
-    if($ds['team_group_id'] != 'all')
-    {
-      $this->db->where('tr.team_group_id', $ds['team_group_id']);
-    }
-
-    if($ds['team_id'] != 'all')
-    {
-      $this->db->where('tr.team_id', $ds['team_id']);
-    }
-
-    if($ds['status'] != 'all')
-    {
-      $this->db->where('tr.status', $ds['status']);
-    }
-
-    if($ds['sap_status'] != 'all')
-    {
-      $this->db->where('tr.sap_status', $ds['sap_status']);
-    }
-
-    if($ds['pea_status'] != 'all')
-    {
-      $this->db->where('tr.pea_status', $ds['pea_status']);
-    }
-
-    if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
-    {
-      $this->db
-      ->where('tr.date_add >=', from_date($ds['from_date']))
-      ->where('tr.date_add <=', to_date($ds['to_date']));
-    }
-
-
-    if( ! $this->_Admin && ! $this->_SuperAdmin && ! $this->_Lead)
-    {
-      $this->db->where('tr.create_by', $this->_user->id);
-    }
-
-    if($this->_Lead)
-    {
-      $team_in = array();
-
-      $teams = $this->user_model->get_user_team($this->_user->id);
-
-      if( ! empty($teams))
+      if(is_array($ds['user_in']) && ! empty($ds['user_in']))
       {
-        foreach($teams as $team)
-        {
-          $team_in[] = $team->team_id;
-        }
-
-        $this->db->where_in('tr.team_id', $team_in);
-      }
-      else
-      {
-        $this->db->where('tr.team_id', 0);
+        $this->db->where_in('user', $ds['user_in']);
       }
     }
 
-    return $this->db->count_all_results();
-
-  }
-
-
-
-  public function count_history_rows($txt)
-  {
-    $this->db->where('create_by', $this->_user->id);
-
-    if($txt != "")
+    if( ! empty($ds['status']) && $ds['status'] != 'all')
     {
-      $this->db
-      ->group_start()
-      ->like('u_pea_no', $txt)
-      ->or_like('route', $txt)
-      ->group_end();
+      $this->db->where('status', $ds['status']);
+    }
+
+    if( ! empty($ds['export_status']) && $ds['export_status'] != 'all')
+    {
+      $this->db->where('export_status', $ds['export_status']);
+    }
+
+    if( ! empty($ds['from_date']))
+    {
+      $this->db->where('date_add >=', from_date($ds['from_date']));
+    }
+
+    if( ! empty($ds['to_date']))
+    {
+      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
 
     return $this->db->count_all_results($this->tb);
   }
 
 
-  public function get_history_list($txt, $perpage = 20, $offset = 0)
+  public function get_max_line_num($transfer_id)
   {
-    $this->db->where('create_by', $this->_user->id);
+    $rs = $this->db->select_max('LineNum')->where('transfer_id', $transfer_id)->get($this->td);
 
-    if($txt != "")
+    if($rs->num_rows() === 1)
     {
-      $this->db
-      ->group_start()
-      ->like('u_pea_no', $txt)
-      ->or_like('route', $txt)
-      ->group_end();
-    }
-
-    $rs = $this->db->order_by('create_at', 'DESC')->limit($perpage, $offset)->get($this->tb);
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
+      return $rs->row()->LineNum;
     }
 
     return NULL;
   }
-
 
   public function get_max_code($pre)
   {
@@ -348,45 +259,46 @@ class Transfer_model extends CI_Model
   }
 
 
-  public function getSapDoc($docNum)
+  ///---- check rows is all open ?
+  public function is_all_open(array $ds = array())
   {
-    $rs = $this->ms->query("SELECT DocEntry, DocNum, Filler, toWhsCode FROM OWTR WHERE DocNum = '{$docNum}'");
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return NULL;
-  }
-
-
-  public function getSapTransferSerialDetails($docNum)
-  {
-    $qr  = "SELECT S.DistNumber AS Serial, S.MnfSerial AS PeaNo, D.ItemCode, ";
-    $qr .= "D.ItemName, D.WhsCode, B.FisrtBin AS BinCode, O.DocEntry ";
-    $qr .= "FROM SRI1 AS D ";
-    $qr .= "LEFT JOIN OSRN AS S ON D.SysSerial = S.SysNumber AND D.ItemCode = S.ItemCode ";
-    $qr .= "LEFT JOIN OWTR AS O ON D.BaseNum = O.DocNum ";
-    $qr .= "LEFT JOIN WTR1 AS B ON O.DocEntry = B.DocEntry AND B.WhsCode = D.WhsCode AND D.Direction = 0 ";
-    $qr .= "WHERE D.BaseNum = '{$docNum}' AND D.Direction = 0 ";
-
-    $rs = $this->ms->query($qr);
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function is_loaded($docNum)
-  {
-    $rs = $this->db->where('DocNum', $docNum)->count_all_results('user_item');
+    $rs = $this->db->where('LineStatus !=', 'O')->where_in('id', $ds)->count_all_results($this->td);
 
     if($rs > 0)
+    {
+      return FALSE;
+    }
+    else
+    {
+      return TRUE;
+    }
+  }
+
+
+  public function get_warehouse_code_by_serial($serial)
+  {        
+    $rs = $this->ms
+    ->select('Q.WhsCode')
+    ->from('OSRN AS S')
+    ->join('OSRQ AS Q', 'S.ItemCode = Q.ItemCode AND S.SysNumber = Q.SysNumber', 'left')
+    ->where('S.DistNumber', $serial)
+    ->where('Q.Quantity >', 0, FALSE)
+    ->get();
+
+    if($rs->num_rows() == 1)
+    {
+      return $rs->row()->WhsCode;
+    }
+
+    return NULL;
+  }
+
+
+  public function is_exists_row($i_pea_no)
+  {
+    $exists = $this->db->where('i_pea_no', $i_pea_no)->where('LineStatus !=', 'D')->count_all_results($this->td);
+
+    if($exists)
     {
       return TRUE;
     }
@@ -394,23 +306,11 @@ class Transfer_model extends CI_Model
     return FALSE;
   }
 
-  public function get_demo_items($docNum)
+
+  public function totalRow($id)
   {
-    $rs = $this->db->get('demo_item');
-
-    if($rs->num_rows() > 0)
-    {
-      foreach($rs->result() as $ds)
-      {
-        $ds->docNum = $docNum;
-      }
-
-      return $rs->result();
-    }
-
-    return NULL;
+    return $this->db->where('transfer_id', $id)->count_all_results($this->td);
   }
-
 } //--- end class
 
  ?>

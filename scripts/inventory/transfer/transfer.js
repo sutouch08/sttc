@@ -15,6 +15,11 @@ $('#toDate').datepicker({
 });
 
 
+$('#date_add').datepicker({
+  dateFormat:'dd-mm-yy'
+});
+
+
 
 function addNew() {
   window.location.href = HOME + 'add_new';
@@ -22,114 +27,50 @@ function addNew() {
 
 
 function edit(id) {
-  $('#transfer-id').val(id);
-
   load_in();
+  window.location.href = HOME + 'edit/'+id;
+}
 
-  $.ajax({
-    url:HOME + 'get_item/'+id,
-    type:'GET',
-    cache:false,
-    success:function(rs) {
-      load_out();
-      if(isJson(rs)) {
-        let source = $('#edit-template').html();
-        let data = JSON.parse(rs);
-        let output = $('#edit-detail');
 
-        render(source, data, output);
-
-        $('#damage_id').val(data.damage_id);
-        $('#phase').val(data.phase);
-        powerInit();
-
-        $('#editModal').modal('show');
-      }
-      else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        })
-      }
-    }
-  });
+function viewDetail(id) {
+  load_in();
+  window.location.href = HOME + 'view_detail/'+id;
 }
 
 
 function getEdit() {
-  let id = $('#transfer-id').val();
-
-  $('#previewModal').modal('hide');
-
-  load_in();
-
-  $.ajax({
-    url:HOME + 'get_item/'+id,
-    type:'GET',
-    cache: false,
-    success:function(rs) {
-      load_out();
-      if(isJson(rs)) {
-        let source = $('#edit-template').html();
-        let data = JSON.parse(rs);
-        let output = $('#edit-detail');
-        render(source, data, output);
-        console.log(data)
-        $('#damage_id').val(data.damage_id);
-        $('#editModal').modal('show');
-      }
-      else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        })
-      }
-    }
-  })
+  $('.edit').removeAttr('disabled');
+  $('#btn-edit').addClass('hide');
+  $('#btn-update').removeClass('hide');
 }
 
 
-function preview(id) {
-  $('#transfer-id').val(id);
+function update() {
+  let id = $('#transfer_id').val();
+  let remark = $('#remark').val();
 
   load_in();
 
   $.ajax({
-    url:HOME + 'get_item/'+id,
-    type:'GET',
+    url:HOME + 'update',
+    type:'POST',
     cache:false,
+    data:{
+      "id" : id,
+      "remark" : remark
+    },
     success:function(rs) {
       load_out();
-      if(isJson(rs)) {
-        let source = $('#preview-template').html();
-        let data = JSON.parse(rs);
-        let output = $('#item-detail');
+      if(rs === 'success') {
+        swal({
+          title:'Success',
+          type:'success',
+          timer:1000
+        });
 
-        render(source, data, output);
-
-        $('#btn-approve').addClass('hide');
-        $('#btn-reject').addClass('hide');
-        $('#btn-edit').addClass('hide');
-        $('#btn-temp').addClass('hide');
-        $('#btn-scs').addClass('hide');
-
-        if(data.status == 'I' && data.is_approve == 0) {
-          $('#btn-approve').removeClass('hide');
-          $('#btn-reject').removeClass('hide');
-          $('#btn-edit').removeClass('hide');
-        }
-
-        if(data.status == 'A' && data.is_approve == 1 && (data.sap_status == 'P' || data.sap_status == 'F')) {
-          $('#btn-temp').removeClass('hide');
-        }
-
-        if(data.status == 'A' && data.is_approve == 1 && (data.pea_status == 'P' || data.pea_status == 'F')) {
-          $('#btn-scs').removeClass('hide');
-        }
-
-        $('#previewModal').modal('show');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
       }
       else {
         swal({
@@ -139,255 +80,174 @@ function preview(id) {
         });
       }
     }
+  })
+}
+
+
+function confirmCancle() {
+  swal({
+    title:'ยกเลิก',
+    text:'คุณต้องการยกเลิกเอกสารนี้หรือไม่ ?',
+    type:'warning',
+    showCancelButton:true,
+    confirmButtonColor:'#d15b47 ',
+    confirmButtonText:'Yes',
+    cancelButtonText:'No',
+    closeOnConfirm:true
+  }, function() {
+    setTimeout(() => {
+      cancleTransfer();
+    }, 200)
   });
 }
 
 
-function doApprove() {
-  let id = $('#transfer-id').val();
-  let no = $('#no-'+id).text();
+function cancleTransfer() {
+  let id = $('#transfer_id').val();
 
-  $('#previewModal').modal('hide');
+  load_in();
 
-  setTimeout(() => {
-    load_in();
+  $.ajax({
+    url:HOME + 'cancle_transfer',
+    type:'POST',
+    cache:false,
+    data:{
+      'id' : id
+    },
+    success:function(rs) {
+      load_out();
+      if(rs === 'success') {
+        swal({
+          title:'Success',
+          type:'success',
+          timer:1000
+        });
 
-    $.ajax({
-      url:HOME + 'approve',
-      type:'POST',
-      cache:false,
-      data:{
-        "id" : id
-      },
-      success:function(rs) {
-        load_out();
-
-        if(rs == 'success') {
-          swal({
-            title:'Approved',
-            type:'success',
-            timer:1000
-          });
-
-          setTimeout(() => {
-            window.location.reload();
-          }, 1200);
-        }
-        else {
-          swal({
-            title:'Error!',
-            text: rs,
-            type:'error'
-          }, function() {
-            setTimeout(() => {
-              window.location.reload();
-            }, 500);
-          });
-        }
+        setTimeout(() => {
+          viewDetail(id);
+        }, 1200);
       }
-    });
-  }, 500);
+      else {
+        swal({
+          title:'Error!',
+          text:rs,
+          type:'error'
+        });
+      }
+    }
+  })
 }
 
 
-function doReject() {
-  let id = $('#transfer-id').val();
 
+function confirmSave() {
   swal({
-    title:'กรุณายืนยัน',
-    text:'กรุณายืนยันว่าคุณ "ไม่อนุมัติ" รายการนี้<br/>เพื่อให้ใบสั่งงานถูกดึงกลับไปแก้ไขใหม่อีกครั้ง',
+    title:'บันทึกเอกสาร ?',
+    text:'คุณต้องการบันทึกเอกสารหรือไม่ ?',
     type:'warning',
-    html:true,
     showCancelButton:true,
-    confirmButtonText: 'ยืนยัน',
-    cancelButtonText:'ยกเลิก',
+    confirmButtonColor:'#87b87f ',
+    confirmButtonText:'Yes',
+    cancelButtonText:'No',
     closeOnConfirm:true
   }, function() {
-    $('#previewModal').modal('hide');
-    load_in();
+    setTimeout(() => {
+      save();
+    }, 200)
+  });
+}
 
-    $.ajax({
-      url:HOME + 'reject',
-      type:'POST',
-      cache:false,
-      data:{
-        'id' : id
-      },
-      success:function(rs) {
-        load_out();
 
-        if(rs == 'success') {
+function save() {
+  let id = $('#transfer_id').val();
+  let date_add = $('#date_add').val();
+  let fromWhsCode = $('#fromWhsCode').val();
+  let toWhsCode = $('#toWhsCode').val();
+  let err = 0;
+
+  $('.no').each(function() {
+    let no = $(this).data('no');
+    let fromWh = $('#from-'+no).text();
+    let toWh = $('#to-'+no).text();
+
+    if((fromWh != fromWhsCode) || (toWh != toWhsCode)) {
+      err++;
+    }
+  });
+
+  if(err > 0) {
+    console.log(err);
+    swal({
+      title:'Error!',
+      text:`พบคลังไม่ตรงกับหัวเอกสาร ${err} รายการ กรุณาแก้ไข`,
+      type:'error'
+    });
+
+    return false;
+  }
+
+  load_in();
+
+  $.ajax({
+    url:HOME + 'save',
+    type:'POST',
+    cache:false,
+    data:{
+      "id" : id
+    },
+    success:function(rs) {
+      load_in();
+
+      if(isJson(rs)) {
+        let ds = JSON.parse(rs);
+
+        if(ds.status == 'success') {
           setTimeout(() => {
             swal({
               title:'Success',
               type:'success',
               timer:1000
             });
-
-            setTimeout(() => {
-              window.location.reload();
-            }, 1200);
           }, 200);
-        }
-        else {
-          setTimeout(() => {
-            swal({
-              title:'Error!',
-              text:rs,
-              type:'error'
-            });
-          }, 200)
-        }
-      }
-    })
-  })
-}
-
-
-function updateRow(id, no) {
-  $.ajax({
-    url:HOME + 'get_row/'+id,
-    type:'GET',
-    cache:false,
-    success:function(rs) {
-      if(isJson(rs)) {
-        let source = $('#row-template').html();
-        let data = JSON.parse(rs);
-        let output = $('#row-'+id);
-
-        render(source, data, output);
-
-        $('#no-'+id).text(no);
-      }
-      else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
-      }
-    }
-  });
-}
-
-
-function suggest() {
-
-  let age = parseDefault(parseInt($('#use-age').val()), 0);
-  let cond = $('#damage_id').val();
-  let color = "red";
-
-  if(age <= 10) {
-    if(cond != '0' && age > 3) {
-      color = "orange";
-    }
-
-    if(cond != '0' && age <= 3) {
-      color = "blue";
-    }
-
-    if(cond == '0') {
-      color = "green";
-    }
-  }
-
-  let label = `<div style="background-color:${color}; width:40px; height:40px;"></div>`;
-  $('#suggest-label').html(label);
-
-}
-
-
-
-function updateItem() {
-  $('#btn-update').attr('disabled', 'disabled');
-
-  let id = $('#transfer-id').val();
-  let i_power_no = $('#i-power-no').val();
-  let u_power_no = $('#u-power-no').val();
-  let damage_id = $('#damage_id').val();
-  let phase = $('#phase').val();
-
-
-  setTimeout(() => {
-    if(id == "" || id == 0) {
-      swal({
-        title:'Oops!',
-        text: "Missing required parameter : transferId",
-        type:'error'
-      });
-
-      $('#btn-update').removeAttr('disabled');
-
-      return false;
-    }
-
-
-    if(i_power_no.length != 5) {
-      swal({
-        title:'Opps!',
-        text:"หน่วยตัดกลับไม่ถูกต้อง",
-        type:'error'
-      });
-
-      $('#btn-update').removeAttr('disabled');
-      return false;
-    }
-
-    if(u_power_no.length != 5) {
-      swal({
-        title:'Opps!',
-        text:"หน่วยตั้งต้นไม่ถูกต้อง",
-        type:'error'
-      });
-
-      $('#btn-update').removeAttr('disabled');
-      return false;
-    }
-
-    $('#editModal').modal('hide');
-
-    load_in();
-
-    $.ajax({
-      url:HOME + 'update_item/'+id,
-      type:'POST',
-      cache:false,
-      data: {
-        'i_power_no' : i_power_no,
-        'u_power_no' : u_power_no,
-        'damage_id' : damage_id,
-        'phase' : phase
-      },
-      success:function(rs) {
-        load_out();
-
-        if(rs == 'success') {
-          swal({
-            title:'Success',
-            type:'success',
-            timer:1000
-          });
 
           setTimeout(() => {
-            window.location.reload();
+            viewDetail(id);
           }, 1200);
         }
         else {
-          $('#btn-update').removeAttr('disabled');
+          if(ds.ex == 1) {
+            setTimeout(() => {
+              swal({
+                title:'Warning !',
+                text:ds.message,
+                type:'warning'
+              }, function() {
+                viewDetail(id);
+              });
+            }, 200);
+          }
+          else {
+            setTimeout(() => {
+              swal({
+                title:'Error!',
+                text:ds.message,
+                type:'error'
+              });
+            }, 200);
+          }
+        }
+      }
+      else {
+        setTimeout(() => {
           swal({
             title:'Error!',
             text:rs,
             type:'error'
-          },
-          function() {
-            $('#editModal').modal('show');
           });
-        }
+        }, 200);
       }
-    })
-
-  }, 200);
-
+    }
+  });
 }
 
 
@@ -437,47 +297,185 @@ function sendToSAP() {
 }
 
 
-function sendToSCS() {
-  let id = $('#transfer-id').val();
+function checkAll() {
+  if( $('#chk-all').is(':checked')) {
+    $('.chk').prop('checked', true);
+  }
+  else {
+    $('.chk').prop('checked', false);
+  }
+}
 
-  $('#previewModal').modal('hide');
+function selectAll() {
+  if($('#select-all').is(':checked')) {
+    $('.sel').prop('checked', true);
+  }
+  else {
+    $('.sel').prop('checked', false);
+  }
+}
 
-  setTimeout(() => {
-    load_in();
 
-    $.ajax({
-      url:HOME + 'send_to_scs',
-      type:'POST',
-      cache:false,
-      data:{
-        'id' : id
-      },
-      success:function(rs) {
-        load_out();
+function clearList() {
+  $('.fl').val('');
+}
 
-        if(rs == 'success') {
+
+function getInstallList() {
+  let pea_no = $('#pea-no').val();
+  let area = $('#area').val();
+  $('#select-all').prop('checked', false);
+
+  load_in();
+
+  $.ajax({
+    url:BASE_URL + 'inventory/install_list/get_open_items',
+    type:'POST',
+    cache:false,
+    data:{
+      "pea_no" : pea_no,
+      "area" : area
+    },
+    success:function(rs) {
+      load_out();
+      if(isJson(rs)) {
+        ds = JSON.parse(rs);
+        if(ds.length) {
+          let source = $('#items-template').html();
+          let output = $('#items-table');
+          render(source, ds, output);
+          $('#installListModal').modal('show');
+        }
+      }
+    }
+  })
+}
+
+function deleteSelected() {
+  let checked = $('.chk:checked').length;
+
+  if(checked > 0) {
+    swal({
+      title:'คุณแน่ใจ ?',
+      text:'ต้องการลบรายการนำเข้าตามที่เลือกไว้หรือไม่ ?',
+      type:'warning',
+      showCancelButton:true,
+      confirmButtonColor:'#d15b47',
+      confirmButtonText:'ยืนยัน',
+      cancelButtonText:'ยกเลิก',
+      closeOnConfirm:true
+    }, function() {
+      let ds = [];
+      $('.chk:checked').each(function() {
+        let val = $(this).val();
+
+        ds.push(val);
+      });
+
+      if(ds.length > 0) {
+        load_in();
+
+        $.ajax({
+          url:HOME + 'delete_details',
+          type:'POST',
+          cache:false,
+          data:{
+            "data" : JSON.stringify(ds)
+          },
+          success:function(rs) {
+            load_out();
+
+            if(rs === 'success') {
+              setTimeout(() => {
+                swal({
+                  title:'Success',
+                  type:'success',
+                  timer:1000
+                });
+              }, 200);
+
+              setTimeout(() => {
+                window.location.reload();
+              }, 1200);
+            }
+            else {
+              setTimeout(() => {
+                swal({
+                  title:'Error!',
+                  text:rs,
+                  type:'error'
+                });
+              }, 200);
+            }
+          }
+        });
+      }
+      else {
+        setTimeout(() => {
+          swal({
+            title:"Error!",
+            text:"Please select items",
+            type:"error"
+          });
+        }, 200);
+      }
+    });
+  }
+}
+
+
+function addToTransfer() {
+  let id = $('#transfer_id').val();
+  let ds = [];
+
+  $('.sel').each(function() {
+    if($(this).is(':checked')) {
+      ds.push($(this).val());
+    }
+  });
+
+  if(ds.length == 0) {
+    swal("กรุณาเลือกรายการ");
+    return false;
+  }
+
+  $('#installListModal').modal('hide');
+
+  load_in();
+
+  $.ajax({
+    url:HOME + 'add_details',
+    type:'POST',
+    cache:false,
+    data:{
+      "id" : id,
+      "data" : JSON.stringify(ds)
+    },
+    success:function(rs) {
+      load_out();
+
+      if(rs === 'success') {
+        setTimeout(() => {
           swal({
             title:'Success',
             type:'success',
             timer:1000
           });
+        }, 200);
 
-          setTimeout(() => {
-            window.location.reload();
-          }, 1200);
-        }
-        else {
-          setTimeout(() => {
-            swal({
-              title:'Error!',
-              text:rs,
-              type:'error'
-            }, () => {
-              $('#previewModal').modal('show');
-            });
-          }, 200)
-        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 1300);
       }
-    });
-  }, 500);
+      else {
+        setTimeout(() => {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          });
+        }, 200);
+      }
+    }
+  });
 }

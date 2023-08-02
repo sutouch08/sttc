@@ -39,9 +39,8 @@ function user_array($id = NULL)
 function select_ugroup($id = '')
 {
   $ds = '';
-  $ds .= '<option value="1" '.is_selected('1', $id).'>Admin</option>';
-  $ds .= '<option value="2" '.is_selected('2', $id).'>Manager</option>';
-  $ds .= '<option value="3" '.is_selected('3', $id).'>Outsource</option>';
+  $ds .= '<option value="1" '.is_selected('1', $id).'>User</option>';
+  $ds .= '<option value="2" '.is_selected('2', $id).'>Admin</option>';  
 
   return $ds;
 }
@@ -51,6 +50,13 @@ function uname($id)
 {
   $ci =& get_instance();
   return $ci->user_model->get_uname($id);
+}
+
+
+function display_name($id)
+{
+  $ci =& get_instance();
+  return $ci->user_model->get_name($id);
 }
 
 
@@ -65,6 +71,24 @@ function select_outsource($id = NULL)
     foreach($users AS $us)
     {
       $ds .= '<option value="'.$us->id.'" '.is_selected($id, $us->id).'>'.$us->uname.' : '.$us->name.'</option>';
+    }
+  }
+
+  return $ds;
+}
+
+
+function select_user($id = NULL)
+{
+  $ds = "";
+  $ci =& get_instance();
+  $users = $ci->user_model->get_all_active();
+
+  if( ! empty($users))
+  {
+    foreach($users as $rs)
+    {
+      $ds .= '<option value="'.$rs->id.'" '.is_selected($id, $rs->id).'>'.$rs->uname.' : '.$rs->name.'</option>';
     }
   }
 

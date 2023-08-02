@@ -1,14 +1,10 @@
 <?php
 
-function transfer_status_label($status = 'I')
+function transfer_status_label($status = 'P')
 {
   $arr = array(
-    'I' => '<span style="color:#ff892a;">รออนุมัติ</span>',
-    'A' => '<span style="color:#478fca;">อนุมัติแล้ว</span>',
-    'R' => '<span style="color:red;">ไม่อนุมัติ</span>',
-    'W' => '<span style="color:blue;">รอตรวจรับ</span>',
-    'S' => '<span style="color:green;">ตรวจรับแล้ว</span>',
-    'U' => '<span style="color:red;">ต้องแก้ไข</span>',
+    'P' => '<span style="color:#ff892a;">ดราฟ</span>',
+    'S' => '<span style="color:#478fca;">บันทึกแล้ว</span>',
     'C' => '<span style="color:darkgrey;">ยกเลิก</span>'
   );
 

@@ -39,6 +39,45 @@ function select_listed_warehouse($code = NULL)
 }
 
 
+function select_listed_warehouse_by_role($role = 0, $code = NULL)
+{
+	$ds = '';
+	$ci =& get_instance();
+	$ci->load->model('admin/warehouse_model');
+
+	$option = $ci->warehouse_model->get_listed_warehouse_by_role($role);
+
+	if( ! empty($option))
+	{
+		foreach($option as $rs)
+		{
+			$ds .= '<option value="'.$rs->code.'" '.is_selected($rs->code, $code).'>'.$rs->code.' : '.$rs->name.'</option>';
+		}
+	}
+
+	return $ds;
+}
+
+function select_listed_warehouse_by_role_and_area($role, $area, $code = NULL)
+{
+	$ds = '';
+	$ci =& get_instance();
+	$ci->load->model('admin/warehouse_model');
+
+	$option = $ci->warehouse_model->get_listed_warehouse_by_role_and_area($role, $area);
+
+	if( ! empty($option))
+	{
+		foreach($option as $rs)
+		{
+			$ds .= '<option value="'.$rs->code.'" '.is_selected($rs->code, $code).'>'.$rs->code.' : '.$rs->name.'</option>';
+		}
+	}
+
+	return $ds;
+}
+
+
 function user_warehouse_names($user_id)
 {
 	$ds = "";
@@ -58,5 +97,13 @@ function user_warehouse_names($user_id)
 	}
 
 	return $ds;
+}
+
+function warehouse_name($whsCode)
+{
+	$ci =& get_instance();
+	$ci->load->model('admin/warehouse_model');
+
+	return $ci->warehouse_model->get_name($whsCode);
 }
 ?>

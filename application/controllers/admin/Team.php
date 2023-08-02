@@ -4,14 +4,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Team extends PS_Controller {
 	public $menu_code = 'SCTEAM'; //--- Add/Edit Users
 	public $menu_group_code = 'SC'; //--- System security
-	public $title = 'เขต/พื้นที่';
+	public $title = 'เพิ่ม/แก้ไข เขต';
 	public $segment = 4;
 
   public function __construct()
   {
     parent::__construct();
     $this->home = base_url().'admin/team';
-    $this->load->model('admin/team_model');    
+    $this->load->model('admin/team_model');
   }
 
 
@@ -19,6 +19,7 @@ class Team extends PS_Controller {
   public function index()
   {
 		$filter = array(
+			'code' => get_filter('code', 'team_code', ''),
 			'name' => get_filter('name', 'team_name', ''),
       'status' => get_filter('status', 'team_status', 'all')
 		);
@@ -64,17 +65,20 @@ class Team extends PS_Controller {
   public function add()
   {
     $sc = TRUE;
+		$ds = array();
 
 		if($this->pm->can_add)
 		{
-			if($this->input->post('name'))
+			if($this->input->post('code') && $this->input->post('name'))
       {
+				$code = trim($this->input->post('code'));
         $name = trim($this->input->post('name'));
         $active = $this->input->post('status') == 1 ? 1 : 0;
 
-        if( ! $this->team_model->is_exists($name))
+        if( ! $this->team_model->is_exists($code))
         {
           $arr = array(
+						'code' => $code,
             'name' => $name,
             'status' => $active,
             'create_at' => now(),
@@ -82,6 +86,7 @@ class Team extends PS_Controller {
           );
 
           $id = $this->team_model->add($arr);
+
           if( ! $id)
           {
             $sc = FALSE;
@@ -91,6 +96,7 @@ class Team extends PS_Controller {
           {
             $ds = array(
               'id' => $id,
+							'code' => $code,
               'name' => $name,
               'status' => is_active($active),
               'create_at' => thai_date(now(), FALSE),
@@ -103,7 +109,7 @@ class Team extends PS_Controller {
         else
         {
           $sc = FALSE;
-          set_error('exists', $name);
+          set_error('exists', $code);
         }
       }
       else
@@ -126,6 +132,7 @@ class Team extends PS_Controller {
   {
     $sc = TRUE;
     $id = $this->input->post('id');
+		$code = trim($this->input->post('code'));
     $name = trim($this->input->post('name'));
     $active = $this->input->post('status') == 1 ? 1 : 0;
 
@@ -133,9 +140,10 @@ class Team extends PS_Controller {
     {
       if( ! empty($id) && ! empty($name))
       {
-        if( ! $this->team_model->is_exists($name, $id))
+        if( ! $this->team_model->is_exists($code, $id))
         {
           $arr = array(
+						'code' => $code,
             'name' => $name,
             'status' => $active,
             'update_at' => now(),
@@ -213,7 +221,7 @@ class Team extends PS_Controller {
 
   public function clear_filter()
   {
-    $filter = array("team_name", "team_status");
+    $filter = array("team_code", "team_name", "team_status");
 
     return clear_filter($filter);
   }

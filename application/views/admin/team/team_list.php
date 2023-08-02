@@ -16,8 +16,12 @@
 <hr class="padding-5"/>
 <form id="searchForm" method="post" action="<?php echo current_url(); ?>">
 <div class="row">
+	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+    <label>รหัสเขต</label>
+    <input type="text" class="form-control input-sm search-box" name="code" value="<?php echo $code; ?>" />
+  </div>
   <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-    <label>เขต/พื้นที่</label>
+    <label>ชื่อเขต</label>
     <input type="text" class="form-control input-sm search-box" name="name" value="<?php echo $name; ?>" />
   </div>
 
@@ -51,7 +55,8 @@
 			<thead>
 				<tr>
 					<th class="fix-width-60 middle text-center">#</th>
-					<th class="fix-width-300 middle">เขต/พื้นที่</th>
+					<th class="fix-width-100 middle">รหัสเขต</th>
+					<th class="fix-width-200 middle">ชื่อเขต</th>
 					<th class="fix-width-80 middle">สถานะ</th>
 					<th class="fix-width-100 middle">สร้างเมื่อ</th>
 					<th class="fix-width-100 middle text-center">สร้างโดย</th>
@@ -66,6 +71,7 @@
 	<?php foreach($data as $rs) : ?>
 				<tr id="row-<?php echo $rs->id; ?>">
 					<td class="middle text-center no"><?php echo $no; ?></td>
+					<td class="middle"><?php echo $rs->code; ?></td>
 					<td class="middle"><?php echo $rs->name; ?></td>
 					<td class="middle text-center"><?php echo is_active($rs->status); ?></td>
 					<td class="middle text-center"><?php echo thai_date($rs->create_at, FALSE); ?></td>
@@ -99,9 +105,14 @@
       </div>
       <div class="modal-body">
         <div class="row" style="padding-left:12px; padding-right:12px;">
-          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>ชื่อ เขต/พื้นที่</label>
-						<input type="text" id="add-name" class="form-control" maxlength="100"	autofocus required />
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+						<label>รหัสเขต</label>
+						<input type="text" id="add-code" class="form-control" maxlength="15"	autofocus required />
+						<div class="err-label" id="add-code-error"></div>
+					</div>
+          <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+						<label>ชื่อเขต</label>
+						<input type="text" id="add-name" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="add-name-error"></div>
 					</div>
 
@@ -134,9 +145,14 @@
       </div>
       <div class="modal-body">
         <div class="row" style="padding-left:12px; padding-right:12px;">
-          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<label>ชื่อ เขต/พื้นที่</label>
-						<input type="text" id="edit-name" class="form-control" maxlength="100" autofocus required />
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+						<label>รหัสเขต</label>
+						<input type="text" id="edit-code" class="form-control" maxlength="15"	autofocus required />
+						<div class="err-label" id="edit-code-error"></div>
+					</div>
+					<div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+						<label>ชื่อเขต</label>
+						<input type="text" id="edit-name" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="edit-name-error"></div>
             <input type="hidden" id="edit-id"/>
 					</div>
@@ -161,6 +177,7 @@
 <script id="row-template" type="text/x-handlebarsTemplate">
 <tr id="row-{{id}}">
   <td class="middle text-center no">{{no}}</td>
+	<td class="middle">{{code}}</td>
   <td class="middle">{{name}}</td>
   <td class="middle text-center">{{{status}}}</td>
   <td class="middle text-center">{{create_at}}</td>
@@ -177,6 +194,7 @@
 <script id="in-row-template" type="text/x-handlebarsTemplate">
 
   <td class="middle text-center no">{{no}}</td>
+	<td class="middle">{{code}}</td>
   <td class="middle">{{name}}</td>
   <td class="middle text-center">{{{status}}}</td>
   <td class="middle text-center">{{create_at}}</td>

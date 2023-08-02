@@ -72,9 +72,9 @@ class Api
 		if($testMode)
 		{
 			$arr = array(
-				'sap_status' => 'S',
-				'docEntry' => 1,
-				'docNum' => "22000001"
+				'export_status' => 'S',
+				'DocEntry' => 1,
+				'DocNum' => "22000001"
 			);
 
 			$this->ci->transfer_model->update($id, $arr);
@@ -87,8 +87,9 @@ class Api
 
 		$sc = TRUE;
 		$doc = $this->ci->transfer_model->get($id);
+    $details = $this->ci->transfer_model->get_details($id);
 
-		if(! empty($doc))
+		if(! empty($doc) && ! empty($details))
 		{
       $ds = array(
         'U_WEBCODE' => $doc->code,
@@ -111,12 +112,17 @@ class Api
         'Filler' => $doc->fromWhsCode,
         'ToWhsCode' => $doc->toWhsCode,
         'Comments' => $doc->remark,
-        'DocLine' => array(
-          'U_WEBCODE' => $doc->code,
-          'LineNum' => 0,
-          'ItemCode' => $doc->ItemCode,
-          'Dscription' => $doc->ItemName,
-          'Quantity' => $doc->qty,
+        'DocLine' => array()
+      );
+
+      foreach($details as $rs)
+      {
+        $arr =  array(
+          'U_WEBCODE' => $rs->transfer_code,
+          'LineNum' => $rs->LineNum,
+          'ItemCode' => $rs->ItemCode,
+          'Dscription' => $rs->ItemName,
+          'Quantity' => $rs->qty,
           'unitMsr' => NULL,
           'PriceBefDi' => 0.000000,
           'LineTotal' => 0.000000,
@@ -126,21 +132,19 @@ class Api
           'DiscPrcnt' => 0.000000,
           'Price' => 0.000000,
           'TotalFrgn' => 0.000000,
-          'FromWhsCod' => $doc->fromWhsCode,
-          'WhsCode' => $doc->toWhsCode,
-          'FisrtBin' => NULL,
-          'F_FROM_BIN' => $doc->fromBinCode,
-          'F_TO_BIN' => $doc->toBinCode,
-          'AllocBinC' => NULL,
+          'FromWhsCod' => $rs->fromWhsCode,
+          'WhsCode' => $rs->toWhsCode,
           'TaxStatus' => 'Y',
           'VatPrcnt' => 0.000000,
           'VatGroup' => NULL,
           'PriceAfVAT' => 0.000000,
           'VatSum' => 0.000000,
           'TaxType' => 'Y',
-          'SerialNum' => $doc->i_serial
-        )
-      );
+          'SerialNum' => $rs->i_pea_no
+        );
+
+        array_push($ds['DocLine'], $arr);
+      }
 
 			$url = getConfig('SAP_API_HOST');
 
@@ -200,9 +204,9 @@ class Api
 				if($rs->status == 'success')
 				{
 					$arr = array(
-						'sap_status' => 'S',
-						'docEntry' => $rs->docEntry,
-						'docNum' => $rs->docNum
+						'export_status' => 'S',
+						'DocEntry' => $rs->docEntry,
+						'DocNum' => $rs->docNum
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
@@ -211,9 +215,9 @@ class Api
         elseif($rs->status == 'exists')
         {
           $arr = array(
-						'sap_status' => 'S',
-						'docEntry' => $rs->docEntry,
-						'docNum' => $rs->docNum
+						'export_status' => 'S',
+						'DocEntry' => $rs->docEntry,
+						'DocNum' => $rs->docNum
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
@@ -221,8 +225,8 @@ class Api
 				else
 				{
 					$arr = array(
-						'sap_status' => 'F',
-						'message' => $rs->message
+						'export_status' => 'F',
+						'Message' => $rs->message
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
@@ -248,8 +252,8 @@ class Api
 				$this->ci->error = "Export failed : {$response}";
 
 				$arr = array(
-					'sap_status' => 'F',
-					'message' => $response
+					'export_status' => 'F',
+					'Message' => $response
 				);
 
 				$this->ci->transfer_model->update($id, $arr);

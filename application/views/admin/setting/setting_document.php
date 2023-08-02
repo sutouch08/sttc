@@ -21,12 +21,12 @@
 							</td>
 						</tr>
 						<tr>
-							<td class="text-right">Return</td>
+							<td class="text-right">Pack List</td>
 							<td class="text-center">
-								<input type="text" class="form-control text-center prefix" name="PREFIX_RETURN" required maxlength="2" value="<?php echo $PREFIX_RETURN; ?>" />
+								<input type="text" class="form-control text-center prefix" name="PREFIX_PACK" required maxlength="2" value="<?php echo $PREFIX_PACK; ?>" />
 							</td>
 							<td class="text-center">
-								<input type="number" class="form-control text-center digit" required name="RUN_DIGIT_RETURN" value="<?php echo $RUN_DIGIT_RETURN; ?>" />
+								<input type="number" class="form-control text-center digit" required name="RUN_DIGIT_PACK" value="<?php echo $RUN_DIGIT_PACK; ?>" />
 							</td>
 						</tr>
 					</tbody>

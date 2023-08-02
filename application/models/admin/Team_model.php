@@ -48,6 +48,31 @@ class Team_model extends CI_Model
   }
 
 
+  public function get_name($id)
+  {
+    $rs = $this->db->select('name')->where('id', $id)->get($this->tb);
+
+    if( $rs->num_rows() === 1)
+    {
+      return $rs->row()->name;
+    }
+
+    return NULL;
+  }
+
+
+  public function get_name_by_code($code)
+  {
+    $rs = $this->db->select('name')->where('code', $code)->get($this->tb);
+
+    if( $rs->num_rows() === 1)
+    {
+      return $rs->row()->name;
+    }
+
+    return NULL;
+  }
+
   public function get_user_team($user_id)
   {
     $rs = $this->db
@@ -64,24 +89,6 @@ class Team_model extends CI_Model
 
     return NULL;
   }
-
-
-  public function get_outsource_by_team($team_id)
-  {
-    $rs = $this->db
-    ->select('id, uname, name, team_id, ugroup')
-    ->where('ugroup', 3)
-    ->where('team_id', $team_id)
-    ->get('user');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
 
 
   public function add_user_team(array $ds = array())
@@ -101,14 +108,14 @@ class Team_model extends CI_Model
   }
 
 
-  public function is_exists($name, $id = NULL)
+  public function is_exists($code, $id = NULL)
   {
     if( ! empty($id))
     {
       $this->db->where('id !=', $id);
     }
 
-    $rs = $this->db->where('name', $name)->count_all_results($this->tb);
+    $rs = $this->db->where('code', $code)->count_all_results($this->tb);
 
     if($rs)
     {
@@ -149,11 +156,8 @@ class Team_model extends CI_Model
   public function is_exists_transection($id)
   {
     $u = $this->db->where('team_id', $id)->count_all_results('user');
-    $ut = $this->db->where('team_id', $id)->count_all_results('user_team');
-    $t = $this->db->where('team_id', $id)->count_all_results('transfer');
-    $all = $u + $ut + $t;
 
-    return $all > 0 ? TRUE : FALSE;
+    return $u > 0 ? TRUE : FALSE;
   }
 
 
@@ -162,8 +166,14 @@ class Team_model extends CI_Model
     return $this->db->where('id', $id)->delete($this->tb);
   }
 
+
   public function get_list(array $ds = array(), $limit = 20, $offset = 0)
   {
+    if( isset($ds['code']) && $ds['code'] !== "" && $ds['code'] !== NULL)
+    {
+      $this->db->like('code', $ds['code']);
+    }
+
     if( isset($ds['name']) && $ds['name'] !== "" && $ds['name'] !== NULL)
     {
       $this->db->like('name', $ds['name']);
@@ -174,7 +184,7 @@ class Team_model extends CI_Model
       $this->db->where('status', $ds['status']);
     }
 
-    $rs = $this->db->order_by('name', 'ASC')->limit($limit, $offset)->get($this->tb);
+    $rs = $this->db->order_by('code', 'ASC')->limit($limit, $offset)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -189,6 +199,11 @@ class Team_model extends CI_Model
 
   public function count_rows(array $ds = array())
   {
+    if( isset($ds['code']) && $ds['code'] !== "" && $ds['code'] !== NULL)
+    {
+      $this->db->like('code', $ds['code']);
+    }
+
     if( isset($ds['name']) && $ds['name'] !== "" && $ds['name'] !== NULL)
     {
       $this->db->like('name', $ds['name']);

@@ -45,10 +45,7 @@ class Authentication extends CI_Controller
 						'displayName' => $rs->name,
 						'ugroup' => $rs->ugroup,
 						'team_id' => $rs->team_id,
-						'teamName' => $rs->team_name,
-						'team_group_id' => $rs->team_group_id,
-						'team_group_name' => $rs->team_group_name,
-						'can_get_meter' => $rs->can_get_meter,
+						'teamName' => $rs->team_name,					
 						'fromWhsCode' => $rs->fromWhsCode,
 						'toWhsCode' => $rs->toWhsCode
 					);

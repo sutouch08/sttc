@@ -5,25 +5,21 @@ class Transfer extends PS_Controller
 {
   public $menu_code = 'OPWHTR';
 	public $menu_group_code = 'OP';
-	public $title = 'งานติดตั้ง';
+	public $title = 'โอนสินค้า';
 	public $segment = 4;
+  public $ms;
   public $error;
 
   public function __construct()
   {
     parent::__construct();
-
-    if($this->_Lead)
-    {
-      $this->pm->can_view = 1;
-    }
-
     $this->home = base_url().'inventory/transfer';
     $this->load->model('inventory/transfer_model');
-    $this->load->helper('team');
-    $this->load->helper('team_group');
-    $this->load->helper('image');
+    $this->load->model('inventory/install_list_model');
+    $this->load->model('inventory/pack_model');
     $this->load->helper('transfer');
+    $this->load->helper('warehouse');
+    $this->load->helper('area');
   }
 
 
@@ -31,18 +27,16 @@ class Transfer extends PS_Controller
   {
 		$filter = array(
 			'code' => get_filter('code', 'tr_code', ''),
-      'u_pea_no' => get_filter('u_pea_no', 'tr_u_pea_no', ''),
-      'i_pea_no' => get_filter('i_pea_no', 'tr_i_pea_no', ''),
-      'serial' => get_filter('serial', 'tr_serial', ''),
+      'from_warehouse' => get_filter('from_warehouse', 'tr_from_warehouse', 'all'),
+      'to_warehouse' => get_filter('to_warehouse', 'tr_to_warehouse', 'all'),
       'user' => get_filter('user', 'tr_user', ''),
-      'team_group_id' => get_filter('team_group_id', 'tr_team_group_id', 'all'),
-      'team_id' => get_filter('team_id', 'tr_team_id', 'all'),
-      'sap_status' => get_filter('sap_status', 'sap_status', 'all'),
-      'pea_status' => get_filter('pea_status', 'pea_status', 'all'),
+      'export_status' => get_filter('export_status', 'sap_status', 'all'),
       'status' => get_filter('status', 'tr_status', 'all'),
       'from_date' => get_filter('from_date', 'tr_from_date', ''),
       'to_date' => get_filter('to_date', 'tr_to_date', '')
 		);
+
+    $filter['user_in'] = empty($filter['user']) ? NULL : $this->user_model->get_user_in($ds['user']);
 
 		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
@@ -60,303 +54,985 @@ class Transfer extends PS_Controller
   }
 
 
-  public function update_item($id)
+  public function add_new()
+  {
+    $ds = array(
+      'code' => $this->get_new_code()
+    );
+
+    $this->load->view('inventory/transfer/transfer_add', $ds);
+  }
+
+
+  public function add()
   {
     $sc = TRUE;
-    $i_power_no = trim($this->input->post('i_power_no'));
-    $u_power_no = trim($this->input->post('u_power_no'));
-    $damage_id = get_null($this->input->post('damage_id'));
-    $phase = $this->input->post('phase');
 
-    if(strlen($i_power_no) == 5 OR strlen($u_power_no) == 5)
+    if($this->pm->can_add)
     {
-      $doc = $this->transfer_model->get($id);
+      $date_add = db_date($this->input->post('date_add'), TRUE);
+      $fromWhsCode = $this->input->post('fromWhsCode');
+      $toWhsCode = $this->input->post('toWhsCode');
+      $remark = get_null(trim($this->input->post('remark')));
 
-      if(! empty($doc))
-      {
-        if($doc->status == 'I' OR $doc->status == 'R' OR $doc->status == 'U')
-        {
+      $code = $this->get_new_code($date_add);
 
-          $arr = array(
-            'i_power_no' => $i_power_no,
-            'u_power_no' => $u_power_no,
-            'damage_id' => $damage_id,
-            'phase' => $phase
-          );
+      $arr = array(
+        'date_add' => $date_add,
+        'code' => $code,
+        'fromWhsCode' => $fromWhsCode,
+        'toWhsCode' => $toWhsCode,
+        'remark' => $remark,
+        'user' => $this->_user->id,
+        'input_type' => 'M'
+      );
 
-          if( ! $this->transfer_model->update($id, $arr))
-          {
-            $sc = FALSE;
-            $this->error = "Update data failed";
-          }
-        }
-      }
-      else
+      $id = $this->transfer_model->add($arr);
+
+      if( ! $id)
       {
         $sc = FALSE;
-        $this->error = "Invalid Document Id";
+        $this->error = "Failed to create document";
       }
     }
     else
     {
       $sc = FALSE;
-      $this->error = "Missing required parameters";
+      set_error('permission');
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'id' => $sc === TRUE ? $id : NULL
+    );
+
+    echo json_encode($arr);
+  }
+
+
+  public function createFromPackList($pack_id)
+  {
+    $this->ms = $this->load->database('ms', TRUE);
+    $this->load->model('inventory/pack_model');
+    $sc = TRUE;
+
+    if($this->pm->can_add)
+    {
+      if(! empty($this->_user->fromWhsCode) && ! empty($this->_user->toWhsCode))
+      {
+        $pack = $this->pack_model->get($pack_id);
+
+        if( ! empty($pack))
+        {
+          if($pack->status == 'F')
+          {
+            $details = $this->pack_model->get_details($pack_id);
+
+            if( ! empty($details))
+            {
+              $code = $this->get_new_code();
+
+              $arr = array(
+                'date_add' => now(),
+                'code' => $code,
+                'fromWhsCode' => $this->_user->fromWhsCode,
+                'toWhsCode' => $this->_user->toWhsCode,
+                'remark' => "Create from {$pack->code}",
+                'user' => $this->_user->id,
+                'pack_id' => $pack->id,
+                'pack_code' => $pack->code,
+                'input_type' => 'A'
+              );
+
+              $this->db->trans_begin();
+              $id = $this->transfer_model->add($arr);
+
+              if($id)
+              {
+                $lineNum = 0;
+
+                foreach($details as $rs)
+                {
+                  if($sc === FALSE)
+                  {
+                    break;
+                  }
+
+                  if( ! $this->transfer_model->is_exists_row($rs->i_pea_no))
+                  {
+                    //--- get install list by id
+                    $row = $this->install_list_model->get($rs->u_pea_no, 'u');
+
+                    if( ! empty($row))
+                    {
+                      if( ! empty($row->ItemCode))
+                      {
+                        $arr = array(
+                          'transfer_id' => $id,
+                          'transfer_code' => $code,
+                          'LineNum' => $lineNum,
+                          'ItemCode' => $row->ItemCode,
+                          'ItemName' => $row->ItemName,
+                          'qty' => 1,
+                          'fromWhsCode' => $this->transfer_model->get_warehouse_code_by_serial($row->i_pea_no),
+                          'toWhsCode' => $this->_user->toWhsCode,
+                          'i_pea_no' => $row->i_pea_no,
+                          'u_pea_no' => $row->u_pea_no,
+                          'reference' => $pack->code,
+                          'pack_id' => $pack_id,
+                          'pack_row_id' => $rs->id
+                        );
+
+                        //--- add transfer row
+                        if( ! $this->transfer_model->add_detail($arr))
+                        {
+                          $sc = FALSE;
+                          $this->error = "เพิ่มรายการไม่สำเร็จ : {$row->i_pea_no}";
+                        }
+
+                        //--- update install row to Loaded
+                        if( $sc === TRUE)
+                        {
+                          $arr = array(
+                            'status' => 'L',
+                            'transfer_code' => $code
+                          );
+
+                          $this->install_list_model->update($row->id, $arr);
+
+                          $arr = array(
+                            'status' => 'C',
+                            'is_transfer' => 1,
+                            'transfer_code' => $code
+                          );
+
+                          $this->pack_model->update_detail($rs->id, $arr);
+                        }
+
+                        $lineNum++;
+                      }
+                    }
+                    else
+                    {
+                      $sc = FALSE;
+                      $this->error = "ไม่พบ {$rs->u_pea_no} ในรายการติดตั้งสำเร็จ";
+                    }
+                  }
+                } //-- end foreach
+              }
+              else
+              {
+                $sc = FALSE;
+                $this->error = "Failed to create document";
+              }
+
+              if($sc === TRUE)
+              {
+                //--- change pack status
+                $arr = array(
+                  'status' => 'C',
+                  'is_transfer' => 1,
+                  'transfer_code' => $code
+                );
+
+                if( ! $this->pack_model->update($pack_id, $arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "เปลี่ยนสถานะเอกสารแพ็คไม่สำเร็จ";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $this->db->trans_commit();
+              }
+              else
+              {
+                $this->db->trans_rollback();
+              }
+            }
+            else
+            {
+              $sc = FALSE;
+              $this->error = "ไม่พบรายการที่ต้องโอนย้าย";
+            }
+          }
+          else
+          {
+            $sc = FALSE;
+
+            $err = array(
+            'O' => "เอกสารนี้ยังแพ็คไม่จบ",
+            'C' => "เอกสารนี้ปิดไปแล้ว",
+            'D' => "เอกสารนี้ถูกยกเลิกไปแล้ว"
+            );
+
+            $this->error = $err[$pack->status];
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "ไม่พบเลขที่เอกสารแพ็ค";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "User ไม่ได้ผูกคลังไว้อย่างถูกต้อง กรุณาตรวจสอบ";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('permission');
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'id' => $sc === TRUE ? $id : NULL
+    );
+
+    echo json_encode($arr);
+  }
+
+
+  public function import_from_pack()
+  {
+    $sc = TRUE;
+
+    $id = $this->input->get('transfer_id');
+    $code = $this->input->get('pack_code');
+
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
+    {
+      if($doc->status == 'P')  //-- P = Draft , S = Save , C = Cancelled
+      {
+        $pack = $this->pack_model->get_by_code($code);
+
+        if( ! empty($pack))
+        {
+          if($pack->status == 'F')
+          {
+            $details = $this->pack_model->get_details($pack->id);
+
+            if( ! empty($details))
+            {
+              $this->ms = $this->load->database('ms', TRUE);
+
+              $this->db->trans_begin();
+
+              $this->transfer_model->update($doc->id, array('pack_id' => $pack->id, 'pack_code' => $pack->code));
+
+              $lineNum = 0;
+
+              foreach($details as $rs)
+              {
+                if($sc === FALSE)
+                {
+                  break;
+                }
+
+                if($rs->status == 'F')
+                {
+                  $item = $this->install_list_model->get_item_data_by_pea_no($rs->i_pea_no);
+
+                  if( ! empty($item))
+                  {
+                    $arr = array(
+                      'transfer_id' => $doc->id,
+                      'transfer_code' => $doc->code,
+                      'LineNum' => $lineNum,
+                      'ItemCode' => $item->ItemCode,
+                      'ItemName' => $item->ItemName,
+                      'fromWhsCode' => $this->transfer_model->get_warehouse_code_by_serial($rs->i_pea_no),
+                      'toWhsCode' => $doc->toWhsCode,
+                      'i_pea_no' => $rs->i_pea_no,
+                      'u_pea_no' => $rs->u_pea_no,
+                      'LineStatus' => 'O',
+                      'reference' => $pack->code,
+                      'pack_id' => $rs->pack_id,
+                      'pack_row_id' => $rs->id
+                    );
+
+                    if( ! $this->transfer_model->add_detail($arr))
+                    {
+                      $sc = FALSE;
+                      $this->error = "เพิ่มรายการโอนสินค้าไม่สำเร็จ";
+                    }
+
+                    if($sc === TRUE)
+                    {
+                      //---- update pack row
+                      $arr = array(
+                        'is_transfer' => 1,
+                        'transfer_code' => $doc->code,
+                        'status' => 'C'
+                      );
+
+                      if(! $this->pack_model->update_detail($rs->id, $arr))
+                      {
+                        $sc = FALSE;
+                        $this->error = "เปลี่ยนสถานะรายการแพ็คไม่สำเร็จ";
+                      }
+                    }
+
+                    if($sc === TRUE)
+                    {
+                      //--- update install list
+                      $arr = array(
+                        'status' => 'L',
+                        'transfer_code' => $doc->code
+                      );
+
+                      if( ! $this->install_list_model->update_by_u_pea_no($rs->u_pea_no, $arr))
+                      {
+                        $sc = FALSE;
+                        $this->error = "เปลี่ยนสถานะรายการติดตั้งไม่สำเร็จ";
+                      }
+                    }
+
+                    $lineNum++;
+                  }
+                }
+                else
+                {
+                  $sc = FALSE;
+                  $this->error = "พบรายการแพ็คที่ยังไม่บันทึกหรือสถานะรายการไม่สามารถโอนได้";
+                }
+              } //-- end foreach details
+
+              if($sc === TRUE)
+              {
+                //--- change pack status
+                $arr = array(
+                  'status' => 'C',
+                  'is_transfer' => 1,
+                  'transfer_code' => $doc->code
+                );
+
+                if( ! $this->pack_model->update($pack->id, $arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "เปลี่ยนสถานะเอกสารแพ็คไม่สำเร็จ";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $this->db->trans_commit();
+              }
+              else
+              {
+                $this->db->trans_rollback();
+              }
+            }
+            else
+            {
+              $sc = FALSE;
+              $this->error = "ไม่พบรายการในเอกสารแพ็ค";
+            }
+          }
+          else
+          {
+            $sc = FALSE;
+            $this->error = "สถานะเอกสารแพ็คไม่ถูกต้อง";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "ไม่พบเลขที่เอกสารแพ็ค";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "สถานะเอกสารโอนคลังไม่ถูกต้อง กรุณาตรวจสอบ";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "เลขที่เอกสารโอนคลังไม่ถูกต้อง";
+    }
+
+
+    $this->_response($sc);
+  }
+
+
+  public function remove_pack_items()
+  {
+    $sc = TRUE;
+
+    $id = $this->input->get('transfer_id');
+    $code = $this->input->get('pack_code');
+
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
+    {
+      if($doc->status == 'P')  //-- P = Draft , S = Save , C = Cancelled
+      {
+        $pack = $this->pack_model->get_by_code($code);
+
+        if( ! empty($pack))
+        {
+          if($pack->status == 'C')
+          {
+            $details = $this->transfer_model->get_details($doc->id);
+
+            if( ! empty($details))
+            {
+              $this->db->trans_begin();
+
+              $this->transfer_model->update($doc->id, array('pack_id' => NULL, 'pack_code' => NULL));
+
+              $lineNum = 0;
+
+              foreach($details as $rs)
+              {
+                if($sc === FALSE)
+                {
+                  break;
+                }
+
+                if( ! $this->transfer_model->delete_detail($rs->id))
+                {
+                  $sc = FALSE;
+                  $this->error = "ลบรายการนำเข้าไม่สำเร็จ";
+                }
+
+                if($sc === TRUE)
+                {
+                  //---- update pack row
+                  $arr = array(
+                    'is_transfer' => 0,
+                    'transfer_code' => NULL,
+                    'status' => 'F'
+                  );
+
+                  if(! $this->pack_model->update_detail($rs->pack_row_id, $arr))
+                  {
+                    $sc = FALSE;
+                    $this->error = "เปลี่ยนสถานะรายการแพ็คไม่สำเร็จ";
+                  }
+                }
+
+                if($sc === TRUE)
+                {
+                  //--- update install list
+                  $arr = array(
+                    'status' => 'O',
+                    'transfer_code' => NULL
+                  );
+
+                  if( ! $this->install_list_model->update_by_u_pea_no($rs->u_pea_no, $arr))
+                  {
+                    $sc = FALSE;
+                    $this->error = "เปลี่ยนสถานะรายการติดตั้งไม่สำเร็จ";
+                  }
+                }
+              } //-- end foreach details
+
+              if($sc === TRUE)
+              {
+                //--- change pack status
+                $arr = array(
+                  'status' => 'F',
+                  'is_transfer' => 0,
+                  'transfer_code' => NULL
+                );
+
+                if( ! $this->pack_model->update($pack->id, $arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "เปลี่ยนสถานะเอกสารแพ็คไม่สำเร็จ";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $this->db->trans_commit();
+              }
+              else
+              {
+                $this->db->trans_rollback();
+              }
+            }
+            else
+            {
+              $sc = FALSE;
+              $this->error = "ไม่พบรายการในเอกสารแพ็ค";
+            }
+          }
+          else
+          {
+            $sc = FALSE;
+            $this->error = "สถานะเอกสารแพ็คไม่ถูกต้อง";
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "ไม่พบเลขที่เอกสารแพ็ค";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "สถานะเอกสารโอนคลังไม่ถูกต้อง กรุณาตรวจสอบ";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "เลขที่เอกสารโอนคลังไม่ถูกต้อง";
+    }
+
+
+    $this->_response($sc);
+  }
+
+
+  public function edit($id)
+  {
+    if($this->pm->can_edit)
+    {
+      $doc = $this->transfer_model->get($id);
+
+      if( ! empty($doc))
+      {
+        $ds = array(
+          'doc' => $doc,
+          'details' => $this->transfer_model->get_details($id)
+        );
+
+        if($doc->status == 'P')
+        {
+          $this->load->view('inventory/transfer/transfer_edit', $ds);
+        }
+        else
+        {
+          $this->load->view('inventory/transfer/transfer_view_detail', $ds);
+        }
+      }
+      else
+      {
+        $this->page_error();
+      }
+    }
+    else
+    {
+      $this->permission_page();
+    }
+  }
+
+
+  public function view_detail($id)
+  {
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
+    {
+      $ds = array(
+        'doc' => $doc,
+        'details' => $this->transfer_model->get_details($id)
+      );
+
+      $this->load->view('inventory/transfer/transfer_view_detail', $ds);
+    }
+    else
+    {
+      $this->page_error();
+    }
+  }
+
+
+
+  public function update()
+  {
+    $sc = TRUE;
+    $id = $this->input->post('id');
+    $remark = get_null(trim($this->input->post('remark')));
+
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
+    {
+      if( $doc->status == 'P')
+      {
+        $arr = array(
+          'remark' => $remark,
+          'update_user' => $this->_user->id
+        );
+
+        if( ! $this->transfer_model->update($id, $arr))
+        {
+          $sc = FALSE;
+          $this->error = "Update failed";
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "Invalid document status";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Invalid document id";
     }
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
 
 
-  public function approve()
+  function save()
   {
-    $this->load->model('inventory/work_list_model');
-    $this->load->model('inventory/user_item_model');
-
     $sc = TRUE;
-    $ex = 0; //--- export status 0 = สำเร็จ , 1 = ส่งเข้า SAP ไม่สำเร็จ, 2 = ส่งไป SCS ไม่สำเร็จ;
+    $ex = 0;
+
     $id = $this->input->post('id');
 
-    if($id)
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
     {
-      $doc = $this->transfer_model->get($id);
-
-      if( ! empty($doc))
+      if($doc->status == 'P')
       {
-        if($doc->status == 'I' OR $doc->is_approve == 0)
+        $this->db->trans_begin();
+
+        $arr = array(
+          'status' => 'S',
+          'update_user' => $this->_user->id
+        );
+
+        $do = $this->transfer_model->update($id, $arr);
+        $de = $this->transfer_model->update_details($id, array('LineStatus' => 'C'));
+
+        if($do && $de)
         {
-          $arr = array(
-            'status' => 'A',
-            'is_approve' => 1,
-            'approver' => $this->_user->uname
-          );
+          $this->db->trans_commit();
+        }
+        else
+        {
+          $this->db->trans_rollback();
+          $sc = FALSE;
+          $this->error = "Failed to save document";
+        }
 
-          $this->db->trans_begin();
+        if($sc === TRUE)
+        {
+          $this->ms = $this->load->database('ms', TRUE);
+          $this->load->library('api');
 
-          if( ! $this->transfer_model->update($id, $arr))
+          if( ! $this->api->exportTransfer($id))
           {
             $sc = FALSE;
-            set_error(0, "อนุมัติเอกสารไม่สำเร็จ");
-          }
-
-          if($sc === TRUE)
-          {
-            if( ! $this->user_item_model->set_status($doc->i_pea_no, 'A'))
-            {
-              $sc = FALSE;
-              $this->error = "เปลี่ยนสถานะรายการมิเตอร์ไม่สำเร็จ";
-            }
-          }
-
-          if($sc === TRUE)
-          {
-            if( ! $this->work_list_model->set_status($doc->u_pea_no, 'A'))
-            {
-              $sc = FALSE;
-              $this->error = "เปลี่ยนสถานะใบสั่งงานไม่สำเร็จ";
-            }
-          }
-
-          if($sc === TRUE)
-          {
-            $this->db->trans_commit();
+            $ex = 1;
+            $this->error = "บันทึกเอกสารสำเร็จแต่สส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง : {$this->error}";
           }
           else
           {
-            $this->db->trans_rollback();
+            $this->install_list_model->change_status_by_transfer_code($doc->code, 'S');
+          }
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "Invalid document status";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "Invalid document id";
+    }
+
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'ex' => $ex
+    );
+
+    echo json_encode($arr);
+  }
+
+
+  public function delete_details()
+  {
+    $sc = TRUE;
+    $data = json_decode($this->input->post('data'));
+
+    if( ! empty($data))
+    {
+      if( $this->transfer_model->is_all_open($data))
+      {
+        $this->db->trans_begin();
+
+        foreach($data as $id)
+        {
+          if($sc === FALSE)
+          {
+            break;
           }
 
-          if($sc === TRUE)
+          $row = $this->transfer_model->get_detail($id);
+
+          if( ! empty($row) && $row->LineStatus == 'O')
           {
-            if(getConfig('PEA_API'))
+            if($this->transfer_model->delete_detail($id))
             {
-              $this->load->library('scs');
-              $work_list = $this->work_list_model->get($doc->u_pea_no);
-
-              $i_path = $this->config->item('image_path')."installed/{$doc->i_pea_no}-{$id}.jpg";
-              $u_path = $this->config->item('image_path')."returnned/{$doc->u_pea_no}-{$id}.jpg";
-              $s_path = $this->config->item('image_path')."signature/{$doc->u_pea_no}-{$id}_sign.jpg";
-
-              $doc->i_path = $i_path;
-              $doc->u_path = $u_path;
-              $doc->image1 = readImage($i_path);
-              $doc->image2 = readImage($u_path);
-              $doc->image3 = NULL;
-
-              if($doc->sign_status == 0)
+              if( ! $this->install_list_model->change_status_by_u_pea_no($row->u_pea_no, 'O'))
               {
-                $doc->s_path = $s_path;
-                $doc->image3 = readImage($s_path);
+                $sc = FALSE;
+                $this->error = "เปลี่ยนสถานะรายการติดตั้งไม่สำเร็จ : {$row->i_pea_no}";
               }
 
-              $res = json_decode($this->scs->send_data($doc, $work_list));
-
-              if( ! empty($res))
-              {
-                if($res->status == 1)
-                {
-                  $arr = array(
-                    'stataus' => 'W',
-                    'pea_status' => 'S',
-                    'pea_message' => NULL
-                  );
-
-                  $this->transfer_model->update($id, $arr);
-
-                  $this->work_list_model->set_status($doc->u_pea_no, 'W');
-                }
-                else
-                {
-                  $arr = array(
-                    'pea_status' => 'F',
-                    'pea_message' => $res->friendly_msg_en
-                  );
-
-                  $this->transfer_model->update($id, $arr);
-
-                  $sc = FALSE;
-                  $this->error = "อนุมัติเอกสารสำเร็จ ส่งข้อมูลเข้า SAP สำเร็จ แต่ส่งข้อมูลไประบบ SCS ไม่สำเร็จ : {$res->friendly_msg_en}";
-                }
-              }
-              else
+              if($sc === TRUE)
               {
                 $arr = array(
-                  'pea_status' => 'F',
-                  'pea_message' => 'ไม่ได้รับการตอบกลับจากระบบ SCS'
+                  'transfer_code' => NULL,
+                  'pack_id' => NULL,
+                  'pack_row_id' => NULL
                 );
 
-                $this->transfer_model->update($id, $arr);
+                $this->pack_model->update_detail($row->pack_row_id, $arr);
+              }
+            }
+            else
+            {
+              $sc = FALSE;
+              $this->error = "ลบรายการโอนย้ายไม่สำเร็จ : {$row->i_pea_no}";
+            }
+          }
+        } //-- end foreach
 
-                $sc = FALSE;
-                $this->error = "อนุมัติเอกสารสำเร็จ ส่งข้อมูลเข้า SAP สำเร็จ แต่ส่งข้อมูลไประบบ SCS ไม่สำเร็จ : ไม่ได้รับการตอบกลับจากระบบ SCS";
+        if($sc === TRUE)
+        {
+          $this->db->trans_commit();
+        }
+        else
+        {
+          $this->db->trans_rollback();
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "ลบไม่สำเร็จ - พบรายการที่มีสถานะ Close หรือ Cancelled ไปแล้ว";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "No item selected";
+    }
+
+    echo $sc === TRUE ? 'success' : $this->error;
+  }
+
+
+
+  public function cancle_transfer()
+  {
+    $sc = TRUE;
+    $id = $this->input->post('id');
+    $doc = $this->transfer_model->get($id);
+
+    if( ! empty($doc))
+    {
+      if($doc->status != 'C')
+      {
+        if($doc->status == 'P' OR $this->pm->can_delete)
+        {
+          $DocNum = $doc->status == 'P' ? NULL : $this->sapExists($doc->code);
+
+          if(empty($DocNum))
+          {
+            //--
+            $this->db->trans_begin();
+
+            //--- change document status
+            if( ! $this->transfer_model->update($doc->id, array('status' => 'C', 'update_user' => $this->_user->id)))
+            {
+              $sc = FALSE;
+              $this->error = "ยกเลิกเอกสารไม่สำเร็จ : เปลี่ยนสถานะเอกสารไม่สำเร็จ";
+            }
+
+            //--- delete transfer details
+            if($sc === TRUE)
+            {
+              $details = $this->transfer_model->get_details($doc->id);
+
+              if( ! empty($details))
+              {
+                foreach($details as $rs)
+                {
+                  if($sc === FALSE)
+                  {
+                    break;
+                  }
+
+                  if( ! $this->transfer_model->update_detail($rs->id, array('LineStatus' => 'D')))
+                  {
+                    $sc = FALSE;
+                    $this->error = "ยกเลิกเอกสารไม่สำเร็จ : เปลี่ยนสถานะรายการโอนย้ายไม่สำเร็จ";
+                  }
+
+                  //--- change status install list
+                  if($sc === TRUE)
+                  {
+                    $arr = array(
+                      'status' => 'O',
+                      'transfer_code' => NULL
+                    );
+
+                    if( ! $this->install_list_model->update_by_u_pea_no($rs->u_pea_no, $arr))
+                    {
+                      $sc = FALSE;
+                      $this->error = "ยกเลิกเอกสารไม่สำเร็จ : เปลี่ยนสถานะรายการติดตั้งแล้วไม่สำเร็จ";
+                    }
+                  }
+
+                  if($sc === TRUE)
+                  {
+                    if( ! empty($rs->pack_row_id))
+                    {
+                      $arr = array(
+                        'is_transfer' => 0,
+                        'transfer_code' => NULL,
+                        'status' => 'F'
+                      );
+
+                      if( ! $this->pack_model->update_detail($rs->pack_row_id, $arr))
+                      {
+                        $sc = FALSE;
+                        $this->error = "Change pack row status failed";
+                      }
+                    }
+                  }
+
+                } //--- foreach details
               }
             }
 
-            $this->ms = $this->load->database('ms', TRUE);
-            $this->load->library('api');
-
-            if( ! $this->api->exportTransfer($id))
+            if($sc === TRUE)
             {
-              $sc = FALSE;
-              $this->error = "อนัมัติเอกสารสำเร็จแต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง : {$this->error}";
+              if( ! empty($doc->pack_id))
+              {
+                $arr = array(
+                  'status' => 'F',
+                  'transfer_code' => NULL,
+                  'is_transfer' => 0
+                );
+
+                if( ! $this->pack_model->update($doc->pack_id, $arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "Change pack status failed";
+                }
+              }
             }
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          set_error(0, "Invalid document status");
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        set_error(0, "Invalid document id");
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error("required");
-    }
-
-    $this->_response($sc);
-  }
 
 
-  /*
-  Status
-  P = Pending
-  I = Installed
-  A = Sttc Approve
-  R = Sttc Rejected
-  W = Sent to Pea
-  S = PEA Accept
-  U = PEA Rejected
-  */
-
-  public function reject()
-  {
-    $this->load->model('inventory/work_list_model');
-    $this->load->model('inventory/user_item_model');
-    $sc = TRUE;
-
-    $id = $this->input->post('id');
-
-    if( ! empty($id))
-    {
-      $doc = $this->transfer_model->get($id);
-
-      if( ! empty($doc))
-      {
-
-        if($doc->status == 'I')
-        {
-          $this->db->trans_begin();
-          //--- set work_list status
-          if( ! $this->work_list_model->set_status($doc->u_pea_no, 'R'))
-          {
-            $sc = FALSE;
-            $this->error = "เปลี่ยนสถานะใบสั่งงานไม่สำเร็จ";
-          }
-
-          //--- set user_item status
-          if($sc === TRUE)
-          {
-            if( ! $this->user_item_model->set_status($doc->i_pea_no, 'R'))
+            if($sc === TRUE)
             {
-              $sc = FALSE;
-              $this->error = "เปลี่ยนสถานะรายการมิเตอร์ไม่สำเร็จ";
+              $this->db->trans_commit();
             }
-          }
-
-          //--- set transfer status
-          if($sc === TRUE)
-          {
-            $arr = array(
-              'status' => 'R',
-              'is_approve' => 0,
-              'approver' => $this->_user->uname,
-              'update_at' => now(),
-              'update_by' => $this->_user->id
-            );
-
-            if( ! $this->transfer_model->update($doc->id, $arr))
+            else
             {
-              $sc = FALSE;
-              $this->error = "Update data failed";
+              $this->db->trans_rollback();
             }
-          }
-
-          if($sc === TRUE)
-          {
-            $this->db->trans_commit();
           }
           else
           {
-            $this->db->trans_rollback();
+            $sc = FALSE;
+            $this->error = "เอกสารนี้เข้า SAP แล้ว หากต้องการยกเลิก ต้องยกเลิกใบโอนสินค้าเลขที่ {$DocNum} ในระบบ SAP ก่อน";
           }
         }
         else
         {
           $sc = FALSE;
-          set_error(0, "Invalid document status");
+          $this->error = "คุณไม่มีสิทธิ์ในการยกเลิกเอกสารที่บันทึกแล้ว";
         }
       }
       else
       {
         $sc = FALSE;
-        set_error(0, "Invalid document id");
+        $this->error = "Invalid document status";
       }
     }
     else
     {
       $sc = FALSE;
-      set_error("required");
+      $this->error = "Invalid document id";
     }
 
     $this->_response($sc);
   }
 
+
+  public function reloadWarehouse($id)
+  {
+    $this->ms = $this->load->database('ms', TRUE);
+    $sc = TRUE;
+
+    $details = $this->transfer_model->get_details($id);
+
+    if( ! empty($details))
+    {
+      foreach($details as $rs)
+      {
+        $fromWhsCode = $this->transfer_model->get_warehouse_code_by_serial($rs->i_pea_no);
+        if($fromWhsCode != $rs->fromWhsCode)
+        {
+          $arr = array(
+            'fromWhsCode' => $fromWhsCode
+          );
+
+          $this->transfer_model->update_detail($rs->id, $arr);
+        }
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "ไม่พบรายการโอนย้าย";
+    }
+
+    $this->_response($sc);
+  }
+
+
+  public function sapExists($code)
+  {
+    $this->ms = $this->load->database('ms', TRUE);
+
+    //$rs = $this->ms->select('DocNum')->where('U_WEBCODE', $code)->where('CANCELED', 'N')->get('OWTR');
+    $qr = "SELECT CONCAT(S.BeginStr, '-', O.DocNum) AS DocNum
+            FROM OWTR AS O
+            LEFT JOIN NNM1 AS S ON O.ObjType = 67
+            AND S.ObjectCode = 67 AND O.Series = S.Series
+            WHERE O.U_WEBCODE = '{$code}' AND O.CANCELED = 'N'";
+
+    $rs = $this->ms->query($qr);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->row()->DocNum;
+    }
+
+    return FALSE;
+  }
 
 
   public function send_to_sap()
@@ -404,155 +1080,6 @@ class Transfer extends PS_Controller
   }
 
 
-  public function send_to_scs()
-  {
-    $sc = TRUE;
-
-    $id = $this->input->post('id');
-
-    if($id)
-    {
-      $doc = $this->transfer_model->get($id);
-
-      if( ! empty($doc))
-      {
-        if($doc->status == 'A' && $doc->is_approve == 1)
-        {
-          if(getConfig('PEA_API'))
-          {
-            $this->load->model('inventory/work_list_model');
-            $this->load->library('scs');
-            $work_list = $this->work_list_model->get($doc->u_pea_no);
-
-            $i_path = $this->config->item('image_path')."installed/{$doc->i_pea_no}-{$id}.jpg";
-            $u_path = $this->config->item('image_path')."returnned/{$doc->u_pea_no}-{$id}.jpg";
-            $s_path = $this->config->item('image_path')."signature/{$doc->u_pea_no}-{$id}_sign.jpg";
-
-            $doc->i_path = $i_path;
-            $doc->u_path = $u_path;
-            $doc->image1 = readImage($i_path);
-            $doc->image2 = readImage($u_path);
-            $doc->image3 = NULL;
-
-            if($doc->sign_status == 0)
-            {
-              $doc->s_path = $s_path;
-              $doc->image3 = readImage($s_path);
-            }
-
-            $res = json_decode($this->scs->send_data($doc, $work_list));
-
-            if( ! empty($res))
-            {
-              if($res->status == 1)
-              {
-                $arr = array(
-                  'stataus' => 'W',
-                  'pea_status' => 'S',
-                  'pea_message' => NULL
-                );
-
-                $this->transfer_model->update($id, $arr);
-              }
-              else
-              {
-                $arr = array(
-                  'pea_status' => 'F',
-                  'pea_message' => $res->friendly_msg_en
-                );
-
-                $this->transfer_model->update($id, $arr);
-
-                $sc = FALSE;
-                $this->error = "ส่งข้อมูลไประบบ SCS ไม่สำเร็จ : {$res->friendly_msg_en}";
-              }
-            }
-            else
-            {
-              $arr = array(
-                'pea_status' => 'F',
-                'pea_message' => 'ไม่ได้รับการตอบกลับจากระบบ SCS'
-              );
-
-              $this->transfer_model->update($id, $arr);
-
-              $sc = FALSE;
-              $this->error = "ส่งข้อมูลไประบบ SCS ไม่สำเร็จ : ไม่ได้รับการตอบกลับจากระบบ SCS";
-            }
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          set_error(0, "Invalid document status");
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        set_error(0, "Invalid document id");
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error("required");
-    }
-
-    $this->_response($sc);
-  }
-
-
-  public function get_item($id)
-  {
-    $this->load->model('admin/damaged_model');
-    $sc = TRUE;
-    $ds = array();
-    $rs = $this->transfer_model->get($id);
-
-    if( ! empty($rs))
-    {
-      $i_path = base_url().$this->config->item('image_path')."installed/{$rs->i_pea_no}-{$id}.jpg";
-      $u_path = base_url().$this->config->item('image_path')."returnned/{$rs->u_pea_no}-{$id}.jpg";
-      $s_path = base_url().$this->config->item('image_path')."signature/{$rs->u_pea_no}-{$id}_sign.jpg";
-
-      $ds = array(
-        "id" => $rs->id,
-        "code" => $rs->code,
-        "item_code" => $rs->ItemCode,
-        "item_name" => $rs->ItemName,
-        "i_serial" => $rs->i_serial,
-        "fromWhsCode" => $rs->fromWhsCode,
-        "fromWhsName" => $rs->from_warehouse_name,
-        "toWhsCode" => $rs->toWhsCode,
-        "toWhsName" => $rs->to_warehouse_name,
-        "i_image_path" => $i_path,
-        "u_image_path" => $u_path,
-        "s_image_path" => $rs->sign_status == '0' ? $s_path : NULL,
-        "i_pea_no" => $rs->i_pea_no,
-        "u_pea_no" => $rs->u_pea_no,
-        "u_power_no" => $rs->u_power_no,
-        "i_power_no" => $rs->i_power_no,
-        "phase" => $rs->phase,
-        "damage_id" => $rs->damage_id,
-        "damage_name" => damage_name($rs->damage_id),
-        "color" => sticker_color($rs->damage_id, $rs->use_age),
-        "use_age" => $rs->use_age,
-        "status" => $rs->status,
-        "sap_status" => $rs->sap_status,
-        "pea_status" => $rs->pea_status,
-        "is_approve" => $rs->is_approve,
-        "approver" => $rs->approver
-      );
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "ไม่พบรายการ";
-    }
-
-    echo $sc === TRUE ? json_encode($ds) : $this->error;
-  }
 
 
   public function get_new_code($date = NULL)
@@ -583,12 +1110,9 @@ class Transfer extends PS_Controller
   {
     $filter = array(
       'tr_code',
-      'tr_u_pea_no',
-      'tr_i_pea_no',
-      'tr_serial',
+      'tr_from_warehouse',
+      'tr_to_warehouse',
       'tr_user',
-      'tr_team_group_id',
-      'tr_team_id',
       'sap_status',
       'tr_status',
       'tr_from_date',

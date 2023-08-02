@@ -98,10 +98,10 @@ $db['default'] = array(
 
 $db['ms'] = array(
 	'dsn'	=> '',
-	'hostname' => 'stto-gctjkgtvbz.dynamic-m.com',
+	'hostname' => '192.168.10.102', //'stto-gctjkgtvbz.dynamic-m.com',
 	'username' => 'inet',
 	'password' => 'BXSttc2020',
-	'database' => 'TEST_BARCODE',
+	'database' => 'SBO_TTC', //'TEST_BARCODE',
 	'dbdriver' => 'sqlsrv',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
