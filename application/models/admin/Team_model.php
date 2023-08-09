@@ -73,6 +73,20 @@ class Team_model extends CI_Model
     return NULL;
   }
 
+
+  public function get_code($id)
+  {
+    $rs = $this->db->select('code')->where('id', $id)->get($this->tb);
+
+    if($rs->num_rows() == 1)
+    {
+      return $rs->row()->code;
+    }
+
+    return NULL;
+  }
+  
+
   public function get_user_team($user_id)
   {
     $rs = $this->db

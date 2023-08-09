@@ -104,7 +104,7 @@ while($total_page > 0 )
 				$rs->u_pea_no,
 				$rs->phase,
 				$rs->meter_size,
-				number($rs->meter_read_end),
+				$rs->meter_read_end,
 				$rs->meter_age,
 				$rs->dispose_reason_id != '0' ? $rs->dispose_reason_name : ''
 			);
@@ -118,7 +118,7 @@ while($total_page > 0 )
 		$n++;
 		$i++;
 		$index++;
-		
+
 		if($n > $split_row )
 		{
 			$page .= '<tr><td colspan="7" class="text-center"></td><td class="font-size-14 text-center">'.$current_box.'/'.$all_box.'</td></td>';

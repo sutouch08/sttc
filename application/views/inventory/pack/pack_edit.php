@@ -50,8 +50,6 @@
 
 <input type="hidden" id="pack_id" value="<?php echo $doc->id; ?>" />
 <input type="hidden" id="phase" value="<?php echo $doc->phase; ?>" />
-<?php $limit = $doc->phase == 3 ? getConfig('PACK_LIMIT_3_PHASE') : getConfig('PACK_LIMIT_1_PHASE'); ?>
-<input type="hidden" id="limit" value="<?php echo $limit; ?>" />
 <hr class="margin-bottom-10 margin-top-10"/>
 <?php $this->load->view('inventory/pack/pack_control'); ?>
 

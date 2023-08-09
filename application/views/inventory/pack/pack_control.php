@@ -1,8 +1,9 @@
+<?php $limit = $doc->phase == 3 ? getConfig('PACK_LIMIT_3_PHASE') : getConfig('PACK_LIMIT_1_PHASE'); ?>
 
 <div class="row">
   <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12 padding-5">
     <label>จำนวนทั้งหมด</label>
-    <input type="number" class="form-control input-lg text-center" id="all-qty" style="background-color:black; color:white;" value="<?php echo sum_pack_qty($doc->id); ?>" readonly />
+    <input type="text" class="form-control input-lg text-center" id="all-qty" style="background-color:black; color:white;" value="<?php echo sum_pack_qty($doc->id); ?> / <?php echo $limit; ?>" readonly />
   </div>
   <div class="col-xs-12 visible-xs">&nbsp;</div>
   <div class="col-lg-3 col-md-2-harf col-sm-2-harf col-xs-8 padding-5">
@@ -29,6 +30,8 @@
     <label class="display-block not-show hidden-xs">del</label>
     <button type="button" class="btn btn-lg btn-danger btn-block" onclick="confirmDelete()">ลบรายการ</button>
   </div>
+
+  <input type="hidden" id="limit" value="<?php echo $limit; ?>" />
 </div>
 <hr/>
 

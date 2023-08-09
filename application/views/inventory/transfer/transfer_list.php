@@ -15,7 +15,7 @@
 	</div>
 </div><!-- End Row -->
 <hr class="padding-5"/>
-<form id="searchForm" method="post" action="<?php echo current_url(); ?>">
+<form id="searchForm" method="post" action="<?php echo current_url(); ?>" autocomplete="off">
 	<div class="row">
 		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
 			<label>เลขที่</label>

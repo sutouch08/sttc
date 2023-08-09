@@ -14,6 +14,7 @@ class Pack extends PS_Controller
     $this->home = base_url().'inventory/pack';
     $this->load->model('inventory/pack_model');
     $this->load->model('inventory/install_list_model');
+    $this->load->model('admin/team_model');
     $this->load->helper('dispose_reason');
     $this->load->helper('warehouse');
     $this->load->helper('area');
@@ -26,8 +27,8 @@ class Pack extends PS_Controller
   {
 		$filter = array(
 			'code' => get_filter('code', 'pack_code', ''),
-      'area' => get_filter('area', 'pack_area', 'all'),
-      'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'),
+      'area' => (! empty($this->_user->team_id) ? $this->_user->team_id : get_filter('area', 'pack_area', 'all')),
+      'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'), //( ! empty($this->_user->fromWhsCode) ? $this->_user->fromWhsCode : get_filter('warehouse', 'pack_warehouse', 'all')),
       'status' => get_filter('status', 'pack_status', 'all'),
       'phase' => get_filter('phase', 'pack_phase', 'all'),
       'reference' => get_filter('reference', 'pack_reference', ''),
@@ -65,26 +66,34 @@ class Pack extends PS_Controller
 
     if($this->pm->can_add)
     {
-      $date_add = db_date($this->input->post('date_add'));
-      $phase = $this->input->post('phase') == 3 ? 3 : 1;
-      $remark = get_null($this->input->post('remark'));
+      if(! empty($this->_user->team_id) && ! empty($this->_user->fromWhsCode))
+      {
+        $date_add = db_date($this->input->post('date_add'));
+        $phase = $this->input->post('phase') == 3 ? 3 : 1;
+        $remark = get_null($this->input->post('remark'));
 
-      $ds = array(
-        'code' => $this->get_new_code($date_add),
-        'team_id' => $this->_user->team_id,
-        'WhsCode' => $this->_user->fromWhsCode,
-        'date_add' => $date_add,
-        'user' => $this->_user->id,
-        'remark' => $remark,
-        'phase' => $phase
-      );
+        $ds = array(
+          'code' => $this->get_new_code($date_add),
+          'team_id' => $this->_user->team_id,
+          'WhsCode' => $this->_user->fromWhsCode,
+          'date_add' => $date_add,
+          'user' => $this->_user->id,
+          'remark' => $remark,
+          'phase' => $phase
+        );
 
-      $id = $this->pack_model->add($ds);
+        $id = $this->pack_model->add($ds);
 
-      if( ! $id)
+        if( ! $id)
+        {
+          $sc = FALSE;
+          set_error('insert');
+        }
+      }
+      else
       {
         $sc = FALSE;
-        set_error('insert');
+        $this->error = "User ไม่ได้ผูก เขตหรือไม่ได้ผูกคลังไว้ ไม่สามารถเพิ่มเอกสารได้";
       }
     }
     else
@@ -208,7 +217,7 @@ class Pack extends PS_Controller
               'meter_age' => $rs->meter_age,
               'phase' => $rs->phase,
               'meter_size' => $rs->meter_size_name,
-              'meter_read_end' => number($rs->meter_read_end),
+              'meter_read_end' => $rs->meter_read_end,
               'dispose_reason_id' => $rs->dispose_reason,
               'user' => $this->_user->id,
               'dispose_reason_name' => empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason)
@@ -242,7 +251,7 @@ class Pack extends PS_Controller
       else
       {
         $sc = FALSE;
-        $this->error = "มิเตอร์นี้ยังไม่ถูกนำเข้าระบบ กรุณาตรวจสอบ";
+        $this->error = $rs === FALSE ? "พบรายการติดตั้งที่มี PEA NO นี้เกิน 1 บรรทัดกรุณาตรวจสอบ" : "มิเตอร์นี้ยังไม่ถูกนำเข้าระบบ กรุณาตรวจสอบ";
       }
     }
     else

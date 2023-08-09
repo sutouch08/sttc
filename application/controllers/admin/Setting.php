@@ -18,26 +18,33 @@ class Setting extends PS_Controller{
 
   public function index($tab = 'company')
   {
-		$groups = array('Company', 'Document', 'Order', 'SAP', 'system');
-
-		$ds = array(
-			'tab' => $tab
-		);
-
-		foreach($groups as $rs)
+		if($this->config->item('system_date'))
 		{
-			$group = $this->config_model->get_config_by_group($rs);
+			$groups = array('Company', 'Document', 'Order', 'SAP', 'system');
 
-			if(!empty($group))
+			$ds = array(
+				'tab' => $tab
+			);
+
+			foreach($groups as $rs)
 			{
-				foreach($group as $rd)
+				$group = $this->config_model->get_config_by_group($rs);
+
+				if(!empty($group))
 				{
-					$ds[$rd->code] = $this->config_model->get($rd->code);
+					foreach($group as $rd)
+					{
+						$ds[$rd->code] = $this->config_model->get($rd->code);
+					}
 				}
 			}
-		}
 
-		$this->load->view('admin/setting/configs', $ds);
+			$this->load->view('admin/setting/configs', $ds);
+		}
+		else
+		{
+			redirect(base_url().'suspended');
+		}
 
   }
 

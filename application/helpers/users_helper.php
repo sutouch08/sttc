@@ -40,7 +40,7 @@ function select_ugroup($id = '')
 {
   $ds = '';
   $ds .= '<option value="1" '.is_selected('1', $id).'>User</option>';
-  $ds .= '<option value="2" '.is_selected('2', $id).'>Admin</option>';  
+  $ds .= '<option value="2" '.is_selected('2', $id).'>Admin</option>';
 
   return $ds;
 }
@@ -59,23 +59,6 @@ function display_name($id)
   return $ci->user_model->get_name($id);
 }
 
-
-function select_outsource($id = NULL)
-{
-  $ds = "";
-  $ci =& get_instance();
-  $users = $ci->user_model->get_oursource_list();
-
-  if( ! empty($users))
-  {
-    foreach($users AS $us)
-    {
-      $ds .= '<option value="'.$us->id.'" '.is_selected($id, $us->id).'>'.$us->uname.' : '.$us->name.'</option>';
-    }
-  }
-
-  return $ds;
-}
 
 
 function select_user($id = NULL)
@@ -102,43 +85,32 @@ function get_permission($menu, $user_id)
 
   $user = $CI->user_model->get($user_id);
 
-  if(empty($user))
+  if( ! empty($user))
   {
-    return reject_permission();
-  }
-
-  //--- If super admin
-  if($user->ugroup == -987654321)
-  {
-    $pm = new stdClass();
-    $pm->can_view = TRUE;
-    $pm->can_add = TRUE;
-    $pm->can_edit = TRUE;
-    $pm->can_delete = TRUE;
-    $pm->can_approve = TRUE;
-  }
-  else
-  {
-    $pm = $CI->user_model->get_permission($menu, $user_id);
-
-    if(empty($pm))
+    if($user->ugroup == -987654321)
     {
-      return reject_permission();
+      return grant_permission();
     }
     else
     {
-      if(getConfig('CLOSE_SYSTEM') == 2)
+      $pm = $CI->user_model->get_permission($menu, $user_id);
+
+      if( ! empty($pm))
       {
-        $pm = new stdClass();
-        $pm->can_add = FALSE;
-        $pm->can_edit = FALSE;
-        $pm->can_delete = FALSE;
-        $pm->can_approve = FALSE;
+        if(getConfig('CLOSE_SYSTEM') == 2)
+        {
+          $pm->can_add = FALSE;
+          $pm->can_edit = FALSE;
+          $pm->can_delete = FALSE;
+          $pm->can_approve = FALSE;
+        }
+
+        return $pm;
       }
     }
   }
 
-  return $pm;
+  return reject_permission();
 }
 
 

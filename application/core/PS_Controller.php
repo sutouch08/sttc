@@ -30,7 +30,8 @@ class PS_Controller extends CI_Controller
 
 		$this->close_system   = getConfig('CLOSE_SYSTEM'); //--- ปิดระบบทั้งหมดหรือไม่
 		$this->_SuperAdmin = $this->_user->ugroup == -987654321 ? TRUE : FALSE;
-		
+    $this->_Admin = $this->_user->ugroup == 2 ? TRUE : FALSE;    
+
     if($this->close_system == 1 && $this->_SuperAdmin === FALSE)
     {
       redirect(base_url().'maintenance');

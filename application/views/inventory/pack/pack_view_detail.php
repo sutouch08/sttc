@@ -91,7 +91,7 @@
 					<th class="fix-width-150">PEA NO(ใหม่)</th>
 					<th class="fix-width-100 text-center">เฟส</th>
 					<th class="fix-width-100 text-center">ขนาด</th>
-          <th class="fix-width-150 text-center">หน่าวย (kWh)</th>
+          <th class="fix-width-150 text-center">หน่วย (kWh)</th>
           <th class="fix-width-100 text-center">อายุ (ปี)</th>
           <th class="min-width-100">การชำรุด</th>
 				</tr>
@@ -107,7 +107,7 @@
 							<td class="middle"><?php echo $rs->i_pea_no; ?></td>
               <td class="middle text-center"><?php echo $rs->phase; ?></td>
               <td class="middle text-center"><?php echo $rs->meter_size; ?></td>
-							<td class="middle text-center"><?php echo number($rs->meter_read_end); ?></td>
+							<td class="middle text-center"><?php echo $rs->meter_read_end; ?></td>
 							<td class="middle text-center"><?php echo $rs->meter_age; ?></td>
 							<td class="middle"><?php echo $rs->dispose_reason_name; ?></td>
 						</tr>

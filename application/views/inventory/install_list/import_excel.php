@@ -53,7 +53,17 @@
 
 
 <script>
-
+<?php if( ! empty($area_list)) : ?>
+<?php $ai = 0; ?>
+var areaList = {
+  <?php foreach($area_list as $as) : ?>
+  <?php echo $ai == 0 ? "'{$as->code}' : '{$as->code}'" : ", '{$as->code}' : '{$as->code}'"; ?>
+  <?php $ai++; ?>
+  <?php endforeach; ?>
+};
+<?php else : ?>
+var areaList = {};
+<?php endif; ?>
 var count = 0;
 var imported = 0;
 var allow_import = 0;
@@ -204,27 +214,41 @@ function uploadfile()
     reader.readAsText(file);
     reader.onload = function(e) {
       try{
-        var jsonData = [];
-        var header = ["work_date", "u_pea_no", "i_pea_no", "meter_age", "meter_type", "meter_size", "dispose_reason", "meter_read_end", "route", "area", "worker"];
-        var rows = e.target.result.split("\r\n");
-        for(var i = 0; i < rows.length; i++) {
-          var cells = rows[i].split(',');
-          if(cells[0] !='CreatedDate' && cells[0] != '' && cells[1] != '' && cells[2] != '') {
-            var rowData = {};
-            for(var j = 0; j < cells.length; j++) {
-              var key = header[j];
-              if(key) {
-                rowData[key] = cells[j].replace(/"/g, '').trim();
-              }
-            }
+        setTimeout(() => {
+          var jsonData = [];
+          var header = ["work_date", "u_pea_no", "i_pea_no", "meter_age", "meter_type", "meter_size", "dispose_reason", "meter_read_end", "route", "area", "worker"];
+          var rows = e.target.result.split("\r\n");
+          var first = rows[0].split(',');
+          if(first.length != 11) {
 
-            jsonData.push(rowData);
+            swal({
+              title:'Error!',
+              text:'รูปแบบไฟล์ไม่ถูกต้องกรุณาตรวจสอบ',
+              type:'error'
+            });
+
+            return false;
           }
-        }
 
-        if(jsonData.length) {
-          sendData(jsonData);
-        }
+          for(var i = 0; i < rows.length; i++) {
+            var cells = rows[i].split(',');
+            if(cells[0] !='CreatedDate' && cells[0] != '' && cells[1] != '' && cells[2] != '' && areaList[cells[9]] !== undefined) {
+              var rowData = {};
+              for(var j = 0; j < cells.length; j++) {
+                var key = header[j];
+                if(key) {
+                  rowData[key] = cells[j].replace(/"/g, '').trim();
+                }
+              }
+
+              jsonData.push(rowData);
+            }
+          }
+
+          if(jsonData.length) {
+            sendData(jsonData);
+          }
+        }, 200)
       }
       catch(e) {
         console.log(e);
@@ -241,49 +265,4 @@ function uploadfile()
 }
 
 
-
-
-	// function uploadfile()
-	// {
-  //   $('#upload-modal').modal('hide');
-  //
-	// 	var file	= $("#uploadFile")[0].files[0];
-	// 	var fd = new FormData();
-	// 	fd.append('uploadFile', $('input[type=file]')[0].files[0]);
-	// 	if( file !== '')
-	// 	{
-	// 		load_in();
-	// 		$.ajax({
-	// 			url:HOME + 'do_import',
-	// 			type:"POST",
-  //       cache:"false",
-  //       data: fd,
-  //       processData:false,
-  //       contentType: false,
-	// 			success: function(rs){
-	// 				load_out();
-	// 				var rs = $.trim(rs);
-  //         if(rs === 'success'){
-  //           swal({
-  //             title: 'Success',
-  //             text : rs,
-  //             type: 'success',
-  //             html:true,
-  //             timer:1000
-  //           });
-  //
-  //           setTimeout(function(){
-  //             window.location.reload();
-  //           }, 1200);
-  //         }else{
-  //           swal({
-  //             title:'Error!!',
-  //             text:rs,
-  //             type:'error'
-  //           });
-  //         }
-	// 			}
-	// 		});
-	// 	}
-	// }
 </script>

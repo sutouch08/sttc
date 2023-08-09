@@ -107,7 +107,7 @@ while($total_page > 0 )
 				$rs->u_pea_no,
 				$rs->phase,
 				$rs->meter_size,
-				number($rs->meter_read_end),
+				$rs->meter_read_end,
 				$rs->meter_age,
 				$rs->dispose_reason_id != '0' ? $rs->dispose_reason_name : ''
 			);

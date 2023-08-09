@@ -276,7 +276,7 @@ class Transfer_model extends CI_Model
 
 
   public function get_warehouse_code_by_serial($serial)
-  {        
+  {
     $rs = $this->ms
     ->select('Q.WhsCode')
     ->from('OSRN AS S')
@@ -296,7 +296,7 @@ class Transfer_model extends CI_Model
 
   public function is_exists_row($i_pea_no)
   {
-    $exists = $this->db->where('i_pea_no', $i_pea_no)->where('LineStatus !=', 'D')->count_all_results($this->td);
+    $exists = $this->db->where('i_pea_no', $i_pea_no)->where('LineStatus', 'O')->count_all_results($this->td);
 
     if($exists)
     {

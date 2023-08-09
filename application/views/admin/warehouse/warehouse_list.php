@@ -28,7 +28,7 @@
     <label>เขต</label>
     <select class="form-control input-sm filter" name="area">
 			<option value="all">ทั้งหมด</option>
-			<option value="NULL">ไม่ระบุ</option>
+			<option value="NULL" <?php echo is_selected('NULL', $area); ?>>ไม่ระบุ</option>
 			<?php echo select_area($area); ?>
 		</select>
   </div>

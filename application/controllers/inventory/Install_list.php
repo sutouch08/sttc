@@ -13,45 +13,60 @@ class Install_list extends PS_Controller
   public function __construct()
   {
     parent::__construct();
-    $this->home = base_url().'inventory/install_list';
-    $this->load->model('inventory/install_list_model');
-    $this->load->model('inventory/transfer_model');
-    $this->load->helper('warehouse');
-    $this->load->helper('area');
-    $this->load->helper('dispose_reason');
-    $this->load->helper('meter');
+
+    if($this->config->item('system_date'))
+    {
+      $this->home = base_url().'inventory/install_list';
+      $this->load->model('inventory/install_list_model');
+      $this->load->model('inventory/transfer_model');
+      $this->load->model('admin/team_model');
+      $this->load->helper('warehouse');
+      $this->load->helper('area');
+      $this->load->helper('dispose_reason');
+      $this->load->helper('meter');
+    }
   }
 
 
   public function index()
   {
-		$filter = array(
-			'transfer_code' => get_filter('transfer_code', 'transfer_code', ''),
-      'pack_code' => get_filter('pack_code', 'pack_code', ''),
-      'u_pea_no' => get_filter('u_pea_no', 'u_pea_no', ''),
-      'i_pea_no' => get_filter('i_pea_no', 'i_pea_no', ''),
-      'area' => get_filter('area', 'area', 'all'),
-      'whsCode' => get_filter('whsCode', 'whsCode', 'all'),
-      'user' => get_filter('user', 'user', ''),
-      'worker' => get_filter('worker', 'worker', ''),
-      'status' => get_filter('status', 'status', 'all'),
-      'from_date' => get_filter('from_date', 'from_date', ''),
-      'to_date' => get_filter('to_date', 'to_date', '')
-		);
+    if($this->config->item('system_date'))
+    {
+      $filter = array(
+        'transfer_code' => get_filter('transfer_code', 'transfer_code', ''),
+        'pack_code' => get_filter('pack_code', 'pack_code', ''),
+        'u_pea_no' => get_filter('u_pea_no', 'u_pea_no', ''),
+        'i_pea_no' => get_filter('i_pea_no', 'i_pea_no', ''),
+        'area' => (! empty($this->_user->team_id) ? $this->team_model->get_code($this->_user->team_id) : get_filter('area', 'area', 'all')),
+        'whsCode' => get_filter('whsCode', 'whsCode', 'all'),
+        'user' => get_filter('user', 'user', ''),
+        'worker' => get_filter('worker', 'worker', ''),
+        'status' => get_filter('status', 'status', 'all'),
+        'from_date' => get_filter('from_date', 'from_date', ''),
+        'to_date' => get_filter('to_date', 'to_date', '')
+      );
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
+      //--- แสดงผลกี่รายการต่อหน้า
+      $perpage = get_rows();
 
-		$rows = $this->install_list_model->count_rows($filter);
+      $rows = $this->install_list_model->count_rows($filter);
 
-		$filter['data'] = $this->install_list_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+      $filter['data'] = $this->install_list_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
+      //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+      $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 
-		$this->pagination->initialize($init);
+      $this->pagination->initialize($init);
 
-    $this->load->view('inventory/install_list/install_list', $filter);
+      $filter['area_list'] = $this->team_model->get_all_active();
+
+      $this->load->view('inventory/install_list/install_list', $filter);
+    }
+    else
+    {
+      redirect(base_url().'suspended');
+    }
+
   }
 
 
@@ -175,14 +190,18 @@ class Install_list extends PS_Controller
 
     if( ! empty($detail))
     {
-      $label = array(
-    		'O' => 'รอโอน',
-    		'L' => 'ระหว่างโอน',
-    		'S' => 'โอนแล้ว',
-        'E' => 'Error'
-    	);
 
-      $detail->status_label = $label[$detail->status];
+      $label = array(
+        'O0' => 'รอแพ็ค',
+        'O1' => 'รอโอน',
+        'L' => 'ระหว่างโอน',
+        'S' => 'โอนแล้ว',
+        'E' => 'Error',
+        'C' => 'Closed'
+      );
+
+      $pk = $detail->status == 'O' ? $detail->status.$detail->pack_status : $detail->status;
+      $detail->status_label = $label[$pk];
       $detail->work_date = thai_date($detail->work_date);
       $detail->date_add = thai_date($detail->date_add, TRUE);
       $detail->area_name = area_name_by_code($detail->area);
@@ -327,6 +346,113 @@ class Install_list extends PS_Controller
     }
 
     echo json_encode($ds);
+  }
+
+
+  public function export_filter()
+  {
+    ini_set('memory_limit','2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
+
+    $token = $this->input->post('token');
+    $limit = 500000;
+
+    $ds = array(
+      'u_pea_no' => $this->input->post('export_u_pea_no'),
+      'i_pea_no' => $this->input->post('export_i_pea_no'),
+      'area' => $this->input->post('export_area'),
+      'worker' => $this->input->post('export_worker'),
+      'user' => $this->input->post('export_user'),
+      'transfer_code' => $this->input->post('export_transfer_code'),
+      'pack_code' => $this->input->post('export_pack_code'),
+      'status' => $this->input->post('export_status'),
+      'from_date' => $this->input->post('export_from_date'),
+      'to_date' => $this->input->post('export_to_date')
+    );
+
+    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ');
+    $area = area_code_array();
+    $label = array(
+			'O0' => 'รอแพ็ค',
+			'O1' => 'รอโอน',
+			'L' => 'ระหว่างโอน',
+			'S' => 'โอนแล้ว',
+			'E' => 'Error',
+			'C' => 'Closed'
+		);
+
+    $results = $this->install_list_model->get_list($ds, $limit, 0);
+
+    // Create a file pointer
+    $f = fopen('php://memory', 'w');
+    $delimiter = ",";
+    fputs($f, $bom = ( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+    fputcsv($f, $header, $delimiter);
+
+    if(!empty($results))
+    {
+
+      foreach($results as $rs)
+      {
+        $pk = $rs->status == 'O' ? $rs->status.$rs->pack_status : $rs->status;
+        $status = empty($label[$pk]) ? 'unknow' : $label[$pk];
+
+        $arr = array(
+          thai_date($rs->work_date, FALSE),
+          $rs->u_pea_no,
+          $rs->i_pea_no,
+          (empty($area[$rs->area]) ? 'unknow' : $area[$rs->area]),
+          $rs->meter_age,
+          $rs->phase,
+          $rs->meter_size_name,
+          $rs->meter_read_end,
+          $rs->worker,
+          $status
+        );
+
+        fputcsv($f, $arr, $delimiter);
+      }
+
+      $memuse = (memory_get_usage() / 1024) / 1024;
+      $arr = array('memory usage', round($memuse, 2).' MB');
+
+      fputcsv($f, $arr, $delimiter);
+    }
+
+    //--- Move to begin of file
+    fseek($f, 0);
+
+    setToken($token);
+
+    $file_name = "export_filter ".date('Ymd').".csv";
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment;filename="'.$file_name.'"');
+
+    //output all remaining data on a file pointer
+    fpassthru($f); ;
+
+    exit();
+  }
+
+
+  public function count_worker()
+  {
+
+    $ds = array(
+      'u_pea_no' => $this->input->post('u_pea_no'),
+      'i_pea_no' => $this->input->post('i_pea_no'),
+      'area' => $this->input->post('area'),
+      'worker' => $this->input->post('worker'),
+      'user' => $this->input->post('user'),
+      'transfer_code' => $this->input->post('transfer_code'),
+      'pack_code' => $this->input->post('pack_code'),
+      'status' => $this->input->post('status'),
+      'from_date' => $this->input->post('from_date'),
+      'to_date' => $this->input->post('to_date')
+    );
+
+    $rows = $this->install_list_model->count_worker($ds);
+
+    echo $rows;
   }
 
 

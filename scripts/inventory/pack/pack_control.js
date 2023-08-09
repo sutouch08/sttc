@@ -1,7 +1,9 @@
 
 function updatePackQty() {
+  let limit = $('#limit').val();
   let packed = $('.pea-no').length;
-  $('#all-qty').val(packed);
+  let qty = packed + " / " + limit;
+  $('#all-qty').val(qty);
 }
 
 
@@ -29,7 +31,7 @@ function doPacking(op) {
   if(count < limit) {
     if(peaNo.length) {
       let id = $('#pack_id').val();
-  
+
       $.ajax({
         url:HOME + 'do_packing',
         type:'POST',
@@ -45,7 +47,7 @@ function doPacking(op) {
             let ds = JSON.parse(rs);
             let source = $('#row-template').html();
             let output = $('#row-table');
-  
+
             render_prepend(source, ds, output);
             updatePackQty();
             reIndex();
@@ -65,7 +67,7 @@ function doPacking(op) {
           }
         }
       });
-  
+
     }
     else {
       el.val('').removeAttr('disabled').focus();

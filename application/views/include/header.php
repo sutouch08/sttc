@@ -1,4 +1,8 @@
-
+<?php if(!$this->config->item('system_date')) : ?>
+	<?php if(current_url() != base_url().'suspended') : ?>
+		<?php redirect(base_url().'suspended'); ?>
+	<?php endif; ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="th">
 	<head>
@@ -75,8 +79,15 @@
 
 								<li>
 									<a href="JavaScript:void(0)" onclick="changeUserPwd()">
-										<i class="ace-icon fa fa-keys"></i>
+										<i class="ace-icon fa fa-key"></i>
 										เปลี่ยนรหัสผ่าน
+									</a>
+								</li>
+								<li class="divider"></li>
+								<li>
+									<a href="<?php echo base_url(); ?>manual">
+										<i class="ace-icon fa fa-file-pdf-o"></i>
+										คู่มือ
 									</a>
 								</li>
 								<li class="divider"></li>

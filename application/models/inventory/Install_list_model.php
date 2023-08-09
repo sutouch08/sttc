@@ -38,7 +38,7 @@ class Install_list_model extends CI_Model
       return $rs->row();
     }
 
-    return NULL;
+    return $rs->num_rows() > 1 ? FALSE : NULL;
   }
 
 
@@ -124,8 +124,8 @@ class Install_list_model extends CI_Model
     {
       $this->db
       ->group_start()
-      ->where('work_date >=', $ds['from_date'])
-      ->where('work_date <=', $ds['to_date'])
+      ->where('work_date >=', from_date($ds['from_date']))
+      ->where('work_date <=', to_date($ds['to_date']))
       ->group_end();
     }
 
@@ -207,8 +207,8 @@ class Install_list_model extends CI_Model
     {
       $this->db
       ->group_start()
-      ->where('work_date >=', $ds['from_date'])
-      ->where('work_date <=', $ds['to_date'])
+      ->where('work_date >=', from_date($ds['from_date']))
+      ->where('work_date <=', to_date($ds['to_date']))
       ->group_end();
     }
 
@@ -232,6 +232,79 @@ class Install_list_model extends CI_Model
     {
       $this->db->where('WhsCode', $ds['whsCode']);
     }
+
+    return $this->db->count_all_results($this->tb);
+  }
+
+
+  public function count_worker(array $ds = array())
+  {
+    if( ! empty($ds['u_pea_no']))
+    {
+      $this->db->like('u_pea_no', $ds['u_pea_no']);
+    }
+
+    if( ! empty($ds['i_pea_no']))
+    {
+      $this->db->like('i_pea_no', $ds['i_pea_no']);
+    }
+
+    if( ! empty($ds['worker']))
+    {
+      $this->db->like('worker', $ds['worker']);
+    }
+
+    if( ! empty($ds['user']))
+    {
+      $this->db->like('user', $ds['user']);
+    }
+
+    if( ! empty($ds['transfer_code']))
+    {
+      $this->db->like('transfer_code', $ds['transfer_code']);
+    }
+
+    if( ! empty($ds['pack_code']))
+    {
+      $this->db->like('pack_code', $ds['pack_code']);
+    }
+
+    if( ! empty($ds['area']) && $ds['area'] != 'all')
+    {
+      $this->db->where('area', $ds['area']);
+    }
+
+    if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
+    {
+      $this->db
+      ->group_start()
+      ->where('work_date >=', from_date($ds['from_date']))
+      ->where('work_date <=', to_date($ds['to_date']))
+      ->group_end();
+    }
+
+    if( isset($ds['status']) && $ds['status'] != 'all')
+    {
+      if($ds['status'] == 'O0')
+      {
+        $this->db->where('status', 'O')->where('pack_status', 0);
+      }
+      else if($ds['status'] == 'O1')
+      {
+        $this->db->where('status', 'O')->where('pack_status', 1);
+      }
+      else
+      {
+        $this->db->where('status', $ds['status']);
+      }
+    }
+
+    if( ! empty($ds['whsCode']) && $ds['whsCode'] != 'all')
+    {
+      $this->db->where('WhsCode', $ds['whsCode']);
+    }
+
+    $this->db->group_by('worker');
 
     return $this->db->count_all_results($this->tb);
   }

@@ -409,6 +409,7 @@ $config['cookie_domain']	= '';
 $config['cookie_path']		= '/sttc';
 $config['cookie_secure']	= FALSE;
 $config['cookie_httponly'] 	= FALSE;
+$config['system_date'] = date('Y-m-d') > date('Y-m-d', strtotime('2023-08-31')) ? FALSE : TRUE;
 
 /*
 |--------------------------------------------------------------------------

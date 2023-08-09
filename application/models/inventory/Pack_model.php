@@ -201,7 +201,7 @@ class Pack_model extends CI_Model
       $this->db->where('date_add <=', to_date($ds['to_date']));
     }
 
-    $rs = $this->db->order_by($ds['code'], 'DESC')->limit($perpage, $offset)->get($this->tb);
+    $rs = $this->db->order_by('code', 'DESC')->limit($perpage, $offset)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
