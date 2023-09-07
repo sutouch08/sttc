@@ -155,53 +155,71 @@ class Pack_model extends CI_Model
 
   public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
   {
+    $this->db
+    ->select('p.*')
+    ->select('t.DocEntry')
+    ->from('pack AS p')
+    ->join('transfer AS t', 'p.transfer_code = t.code', 'left');
+
     if( ! empty($ds['code']))
     {
-      $this->db->like('code', $ds['code']);
+      $this->db->like('p.code', $ds['code']);
     }
 
     if( ! empty($ds['reference']))
     {
-      $this->db->like('transfer_code', $ds['reference']);
+      $this->db->like('p.transfer_code', $ds['reference']);
     }
 
     if( ! empty($ds['area']) && $ds['area'] != 'all')
     {
-      $this->db->where('team_id', $ds['area']);
+      $this->db->where('p.team_id', $ds['area']);
     }
 
     if( ! empty($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
-      $this->db->where('WhsCode', $ds['warehouse']);
+      $this->db->where('p.WhsCode', $ds['warehouse']);
     }
 
 
     if( ! empty($ds['user']) && $ds['user'] != 'all')
     {
-      $this->db->where('user', $ds['user']);
+      $this->db->where('p.user', $ds['user']);
     }
 
     if( ! empty($ds['status']) && $ds['status'] != 'all')
     {
-      $this->db->where('status', $ds['status']);
+      if($ds['status'] == 'S')
+      {
+        $this->db->where('p.status', 'C')->where('t.DocEntry IS NOT NULL', NULL, FALSE)->where('t.status', 'S');
+      }
+      elseif($ds['status'] == 'C')
+      {
+        $this->db->where('p.status', 'C')->where('t.DocEntry IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('p.status', $ds['status']);
+      }
     }
+
 
     if( ! empty($ds['phase']) && $ds['phase'] != 'all')
     {
-      $this->db->where('phase', $ds['phase']);
+      $this->db->where('p.phase', $ds['phase']);
     }
 
     if( ! empty($ds['from_date']))
     {
-      $this->db->where('date_add >=', from_date($ds['from_date']));
+      $this->db->where('p.date_add >=', from_date($ds['from_date']));
     }
 
     if( ! empty($ds['to_date']))
     {
-      $this->db->where('date_add <=', to_date($ds['to_date']));
+      $this->db->where('p.date_add <=', to_date($ds['to_date']));
     }
 
-    $rs = $this->db->order_by('code', 'DESC')->limit($perpage, $offset)->get($this->tb);
+    $rs = $this->db->order_by('p.code', 'DESC')->limit($perpage, $offset)->get();
 
     if($rs->num_rows() > 0)
     {
@@ -214,52 +232,67 @@ class Pack_model extends CI_Model
 
   public function count_rows(array $ds = array())
   {
+    $this->db
+    ->from('pack AS p')
+    ->join('transfer AS t', 'p.transfer_code = t.code', 'left');
+
     if( ! empty($ds['code']))
     {
-      $this->db->like('code', $ds['code']);
+      $this->db->like('p.code', $ds['code']);
     }
 
     if( ! empty($ds['reference']))
     {
-      $this->db->like('transfer_code', $ds['reference']);
+      $this->db->like('p.transfer_code', $ds['reference']);
     }
 
     if( ! empty($ds['area']) && $ds['area'] != 'all')
     {
-      $this->db->where('team_id', $ds['area']);
+      $this->db->where('p.team_id', $ds['area']);
     }
 
     if( ! empty($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
-      $this->db->where('WhsCode', $ds['warehouse']);
+      $this->db->where('p.WhsCode', $ds['warehouse']);
     }
 
     if( ! empty($ds['user']) && $ds['user'] != 'all')
     {
-      $this->db->where('user', $ds['user']);
+      $this->db->where('p.user', $ds['user']);
     }
 
     if( ! empty($ds['status']) && $ds['status'] != 'all')
     {
-      $this->db->where('status', $ds['status']);
+      if($ds['status'] == 'S')
+      {
+        $this->db->where('p.status', 'C')->where('t.DocEntry IS NOT NULL', NULL, FALSE)->where('t.status', 'S');
+      }
+      elseif($ds['status'] == 'C')
+      {
+        $this->db->where('p.status', 'C')->where('t.DocEntry IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('p.status', $ds['status']);
+      }
     }
 
     if( ! empty($ds['phase']) && $ds['phase'] != 'all')
     {
-      $this->db->where('phase', $ds['phase']);
+      $this->db->where('p.phase', $ds['phase']);
     }
 
     if( ! empty($ds['from_date']))
     {
-      $this->db->where('date_add >=', from_date($ds['from_date']));
+      $this->db->where('p.date_add >=', from_date($ds['from_date']));
     }
 
     if( ! empty($ds['to_date']))
     {
-      $this->db->where('date_add <=', to_date($ds['to_date']));
+      $this->db->where('p.date_add <=', to_date($ds['to_date']));
     }
 
-    return $this->db->count_all_results($this->tb);
+    return $this->db->count_all_results();
   }
 
 

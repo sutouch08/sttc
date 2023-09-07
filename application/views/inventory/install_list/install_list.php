@@ -30,18 +30,18 @@
 <hr class="padding-5"/>
 <form id="searchForm" method="post" action="<?php echo current_url(); ?>" autocomplete="off">
 	<div class="row">
-		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
 			<label>PEA NO(เก่า)</label>
 			<input type="text" class="form-control input-sm search-box" name="u_pea_no" id="u_pea_no" value="<?php echo $u_pea_no; ?>" />
 		</div>
 
-		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
 			<label>PEA NO(ใหม่)</label>
 			<input type="text" class="form-control input-sm search-box" name="i_pea_no" id="i_pea_no" value="<?php echo $i_pea_no; ?>" />
 		</div>
 
 <?php if(empty($this->_user->team_id)) : ?>
-		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
 			<label>เขต</label>
 			<select class="form-control input-sm filter" name="area" id="area">
 				<option value="all">ทั้งหมด</option>
@@ -60,8 +60,13 @@
 		</div>
 
 		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
-			<label>เลขที่ใบแพ็ค</label>
-			<input type="text" class="form-control input-sm search-box" name="pack_code" id="pack_code" value="<?php echo $pack_code; ?>" />
+			<label>ใบแพ็คเริ่มต้น</label>
+			<input type="text" class="form-control input-sm" name="pack_code_from" id="pack-code-from" value="<?php echo $pack_code_from; ?>" placeholder="เริ่มต้น" />
+		</div>
+
+		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
+			<label>ใบแพ็คสิ้นสุด</label>
+			<input type="text" class="form-control input-sm" name="pack_code_to" id="pack-code-to" value="<?php echo $pack_code_to; ?>" placeholder="สิ้นสุด" />
 		</div>
 
 		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
@@ -113,6 +118,7 @@
 			<button type="button" class="btn btn-xs btn-info btn-block" onclick="countWorker()">แสดง</button>
 		</div>
 	</div>
+	<input type="hidden" name="search" value="1" />
 </form>
 <hr class="margin-top-15">
 <?php echo $this->pagination->create_links(); ?>
@@ -254,7 +260,8 @@
 	<input type="hidden" name="export_area" id="export_area">
 	<input type="hidden" name="export_worker" id="export_worker">
 	<input type="hidden" name="export_user" id="export_user">
-	<input type="hidden" name="export_pack_code" id="export_pack_code">
+	<input type="hidden" name="export_pack_code_from" id="export_pack_code_from">
+	<input type="hidden" name="export_pack_code_to" id="export_pack_code_to">
 	<input type="hidden" name="export_transfer_code" id="export_transfer_code">
 	<input type="hidden" name="export_status" id="export_status">
 	<input type="hidden" name="export_from_date" id="export_from_date">
@@ -305,6 +312,41 @@
 </script>
 
 <script>
+
+$('#pack-code-from').autocomplete({
+	source:BASE_URL + 'auto_complete/get_finished_pack_list',
+	autoFocus:true,
+	close:function() {
+		let fromCode = $('#pack-code-from').val();
+		let toCode = $('#pack-code-to').val();
+
+		if(fromCode.length && toCode.length) {
+			if(fromCode > toCode) {
+				$('#pack-code-from').val(toCode);
+				$('#pack-code-to').val(fromCode);
+			}
+		}
+	}
+});
+
+
+$('#pack-code-to').autocomplete({
+	source:BASE_URL + 'auto_complete/get_finished_pack_list',
+	autoFocus:true,
+	close:function() {
+		let fromCode = $('#pack-code-from').val();
+		let toCode = $('#pack-code-to').val();
+
+		if(fromCode.length && toCode.length) {
+			if(fromCode > toCode) {
+				$('#pack-code-from').val(toCode);
+				$('#pack-code-to').val(fromCode);
+			}
+		}
+	}
+});
+
+
 function exportFilter() {
 
 	let u_pea_no = $('#u_pea_no').val();
@@ -312,7 +354,8 @@ function exportFilter() {
 	let area = $('#area').val();
 	let worker = $('#worker').val();
 	let user = $('#user').val();
-	let pack_code = $('#pack_code').val();
+	let pack_code_from = $('#pack-code-from').val();
+	let pack_code_to = $('#pack-code-to').val();
 	let transfer_code = $('#transfer_code').val();
 	let status = $('#status').val();
 	let from_date = $('#fromDate').val();
@@ -325,17 +368,21 @@ function exportFilter() {
 	$('#export_area').val(area);
 	$('#export_worker').val(worker);
 	$('#export_user').val(user);
-	$('#export_pack_code').val(pack_code);
+	$('#export_pack_code_from').val(pack_code_from);
+	$('#export_pack_code_to').val(pack_code_to);
 	$('#export_transfer_code').val(transfer_code);
 	$('#export_status').val(status);
 	$('#export_from_date').val(from_date);
 	$('#export_to_date').val(to_date);
   $('#token').val(token);
 
+
+	/*
 	if(!isDate(from_date) || !isDate(to_date)){
 		swal("กรุณาระบุวันที่ติดตั้ง");
 		return false;
 	}
+	*/
 
   get_download(token);
 
@@ -349,7 +396,8 @@ function countWorker() {
 	let area = $('#area').val();
 	let worker = $('#worker').val();
 	let user = $('#user').val();
-	let pack_code = $('#pack_code').val();
+	let pack_code_from = $('#pack_code_from').val();
+	let pack_code_to = $('#pack_code_to').val();
 	let transfer_code = $('#transfer_code').val();
 	let status = $('#status').val();
 	let from_date = $('#fromDate').val();
@@ -365,7 +413,8 @@ function countWorker() {
 			"area" : area,
 			"worker" : worker,
 			"user" : user,
-			"pack_code" : pack_code,
+			"pack_code_from" : pack_code_from,
+			"pack_code_to" : pack_code_to,
 			"transfer_code" : transfer_code,
 			"status" : status,
 			"from_date" : from_date,

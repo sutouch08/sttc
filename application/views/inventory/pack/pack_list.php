@@ -61,6 +61,7 @@
 				<option value="F" <?php echo is_selected('F', $status); ?>>Finished</option>
 				<option value="C" <?php echo is_selected('C', $status); ?>>Closed</option>
 				<option value="D" <?php echo is_selected('D', $status); ?>>Cancelled</option>
+				<option value="S" <?php echo is_selected('S', $status); ?>>โอนแล้ว</option>
 			</select>
 		</div>
 
@@ -90,6 +91,7 @@
 			<button type="button" class="btn btn-xs btn-warning btn-block" onclick="clearFilter()"><i class="fa fa-retweet"></i> Reset</button>
 		</div>
 	</div>
+	<input type="hidden" name="search" value="1" />
 </form>
 <hr class="margin-top-15">
 <?php echo $this->pagination->create_links(); ?>
@@ -139,12 +141,14 @@
 					<td class="middle"><?php echo $rs->WhsCode .' : '.warehouse_name($rs->WhsCode); ?></td>
 					<td class="middle text-center"><?php echo sum_pack_qty($rs->id); ?></td>
 					<td class="middle">
-						<?php if($rs->status == 'O') : ?>
+						<?php if($rs->status == 'C' && $rs->DocEntry) : ?>
+							โอนแล้ว
+						<?php elseif($rs->status == 'C' && empty($rs->DocEntry)) : ?>
+							Closed
+						<?php elseif($rs->status == 'O') : ?>
 							Open
 						<?php elseif($rs->status== 'F') : ?>
 							Finished
-						<?php elseif($rs->status == 'C') : ?>
-							Closed
 						<?php elseif($rs->status == 'D') : ?>
 							Cancelled
 						<?php endif; ?>

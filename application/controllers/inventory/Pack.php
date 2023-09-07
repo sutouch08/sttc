@@ -28,7 +28,7 @@ class Pack extends PS_Controller
 		$filter = array(
 			'code' => get_filter('code', 'pack_code', ''),
       'area' => (! empty($this->_user->team_id) ? $this->_user->team_id : get_filter('area', 'pack_area', 'all')),
-      'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'), //( ! empty($this->_user->fromWhsCode) ? $this->_user->fromWhsCode : get_filter('warehouse', 'pack_warehouse', 'all')),
+      'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'),
       'status' => get_filter('status', 'pack_status', 'all'),
       'phase' => get_filter('phase', 'pack_phase', 'all'),
       'reference' => get_filter('reference', 'pack_reference', ''),
@@ -37,19 +37,26 @@ class Pack extends PS_Controller
       'to_date' => get_filter('to_date', 'pack_to_date', '')
 		);
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
+    if($this->input->post('search'))
+    {
+      redirect($this->home);
+    }
+    else
+    {
+      //--- แสดงผลกี่รายการต่อหน้า
+  		$perpage = get_rows();
 
-		$rows = $this->pack_model->count_rows($filter);
+  		$rows = $this->pack_model->count_rows($filter);
 
-		$filter['data'] = $this->pack_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+  		$filter['data'] = $this->pack_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
+  		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+  		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 
-		$this->pagination->initialize($init);
+  		$this->pagination->initialize($init);
 
-    $this->load->view('inventory/pack/pack_list', $filter);
+      $this->load->view('inventory/pack/pack_list', $filter);
+    }
   }
 
 
@@ -442,6 +449,61 @@ class Pack extends PS_Controller
     {
       $sc = FALSE;
       $this->error = "ไม่พบเลขที่เอกสาร";
+    }
+
+    $this->_response($sc);
+  }
+
+
+
+  public function update_install_data()
+  {
+    $sc = TRUE;
+    $id = $this->input->post('id');
+
+    if( ! empty($id))
+    {
+      $doc = $this->pack_model->get($id);
+
+      if( ! empty($doc))
+      {
+        $details = $this->pack_model->get_details($id);
+
+        if( ! empty($details))
+        {
+          foreach($details as $rs)
+          {
+            $row = $this->install_list_model->get($rs->u_pea_no, 'u');
+
+            if( ! empty($row))
+            {
+              $arr = array(
+
+                'i_pea_no' => $row->i_pea_no,
+                'work_date' => $row->work_date,
+                'meter_age' => $row->meter_age,
+                'phase' => $row->phase,
+                'meter_size' => $row->meter_size_name,
+                'meter_read_end' => $row->meter_read_end,
+                'dispose_reason_id' => $row->dispose_reason,
+                'dispose_reason_name' => empty($row->dispose_reason) ? NULL : dispose_reason_name($row->dispose_reason)
+              );
+
+              $this->pack_model->update_detail($rs->id, $arr);
+            }
+          }
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        $this->error = "ไม่พบเอกสารแพ็ค";
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      $this->error = "ไม่พบเอกสารแพ็ค";
     }
 
     $this->_response($sc);

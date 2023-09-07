@@ -3,15 +3,16 @@
 	$pm = get_permission('OPWHTR', $this->_user->id);
 ?>
 <div class="row">
-	<div class="col-lg-4 col-md-4 col-sm-4 hidden-xs">
+	<div class="col-lg-2 col-md-4 col-sm-4 hidden-xs">
     <h3 class="title"> <?php echo $this->title; ?></h3>
   </div>
 	<div class="col-xs-12 visible-xs">
 		<h3 class="title-xs"><?php echo $this->title; ?></h3>
 	</div>
-	<div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+	<div class="col-lg-10 col-md-8 col-sm-8 col-xs-12">
     <p class="pull-right top-p">
 			<button type="button" class="btn btn-sm btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+			<button type="button" class="btn btn-sm btn-purple top-btn" onclick="updateInstallData()">Update ข้อมูลสับเปลี่ยน</button>
 			<?php if($doc->status != 'O' && $doc->status != 'D') : ?>
 				<?php if($pm->can_add && $doc->status == 'F') : ?>
 					<button type="button" class="btn btn-sm btn-success top-btn" onclick="createTransfer()">สร้างใบโอนสินค้า</button>

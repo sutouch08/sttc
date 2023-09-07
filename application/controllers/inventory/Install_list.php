@@ -34,7 +34,8 @@ class Install_list extends PS_Controller
     {
       $filter = array(
         'transfer_code' => get_filter('transfer_code', 'transfer_code', ''),
-        'pack_code' => get_filter('pack_code', 'pack_code', ''),
+        'pack_code_from' => get_filter('pack_code_from', 'pack_code_from', ''),
+        'pack_code_to' => get_filter('pack_code_to', 'pack_code_to', ''),
         'u_pea_no' => get_filter('u_pea_no', 'u_pea_no', ''),
         'i_pea_no' => get_filter('i_pea_no', 'i_pea_no', ''),
         'area' => (! empty($this->_user->team_id) ? $this->team_model->get_code($this->_user->team_id) : get_filter('area', 'area', 'all')),
@@ -46,21 +47,30 @@ class Install_list extends PS_Controller
         'to_date' => get_filter('to_date', 'to_date', '')
       );
 
-      //--- แสดงผลกี่รายการต่อหน้า
-      $perpage = get_rows();
+      if($this->input->post('search'))
+      {
+        redirect($this->home);
+      }
+      else
+      {
+        //--- แสดงผลกี่รายการต่อหน้า
+        $perpage = get_rows();
 
-      $rows = $this->install_list_model->count_rows($filter);
+        $rows = $this->install_list_model->count_rows($filter);
 
-      $filter['data'] = $this->install_list_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+        $filter['data'] = $this->install_list_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
-      //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-      $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
+        //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+        $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 
-      $this->pagination->initialize($init);
+        $this->pagination->initialize($init);
 
-      $filter['area_list'] = $this->team_model->get_all_active();
+        $filter['area_list'] = $this->team_model->get_all_active();
 
-      $this->load->view('inventory/install_list/install_list', $filter);
+        $this->load->view('inventory/install_list/install_list', $filter);
+
+      }
+
     }
     else
     {
@@ -102,18 +112,29 @@ class Install_list extends PS_Controller
           'worker' => $rs->worker,
           'ItemCode' => ( ! empty($item) ? $item->ItemCode : NULL),
           'ItemName' => ( ! empty($item) ? $item->ItemName : NULL),
-          'status' => (empty($item) ? 'E' : 'O'),
-          'message' => (empty($item) ? 'ไม่พบ PEA NO ในระบบ SAP' : NULL),
           'date_add' => now(),
           'user' => $this->_user->uname
         );
 
-        if( ! $this->install_list_model->is_exists($rs->u_pea_no))
+        $id = $this->install_list_model->get_id($rs->u_pea_no);
+
+        if( ! $id)
         {
+          $arr['status'] = (empty($item) ? 'E' : 'O');
+          $arr['message'] = (empty($item) ? 'ไม่พบ PEA NO ในระบบ SAP' : NULL);
+
           if( ! $this->install_list_model->add($arr))
           {
             $sc = FALSE;
             $this->error = "Insert failed at : {$rs->u_pea_no}";
+          }
+        }
+        else
+        {
+          if( ! $this->install_list_model->update($id, $arr))
+          {
+            $sc = FALSE;
+            $this->error = "Update failed at : {$rs->u_pea_no}";
           }
         }
       }
@@ -354,7 +375,7 @@ class Install_list extends PS_Controller
     ini_set('memory_limit','2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
 
     $token = $this->input->post('token');
-    $limit = 500000;
+    $limit = 50000;
 
     $ds = array(
       'u_pea_no' => $this->input->post('export_u_pea_no'),
@@ -363,13 +384,14 @@ class Install_list extends PS_Controller
       'worker' => $this->input->post('export_worker'),
       'user' => $this->input->post('export_user'),
       'transfer_code' => $this->input->post('export_transfer_code'),
-      'pack_code' => $this->input->post('export_pack_code'),
+      'pack_code_from' => $this->input->post('export_pack_code_from'),
+      'pack_code_to' => $this->input->post('export_pack_code_to'),
       'status' => $this->input->post('export_status'),
       'from_date' => $this->input->post('export_from_date'),
       'to_date' => $this->input->post('export_to_date')
     );
 
-    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ');
+    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ', 'pack code');
     $area = area_code_array();
     $label = array(
 			'O0' => 'รอแพ็ค',
@@ -390,7 +412,6 @@ class Install_list extends PS_Controller
 
     if(!empty($results))
     {
-
       foreach($results as $rs)
       {
         $pk = $rs->status == 'O' ? $rs->status.$rs->pack_status : $rs->status;
@@ -406,7 +427,8 @@ class Install_list extends PS_Controller
           $rs->meter_size_name,
           $rs->meter_read_end,
           $rs->worker,
-          $status
+          $status,
+          $rs->pack_code
         );
 
         fputcsv($f, $arr, $delimiter);
@@ -444,7 +466,8 @@ class Install_list extends PS_Controller
       'worker' => $this->input->post('worker'),
       'user' => $this->input->post('user'),
       'transfer_code' => $this->input->post('transfer_code'),
-      'pack_code' => $this->input->post('pack_code'),
+      'pack_code_from' => $this->input->post('pack_code_from'),
+      'pack_code_to' => $this->input->post('pack_code_to'),
       'status' => $this->input->post('status'),
       'from_date' => $this->input->post('from_date'),
       'to_date' => $this->input->post('to_date')
@@ -460,7 +483,8 @@ class Install_list extends PS_Controller
   {
     $filter = array(
 			'transfer_code',
-      'pack_code',
+      'pack_code_from',
+      'pack_code_to',
       'u_pea_no',
       'i_pea_no',
       'area',

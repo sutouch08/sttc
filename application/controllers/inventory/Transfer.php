@@ -27,6 +27,7 @@ class Transfer extends PS_Controller
   {
 		$filter = array(
 			'code' => get_filter('code', 'tr_code', ''),
+      'pack_code' => get_filter('pack_code', 'tr_pack_code', ''),
       'from_warehouse' => get_filter('from_warehouse', 'tr_from_warehouse', 'all'),
       'to_warehouse' => get_filter('to_warehouse', 'tr_to_warehouse', 'all'),
       'user' => get_filter('user', 'tr_user', ''),
@@ -36,21 +37,28 @@ class Transfer extends PS_Controller
       'to_date' => get_filter('to_date', 'tr_to_date', '')
 		);
 
-    $filter['user_in'] = empty($filter['user']) ? NULL : $this->user_model->get_user_in($ds['user']);
+    if($this->input->post('search'))
+    {
+      redirect($this->home);
+    }
+    else
+    {
+      $filter['user_in'] = empty($filter['user']) ? NULL : $this->user_model->get_user_in($ds['user']);
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
+      //--- แสดงผลกี่รายการต่อหน้า
+      $perpage = get_rows();
 
-		$rows = $this->transfer_model->count_rows($filter);
+      $rows = $this->transfer_model->count_rows($filter);
 
-		$filter['data'] = $this->transfer_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+      $filter['data'] = $this->transfer_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
+      //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+      $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 
-		$this->pagination->initialize($init);
+      $this->pagination->initialize($init);
 
-    $this->load->view('inventory/transfer/transfer_list', $filter);
+      $this->load->view('inventory/transfer/transfer_list', $filter);
+    }
   }
 
 
@@ -1038,6 +1046,7 @@ class Transfer extends PS_Controller
   public function send_to_sap()
   {
     $sc = TRUE;
+    $ex = 0;
 
     $id = $this->input->post('id');
 
@@ -1047,15 +1056,20 @@ class Transfer extends PS_Controller
 
       if( ! empty($doc))
       {
-        if($doc->status == 'A' && $doc->is_approve == 1)
+        if($doc->status == 'S')
         {
-          $this->load->database('ms', TRUE);
+          $this->ms = $this->load->database('ms', TRUE);
           $this->load->library('api');
 
           if( ! $this->api->exportTransfer($id))
           {
             $sc = FALSE;
-            set_error(0, "ส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง : {$this->error}");
+            $ex = 1;
+            $this->error = "บันทึกเอกสารสำเร็จแต่สส่งข้อมูลเข้า SAP ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้งภายหลัง : {$this->error}";
+          }
+          else
+          {
+            $this->install_list_model->change_status_by_transfer_code($doc->code, 'S');
           }
         }
         else
@@ -1110,6 +1124,7 @@ class Transfer extends PS_Controller
   {
     $filter = array(
       'tr_code',
+      'tr_pack_code',
       'tr_from_warehouse',
       'tr_to_warehouse',
       'tr_user',

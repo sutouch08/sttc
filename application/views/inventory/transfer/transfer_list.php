@@ -22,6 +22,11 @@
 			<input type="text" class="form-control input-sm search-box" name="code" value="<?php echo $code; ?>" />
 		</div>
 
+		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 margin-bottom-5">
+			<label>ใบแพ็ค</label>
+			<input type="text" class="form-control input-sm search-box" name="pack_code" value="<?php echo $pack_code; ?>" />
+		</div>
+
 		<div class="col-lg-1-harf col-md-3 col-sm-2 col-xs-6 margin-bottom-5">
 			<label>คลังต้นทาง</label>
 			<select class="form-control input-sm filter" name="from_warehouse">
@@ -30,7 +35,8 @@
 			</select>
 		</div>
 
-		<div class="col-lg-1-harf col-md-3 col-sm-2 col-xs-6 margin-bottom-5">
+
+		<div class="col-lg-1-harf col-md-3 col-sm-2 col-xs-6 margin-bottom-5 hide">
 			<label>คลังปลายทาง</label>
 			<select class="form-control input-sm filter" name="to_warehouse">
 				<option value="all">ทั้งหมด</option>
@@ -82,12 +88,13 @@
 			<button type="button" class="btn btn-xs btn-warning btn-block" onclick="clearFilter()">Reset</button>
 		</div>
 	</div>
+	<input type="hidden" name="search" value="1" />
 </form>
 <hr class="margin-top-15">
 <?php echo $this->pagination->create_links(); ?>
 <div class="row">
 	<div class="col-lg-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1000px;;">
+		<table class="table table-hover border-1" style="min-width:1160px;;">
 			<thead>
 				<tr>
 					<th class="fix-width-120 middle text-center"></th>
@@ -96,8 +103,9 @@
 					<th class="fix-width-80 middle text-center">SAP</th>
 					<th class="fix-width-100 middle text-center">วันที่</th>
 					<th class="fix-width-120 middle">เลขที่</th>
-					<th class="fix-width-200 middle">คลังต้นทาง</th>
-					<th class="fix-width-200 middle">คลังปลายทาง</th>
+					<th class="fix-width-120 middle">ใบแพ็ค</th>
+					<th class="fix-width-100 middle">คลังต้นทาง</th>
+					<th class="fix-width-100 middle">คลังปลายทาง</th>
 					<th class="fix-width-80 middle text-center">จำนวน</th>
 					<th class="fix-width-100 middle">ผู้ทำรายการ</th>
 					<th class="fix-width-100 middle">SAP No.</th>
@@ -129,6 +137,7 @@
 					</td>
 					<td class="middle text-center"><?php echo thai_date($rs->date_add, FALSE); ?></td>
 					<td class="middle"><?php echo $rs->code; ?></td>
+					<td class="middle"><?php echo $rs->pack_code; ?></td>
 					<td class="middle"><?php echo $rs->fromWhsCode; ?></td>
 					<td class="middle"><?php echo $rs->toWhsCode; ?></td>
 					<td class="middle text-center"><?php echo number($this->transfer_model->totalRow($rs->id)); ?></td>

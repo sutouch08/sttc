@@ -226,3 +226,40 @@ function cancelPack() {
     }, 200);
   })
 }
+
+
+function updateInstallData() {
+  let id = $('#pack_id').val();
+
+  load_in();
+
+  $.ajax({
+    url:HOME + 'update_install_data',
+    type:'POST',
+    cache:false,
+    data: {
+      "id" : id
+    },
+    success:function(rs) {
+      load_out();
+      if(rs === 'success') {
+        swal({
+          title:'Success',
+          type:'success',
+          timer:1000
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      }
+      else {
+        swal({
+          title:'Error!',
+          text:rs,
+          type:'error'
+        })
+      }
+    }
+  })
+}

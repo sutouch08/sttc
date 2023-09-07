@@ -9,6 +9,9 @@
 	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
     <p class="pull-right top-p">
 			<button type="button" class="btn btn-sm btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+			<?php if($doc->status == 'S') : ?>
+				<button type="button" class="btn btn-sm btn-success top-btn" onclick="sendToSAP()"></i class="fa fa-send"></i> Send to SAP</button>
+			<?php endif; ?>
 			<?php if($doc->status != 'C' && $this->pm->can_delete) : ?>
 				<button type="button" class="btn btn-sm btn-danger top-btn" onclick="confirmCancle()"><i class="fa fa-times"></i> ยกเลิก</button>
 			<?php endif; ?>

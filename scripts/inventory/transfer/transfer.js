@@ -252,10 +252,7 @@ function save() {
 
 
 function sendToSAP() {
-  let id = $('#transfer-id').val();
-
-  $('#previewModal').modal('hide');
-
+  let id = $('#transfer_id').val();
   setTimeout(() => {
     load_in();
 
@@ -286,8 +283,6 @@ function sendToSAP() {
               title:'Error!',
               text:rs,
               type:'error'
-            }, () => {
-              $('#previewModal').modal('show');
             });
           }, 200)
         }

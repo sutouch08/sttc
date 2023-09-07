@@ -42,6 +42,19 @@ class Install_list_model extends CI_Model
   }
 
 
+  public function get_id($pea_no)
+  {
+    $rs = $this->db->select('id')->where('u_pea_no', $pea_no)->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row()->id;
+    }
+
+    return NULL;
+  }
+
+
   public function get_by_id($id)
   {
     $rs = $this->db->where('id', $id)->get($this->tb);
@@ -115,10 +128,31 @@ class Install_list_model extends CI_Model
       $this->db->like('transfer_code', $ds['transfer_code']);
     }
 
-    if( ! empty($ds['pack_code']))
+
+    if( ! empty($ds['pack_code_from']) OR ! empty($ds['pack_code_to']))
     {
-      $this->db->like('pack_code', $ds['pack_code']);
+      if( ! empty($ds['pack_code_from']) && ! empty($ds['pack_code_to']))
+      {
+        $this->db
+        ->group_start()
+        ->where('pack_code >=', $ds['pack_code_from'])
+        ->where('pack_code <=', $ds['pack_code_to'])
+        ->group_end();
+      }
+      else
+      {
+        if( ! empty($ds['pack_code_from']))
+        {
+          $this->db->like('pack_code', $ds['pack_code_from']);
+        }
+
+        if( ! empty($ds['pack_code_to']))
+        {
+          $this->db->like('pack_code', $ds['pack_code_to']);
+        }
+      }
     }
+
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
@@ -193,9 +227,28 @@ class Install_list_model extends CI_Model
       $this->db->like('transfer_code', $ds['transfer_code']);
     }
 
-    if( ! empty($ds['pack_code']))
+    if( ! empty($ds['pack_code_from']) OR ! empty($ds['pack_code_to']))
     {
-      $this->db->like('pack_code', $ds['pack_code']);
+      if( ! empty($ds['pack_code_from']) && ! empty($ds['pack_code_to']))
+      {
+        $this->db
+        ->group_start()
+        ->where('pack_code >=', $ds['pack_code_from'])
+        ->where('pack_code <=', $ds['pack_code_to'])
+        ->group_end();
+      }
+      else
+      {
+        if( ! empty($ds['pack_code_from']))
+        {
+          $this->db->like('pack_code', $ds['pack_code_from']);
+        }
+
+        if( ! empty($ds['pack_code_to']))
+        {
+          $this->db->like('pack_code', $ds['pack_code_to']);
+        }
+      }
     }
 
     if( ! empty($ds['area']) && $ds['area'] != 'all')
@@ -264,9 +317,28 @@ class Install_list_model extends CI_Model
       $this->db->like('transfer_code', $ds['transfer_code']);
     }
 
-    if( ! empty($ds['pack_code']))
+    if( ! empty($ds['pack_code_from']) OR ! empty($ds['pack_code_to']))
     {
-      $this->db->like('pack_code', $ds['pack_code']);
+      if( ! empty($ds['pack_code_from']) && ! empty($ds['pack_code_to']))
+      {
+        $this->db
+        ->group_start()
+        ->where('pack_code >=', $ds['pack_code_from'])
+        ->where('pack_code <=', $ds['pack_code_to'])
+        ->group_end();
+      }
+      else
+      {
+        if( ! empty($ds['pack_code_from']))
+        {
+          $this->db->like('pack_code', $ds['pack_code_from']);
+        }
+
+        if( ! empty($ds['pack_code_to']))
+        {
+          $this->db->like('pack_code', $ds['pack_code_to']);
+        }
+      }
     }
 
     if( ! empty($ds['area']) && $ds['area'] != 'all')
@@ -304,7 +376,7 @@ class Install_list_model extends CI_Model
       $this->db->where('WhsCode', $ds['whsCode']);
     }
 
-    $this->db->group_by('worker');
+    $this->db->order_by('id', 'DESC')->group_by('worker');
 
     return $this->db->count_all_results($this->tb);
   }
