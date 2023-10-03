@@ -28,6 +28,7 @@ class Pack extends PS_Controller
 		$filter = array(
 			'code' => get_filter('code', 'pack_code', ''),
       'area' => (! empty($this->_user->team_id) ? $this->_user->team_id : get_filter('area', 'pack_area', 'all')),
+      'sub_area' => get_filter('sub_area', 'pack_sub_area', 'all'),
       'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'),
       'status' => get_filter('status', 'pack_status', 'all'),
       'phase' => get_filter('phase', 'pack_phase', 'all'),
@@ -78,10 +79,12 @@ class Pack extends PS_Controller
         $date_add = db_date($this->input->post('date_add'));
         $phase = $this->input->post('phase') == 3 ? 3 : 1;
         $remark = get_null($this->input->post('remark'));
+        $sub_area_id = get_null($this->input->post('sub_area'));
 
         $ds = array(
           'code' => $this->get_new_code($date_add),
           'team_id' => $this->_user->team_id,
+          'sub_area_id' => $sub_area_id,
           'WhsCode' => $this->_user->fromWhsCode,
           'date_add' => $date_add,
           'user' => $this->_user->id,
@@ -287,6 +290,21 @@ class Pack extends PS_Controller
       $this->error = "บันทึกอาการชำรุดไม่สำเร็จ";
     }
 
+    if($sc === TRUE)
+    {
+      $row = $this->pack_model->get_detail($id);
+
+      if( ! empty($row))
+      {
+        $pea_no = $row->u_pea_no;
+        $arr = array(
+          'dispose' => $dispose_reason
+        );
+
+        $this->install_list_model->update_by_u_pea_no($pea_no, $arr);
+      }
+    }
+
     $this->_response($sc);
   }
 
@@ -379,14 +397,18 @@ class Pack extends PS_Controller
   {
     $sc = TRUE;
     $id = $this->input->post('id');
+    $sub_area_id = get_null($this->input->post('sub_area'));
     $remark = get_null(trim($this->input->post('remark')));
 
-    $arr = array('remark' => $remark);
+    $arr = array(
+      'sub_area_id' => $sub_area_id,
+      'remark' => $remark
+    );
 
     if( ! $this->pack_model->update($id, $arr))
     {
       $sc = FALSE;
-      $this->error = "บันทึกหมายเหตุไม่สำเร็จ";
+      $this->error = "Update failed";
     }
 
     $this->_response($sc);
@@ -581,6 +603,7 @@ class Pack extends PS_Controller
       'pack_user',
       'pack_warehouse',
       'pack_area',
+      'pack_sub_area',
       'pack_from_date',
       'pack_to_date',
       'pack_reference',

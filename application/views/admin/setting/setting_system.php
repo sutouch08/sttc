@@ -69,7 +69,26 @@
       <span class="help-block"></span>
     </div>
     <div class="divider-hidden"></div>
-    
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">จำกัดจำนวนในการ Export ข้อมูล</span></div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <input type="number" class="form-control input-sm input-small text-center" name="EXPORT_LIMIT_ROWS" value="<?php echo $EXPORT_LIMIT_ROWS; ?>" />
+      <span class="help-block"></span>
+    </div>
+    <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">Export Memory Limit</span></div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <select class="form-control input-sm input-small" name="EXPORT_MEMORY_LIMIT">
+        <option value="1024M" <?php echo is_selected('1024M', $EXPORT_MEMORY_LIMIT); ?>>1 GB</option>
+        <option value="2048M" <?php echo is_selected('2048M', $EXPORT_MEMORY_LIMIT); ?>>2 GB</option>
+        <option value="3072M" <?php echo is_selected('3072M', $EXPORT_MEMORY_LIMIT); ?>>3 GB</option>
+        <option value="4096M" <?php echo is_selected('4096M', $EXPORT_MEMORY_LIMIT); ?>>4 GB</option>
+      </select>
+      <span class="help-block"></span>
+    </div>
+    <div class="divider-hidden"></div>
+
     <div class="divider-hidden"></div>
 		<div class="divider-hidden"></div>
 		<div class="divider-hidden"></div>

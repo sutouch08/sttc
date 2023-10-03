@@ -511,6 +511,24 @@ class Install_list_model extends CI_Model
     return $this->db->where('pack_status', 1)->where('pack_code', $pack_code)->update($this->tb, $arr);
   }
 
+
+  public function count_worker_by_date($date)
+  {
+    $qr = "SELECT COUNT(DISTINCT(worker)) AS workers_qty ";
+    $qr .= "FROM install_list ";
+    $qr .= "WHERE work_date = '{$date}'";
+
+    $rs = $this->db->query($qr);
+
+
+    if($rs->num_rows() == 1)
+    {
+      return $rs->row()->workers_qty;
+    }
+
+    return NULL;
+  }
+
 } //--- end class
 
  ?>

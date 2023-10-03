@@ -1,17 +1,18 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Team extends PS_Controller {
-	public $menu_code = 'SCTEAM'; //--- Add/Edit Users
+class Sub_area extends PS_Controller {
+	public $menu_code = 'SCSUBAREA'; //--- Add/Edit Users
 	public $menu_group_code = 'SC'; //--- System security
-	public $title = 'เพิ่ม/แก้ไข เขต';
+	public $title = 'เพิ่ม/แก้ไข พื้นที่';
 	public $segment = 4;
 
   public function __construct()
   {
     parent::__construct();
-    $this->home = base_url().'admin/team';
-    $this->load->model('admin/team_model');
+    $this->home = base_url().'admin/sub_area';
+    $this->load->model('admin/sub_area_model');
+		$this->load->helper('area');
   }
 
 
@@ -19,10 +20,9 @@ class Team extends PS_Controller {
   public function index()
   {
 		$filter = array(
-			'code' => get_filter('code', 'team_code', ''),
-			'name' => get_filter('name', 'team_name', ''),
-			'contract_no' => get_filter('contract_no', 'contract_no', ''),
-      'status' => get_filter('status', 'team_status', 'all')
+			'name' => get_filter('name', 'area_name', ''),
+			'team_id' => get_filter('team_id', 'area_team_id', 'all'),
+      'status' => get_filter('status', 'area_status', 'all')
 		);
 
 		if($this->input->post('search'))
@@ -34,16 +34,16 @@ class Team extends PS_Controller {
 			//--- แสดงผลกี่รายการต่อหน้า
 			$perpage = get_rows();
 
-			$rows = $this->team_model->count_rows($filter);
+			$rows = $this->sub_area_model->count_rows($filter);
 
-			$filter['data'] = $this->team_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+			$filter['data'] = $this->sub_area_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
 			//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 			$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 
 			$this->pagination->initialize($init);
 
-			$this->load->view('admin/team/team_list', $filter);			
+			$this->load->view('admin/sub_area/sub_area_list', $filter);			
 		}
   }
 
@@ -51,7 +51,7 @@ class Team extends PS_Controller {
   public function get($id)
   {
     $sc = TRUE;
-    $rs = $this->team_model->get($id);
+    $rs = $this->sub_area_model->get($id);
 
     if( ! empty($rs))
     {
@@ -77,29 +77,23 @@ class Team extends PS_Controller {
 
 		if($this->pm->can_add)
 		{
-			if($this->input->post('code') && $this->input->post('name'))
+			if($this->input->post('name') && $this->input->post('team_id'))
       {
-				$code = trim($this->input->post('code'));
         $name = trim($this->input->post('name'));
-				$full_name = trim($this->input->post('full_name'));
-				$contract_no = trim($this->input->post('contract_no'));
-				$list_no = trim($this->input->post('list_no'));
+				$team_id = $this->input->post('team_id');
         $active = $this->input->post('status') == 1 ? 1 : 0;
 
-        if( ! $this->team_model->is_exists($code))
+        if( ! $this->sub_area_model->is_exists($name, $team_id))
         {
           $arr = array(
-						'code' => $code,
             'name' => $name,
-						'full_name' => $full_name,
-						'contract_no' => $contract_no,
-						'list_no' => $list_no,
+						'team_id' => $team_id,
             'status' => $active,
             'create_at' => now(),
             'create_by' => $this->_user->id
           );
 
-          $id = $this->team_model->add($arr);
+          $id = $this->sub_area_model->add($arr);
 
           if( ! $id)
           {
@@ -110,11 +104,9 @@ class Team extends PS_Controller {
           {
             $ds = array(
               'id' => $id,
-							'code' => $code,
               'name' => $name,
-							'full_name' => $full_name,
-							'contract_no' => $contract_no,
-							'list_no' => $list_no,
+							'team_id' => $team_id,
+							'team_name' => area_name($team_id),
               'status' => is_active($active),
               'create_at' => thai_date(now(), FALSE),
               'create_by' => $this->_user->uname,
@@ -149,11 +141,8 @@ class Team extends PS_Controller {
   {
     $sc = TRUE;
     $id = $this->input->post('id');
-		$code = trim($this->input->post('code'));
     $name = trim($this->input->post('name'));
-		$full_name = trim($this->input->post('full_name'));
-		$contract_no = trim($this->input->post('contract_no'));
-		$list_no = trim($this->input->post('list_no'));
+		$team_id = $this->input->post('team_id');
     $active = $this->input->post('status') == 1 ? 1 : 0;
 
 		$ds = array();
@@ -162,27 +151,24 @@ class Team extends PS_Controller {
     {
       if( ! empty($id) && ! empty($name))
       {
-        if( ! $this->team_model->is_exists($code, $id))
+        if( ! $this->sub_area_model->is_exists($name, $team_id, $id))
         {
-          $arr = array(
-						'code' => $code,
+					$arr = array(
             'name' => $name,
-						'full_name' => $full_name,
-						'contract_no' => $contract_no,
-						'list_no' => $list_no,
+						'team_id' => $team_id,
             'status' => $active,
             'update_at' => now(),
             'update_by' => $this->_user->id
           );
 
-          if( ! $this->team_model->update($id, $arr))
+          if( ! $this->sub_area_model->update($id, $arr))
           {
             $sc = FALSE;
             set_error('update');
           }
           else
           {
-            $rs = $this->team_model->get($id);
+            $rs = $this->sub_area_model->get($id);
 
             if(! empty($rs))
             {
@@ -228,9 +214,9 @@ class Team extends PS_Controller {
     $sc = TRUE;
     $id = $this->input->post('id');
 
-    if( ! $this->team_model->is_exists_transection($id))
+    if( ! $this->sub_area_model->is_exists_transection($id))
     {
-      if( ! $this->team_model->delete($id))
+      if( ! $this->sub_area_model->delete($id))
       {
         $sc = FALSE;
         set_error('delete');
@@ -248,7 +234,7 @@ class Team extends PS_Controller {
 
   public function clear_filter()
   {
-    $filter = array("team_code", "team_name", "team_status", "contract_no");
+    $filter = array("area_team_id", "area_name", "area_status");
 
     return clear_filter($filter);
   }

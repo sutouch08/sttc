@@ -24,12 +24,20 @@
 		<input type="hidden" id="team_id" value="<?php echo $this->_user->team_id; ?>" />
 	</div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-5 col-xs-12">
+	<div class="col-lg-2-harf col-md-2-harf col-sm-5 col-xs-6">
 		<label>คลัง</label>
 		<input type="text" class="form-control edit" id="WhsCode" value="<?php echo $this->_user->fromWhsCode.' : '.warehouse_name($this->_user->fromWhsCode); ?>" disabled />
 	</div>
 
-  <div class="col-lg-5-harf col-md-5 col-sm-10-harf col-xs-9">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-2-harf col-xs-6">
+		<label>พื้นที่</label>
+		<select class="form-control edit" id="sub-area">
+			<option value="">เลือกพื้นที่</option>
+			<?php echo select_sub_area_team($this->_user->team_id); ?>
+		</select>
+	</div>
+
+  <div class="col-lg-4 col-md-3-harf col-sm-8 col-xs-9">
     <label>Remark</label>
     <input type="text" class="form-control edit" name="remark" id="remark" maxlength="254" value="" autofocus />
   </div>

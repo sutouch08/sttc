@@ -1,11 +1,11 @@
-var HOME = BASE_URL + 'admin/team/';
+var HOME = BASE_URL + 'admin/sub_area/';
 
 $('#add-modal').on('shown.bs.modal', function() {
-  $('#add-code').focus();
+  $('#add-name').focus();
 });
 
 $('#edit-modal').on('shown.bs.modal', function() {
-  $('#edit-code').focus();
+  $('#edit-name').focus();
 });
 
 
@@ -20,16 +20,10 @@ function openModal(name) {
 
 
 function addNew() {
-  $('#add-code').val('');
-  $('#add-code-error').text('');
   $('#add-name').val('');
   $('#add-name-error').text('');
-  $('#add-fullname').val('');
-  $('#add-fullname-error').text('');
-  $('#add-contract').val('');
-  $('#add-contract-error').text('')
-  $('#add-list').val('');
-  $('#add-list-error').text('');
+  $('#add-team').val('');
+  $('#add-team-error').text('');
   $('#add-active').prop('checked', true);
 
   openModal('add-modal');
@@ -37,20 +31,9 @@ function addNew() {
 
 
 function saveAdd() {
-  let code = $('#add-code').val();
   let name = $('#add-name').val();
-  let fullname = $('#add-fullname').val();
-  let contract = $('#add-contract').val();
-  let list = $('#add-list').val();
+  let team = $('#add-team').val();
   let status = $('#add-active').is(':checked') ? 1 : 0;
-
-  if(code.length == 0) {
-    $('#add-code-error').text('required');
-    return false;
-  }
-  else {
-    $('#add-code-error').text('');
-  }
 
   if(name.length == 0) {
     $('#add-name-error').text('required');
@@ -60,28 +43,12 @@ function saveAdd() {
     $('#add-name-error').text('');
   }
 
-  if(fullname.length == 0) {
-    $('#add-fullname-error').text('required');
+  if(team.val == "") {
+    $('#add-team-error').text('required');
     return false;
   }
   else {
-    $('#add-fullname-error').text('');
-  }
-
-  if(contract.length == 0) {
-    $('#add-contract-error').text('required');
-    return false;
-  }
-  else {
-    $('#add-contract-error').text('');
-  }
-
-  if(list.length == 0) {
-    $('#add-list-error').text('required');
-    return false;
-  }
-  else {
-    $('#add-list-error').text('');
+    $('#add-team-error').text('');
   }
 
   closeModal('add-modal');
@@ -91,11 +58,8 @@ function saveAdd() {
     type:'POST',
     cache:false,
     data:{
-      'code' : code,
       'name' : name,
-      'full_name' : fullname,
-      'contract_no' : contract,
-      'list_no' : list,
+      'team_id' : team,
       'status' : status
     },
     success:function(rs) {
@@ -141,11 +105,8 @@ function getEdit(id) {
       if(isJson(rs)) {
         let ds = $.parseJSON(rs);
         $('#edit-id').val(ds.id);
-        $('#edit-code').val(ds.code);
         $('#edit-name').val(ds.name);
-        $('#edit-fullname').val(ds.full_name);
-        $('#edit-contract').val(ds.contract_no);
-        $('#edit-list').val(ds.list_no);
+        $('#edit-team').val(ds.team_id);
 
         if(ds.status == 1) {
           $('#edit-active').prop('checked', true);
@@ -154,11 +115,8 @@ function getEdit(id) {
           $('#edit-active').prop('checked', false);
         }
 
-        $('#edit-code-error').text('');
         $('#edit-name-error').text('');
-        $('#edit-fullname-error').text('');
-        $('#edit-contract-error').text('');
-        $('#edit-list-error').text('');
+        $('#edit-team-error').text('');
         openModal('edit-modal');
       }
       else {
@@ -175,20 +133,9 @@ function getEdit(id) {
 
 function update() {
   let id = $('#edit-id').val();
-  let code = $('#edit-code').val();
   let name = $('#edit-name').val();
-  let fullname = $('#edit-fullname').val();
-  let contract = $('#edit-contract').val();
-  let list = $('#edit-list').val();
+  let team = $('#edit-team').val();
   let status = $('#edit-active').is(':checked') ? 1 : 0;
-
-  if(code.length == 0) {
-    $('#edit-code-error').text('Required');
-    return false;
-  }
-  else {
-    $('#edit-code-error').text('');
-  }
 
   if(name.length == 0) {
     $('#edit-name-error').text('Required');
@@ -198,28 +145,12 @@ function update() {
     $('#edit-name-error').text('');
   }
 
-  if(fullname.length == 0) {
-    $('#edit-fullname-error').text('required');
+  if(team.val == "") {
+    $('#add-team-error').text('required');
     return false;
   }
   else {
-    $('#edit-fullname-error').text('');
-  }
-
-  if(contract.length == 0) {
-    $('#edit-contract-error').text('Required');
-    return false;
-  }
-  else {
-    $('#edit-contract-error').text('');
-  }
-
-  if(list.length == 0) {
-    $('#edit-list-error').text('Required');
-    return false;
-  }
-  else {
-    $('#edit-list-error').text('');
+    $('#add-team-error').text('');
   }
 
   closeModal('edit-modal');
@@ -230,11 +161,8 @@ function update() {
     cache:false,
     data:{
       'id' : id,
-      'code' : code,
       'name' : name,
-      'full_name' : fullname,
-      'contract_no' : contract,
-      'list_no' : list,
+      'team_id' : team,
       'status' : status
     },
     success:function(rs) {
@@ -257,16 +185,10 @@ function update() {
         reIndex();
 
         $('#edit-id').val('');
-        $('#edit-code').val('');
-        $('#edit-code-error').text('');
         $('#edit-name').val('');
         $('#edit-name-error').text('');
-        $('#edit-fullname').val('');
-        $('#edit-fullname-error').text('');
-        $('#edit-contract').val('');
-        $('#edit-contract-error').text('')
-        $('#edit-list').val('');
-        $('#edit-list-error').text('');
+        $('#edit-team').val('');
+        $('#edit-team-error').text('');      
       }
       else {
         setTimeout(function() {

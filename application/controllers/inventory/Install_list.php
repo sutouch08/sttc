@@ -226,7 +226,7 @@ class Install_list extends PS_Controller
       $detail->work_date = thai_date($detail->work_date);
       $detail->date_add = thai_date($detail->date_add, TRUE);
       $detail->area_name = area_name_by_code($detail->area);
-      $detail->dispose_reason_name = dispose_reason_name($detail->dispose_reason);
+      $detail->dispose_reason_name = empty($detail->dispose) ? dispose_reason_name($detail->dispose_reason) : $detail->dispose;
 
       echo json_encode($detail);
     }
@@ -372,10 +372,13 @@ class Install_list extends PS_Controller
 
   public function export_filter()
   {
-    ini_set('memory_limit','2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
+    $memory = getConfig('EXPORT_MEMORY_LIMIT');
+    $memory = empty($memory) ? '2048M' : $memory;
+    ini_set('memory_limit', $memory); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
 
     $token = $this->input->post('token');
-    $limit = 50000;
+    $limit = intval(getConfig('EXPORT_LIMIT_ROWS'));
+    $limit = $limit > 0 ? $limit : 50000;
 
     $ds = array(
       'u_pea_no' => $this->input->post('export_u_pea_no'),
@@ -391,8 +394,9 @@ class Install_list extends PS_Controller
       'to_date' => $this->input->post('export_to_date')
     );
 
-    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ', 'pack code');
+    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ', 'pack code', 'ลักษณะการชำรุด');
     $area = area_code_array();
+    $reason = dispose_reason_array();
     $label = array(
 			'O0' => 'รอแพ็ค',
 			'O1' => 'รอโอน',
@@ -428,7 +432,8 @@ class Install_list extends PS_Controller
           $rs->meter_read_end,
           $rs->worker,
           $status,
-          $rs->pack_code
+          $rs->pack_code,
+          ( ! empty($rs->dispose) ? $rs->dispose : (empty($reason[$rs->dispose_reason]) ? "" : $reason[$rs->dispose_reason]))
         );
 
         fputcsv($f, $arr, $delimiter);
@@ -476,6 +481,33 @@ class Install_list extends PS_Controller
     $rows = $this->install_list_model->count_worker($ds);
 
     echo $rows;
+  }
+
+  public function count_worker_each_day()
+  {
+    $sc = TRUE;
+    $from_date = db_date($this->input->post('from_date'));
+    $to_date = db_date($this->input->post('to_date'));
+
+    $ds = array();
+    $range = date_range($from_date, $to_date);
+
+    if( ! empty($range))
+    {
+      foreach($range as $date)
+      {
+        $workers_qty = $this->install_list_model->count_worker_by_date($date);
+
+        $arr = array(
+          'work_date' => thai_date($date),
+          'workers_qty' => $workers_qty
+        );
+
+        array_push($ds, $arr);
+      }
+    }
+
+    echo json_encode($ds);
   }
 
 

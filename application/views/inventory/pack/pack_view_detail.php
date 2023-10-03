@@ -31,45 +31,50 @@
 </div><!-- End Row -->
 <hr class="padding-5"/>
 <div class="row">
-  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4">
     <label>เลขที่</label>
     <input type="text" class="form-control text-center" id="code" value="<?php echo $doc->code; ?>" disabled/>
   </div>
-  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4">
     <label>วันที่</label>
     <input type="text" class="form-control text-center" id="date_add" value="<?php echo thai_date($doc->date_add, FALSE); ?>" readonly disabled/>
   </div>
-	<div class="col-lg-2-harf col-md-2-harf col-sm-4 col-xs-6">
+	<div class="col-lg-2-harf col-md-1-harf col-sm-1-harf col-xs-4">
 		<label>เขต</label>
 		<input type="text" class="form-control" id="area" value="<?php echo area_name($doc->team_id); ?>" disabled />
 	</div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-4 col-xs-6">
+	<div class="col-lg-2-harf col-md-2-harf col-sm-2-harf col-xs-6">
 		<label>คลัง</label>
 		<input type="text" class="form-control" id="WhsCode" value="<?php echo $doc->WhsCode.' : '.warehouse_name($doc->WhsCode); ?>" disabled />
 	</div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-2-harf col-xs-6">
+	<div class="col-lg-2 col-md-2-harf col-sm-2-harf col-xs-6">
+		<label>พื้นที่</label>
+		<input type="text" class="form-control" id="sub-area" value="<?php echo sub_area_name($doc->sub_area_id); ?>" disabled />
+	</div>
+
+	<div class="col-lg-2 col-md-2-harf col-sm-2 col-xs-4">
 		<label>ผู้ทำรายการ</label>
 		<input type="text" class="form-control" id="user" value="<?php echo display_name($doc->user); ?>" disabled />
 	</div>
 
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4">
 		<label>Reference</label>
 		<input type="text" class="form-control text-center" value="<?php echo $doc->transfer_code; ?>" disabled />
 	</div>
 
-	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-6">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4">
 		<label>สถานะ</label>
 		<input type="text" class="form-control text-center" value="<?php echo pack_status_label($doc->status); ?>" disabled />
 	</div>
 
-	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-6">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3">
 		<label>เฟส</label>
 		<input type="text" class="form-control text-center" value="<?php echo $doc->phase; ?>" disabled />
 	</div>
 
-  <div class="col-lg-10 col-md-12 col-sm-8 col-xs-12">
+  <div class="col-lg-8-harf col-md-7-harf col-sm-7 col-xs-9">
     <label>Remark</label>
     <input type="text" class="form-control" name="remark" id="remark" maxlength="254" value="<?php echo $doc->remark; ?>" disabled/>
   </div>
@@ -120,7 +125,7 @@
 	</div>
 </div>
 
-<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 grey" style="position:absolute; bottom:0px;">
+<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 grey hidden-xs" style="position:absolute; bottom:0px;">
 	** "เขต" และ "คลัง" ไม่สามารถแก้ไขได้ เนื่องจากถูกผูกไว้กับ User name ของผู้ทำรายการ
 </div>
 <script src="<?php echo base_url(); ?>scripts/inventory/pack/pack.js?v=<?php echo date('Ymd'); ?>"></script>

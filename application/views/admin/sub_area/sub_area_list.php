@@ -16,18 +16,17 @@
 <hr class="padding-5"/>
 <form id="searchForm" method="post" action="<?php echo current_url(); ?>">
 <div class="row">
-	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-    <label>รหัสเขต</label>
-    <input type="text" class="form-control input-sm search-box" name="code" value="<?php echo $code; ?>" />
-  </div>
   <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-    <label>ชื่อเขต</label>
+    <label>พื้นที่</label>
     <input type="text" class="form-control input-sm search-box" name="name" value="<?php echo $name; ?>" />
   </div>
 
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-    <label>เลขทีสัญญา</label>
-    <input type="text" class="form-control input-sm search-box" name="contract_no" value="<?php echo $contract_no; ?>" />
+    <label>เขต</label>
+    <select class="form-control input-sm" name="team_id" onchange="getSearch()">
+			<option value="all">ทั้งหมด</option>
+			<?php echo select_area($team_id); ?>
+		</select>
   </div>
 
 	<div class="col-lg-1 col-md-1 col-sm-1 col-xs-6">
@@ -56,16 +55,13 @@
 
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1250px;">
+		<table class="table table-hover border-1" style="min-width:820px;">
 			<thead>
 				<tr>
 					<th class="fix-width-80"></th>
 					<th class="fix-width-60 middle text-center">#</th>
-					<th class="fix-width-100 middle">รหัสเขต</th>
-					<th class="fix-width-100 middle">ชื่อเขต</th>
-					<th class="fix-width-200 middle">ชื่อเต็ม</th>
-					<th class="fix-width-150 middle">เลขที่สัญญา</th>
-					<th class="fix-width-80 middle text-center">รายการที่</th>
+					<th class="fix-width-100 middle">พื้นที่</th>
+					<th class="fix-width-100 middle">เขต</th>
 					<th class="fix-width-80 middle text-center">สถานะ</th>
 					<th class="fix-width-100 middle">สร้างเมื่อ</th>
 					<th class="fix-width-100 middle">สร้างโดย</th>
@@ -87,11 +83,8 @@
 						<?php endif; ?>
 					</td>
 					<td class="middle text-center no"><?php echo $no; ?></td>
-					<td class="middle"><?php echo $rs->code; ?></td>
 					<td class="middle"><?php echo $rs->name; ?></td>
-					<td class="middle"><?php echo $rs->full_name; ?></td>
-					<td class="middle"><?php echo $rs->contract_no; ?></td>
-					<td class="middle text-center"><?php echo $rs->list_no; ?></td>
+					<td class="middle"><?php echo $rs->team_name; ?></td>
 					<td class="middle text-center"><?php echo is_active($rs->status); ?></td>
 					<td class="middle"><?php echo thai_date($rs->create_at, FALSE); ?></td>
 					<td class="middle"><?php echo uname($rs->create_by); ?></td>
@@ -112,40 +105,26 @@
    <div class="modal-content">
        <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-       <h4 class="modal-title">เพิ่ม เขต/พื้นที่</h4>
+       <h4 class="modal-title">เพิ่ม พื้นที่</h4>
       </div>
       <div class="modal-body">
         <div class="row" style="padding-left:12px; padding-right:12px;">
-					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-4">
-						<label>รหัสเขต</label>
-						<input type="text" id="add-code" class="form-control" maxlength="15"	autofocus required />
-						<div class="err-label" id="add-code-error"></div>
-					</div>
-          <div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
-						<label>ชื่อย่อ</label>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+						<label>ชื่อพื้นที่</label>
 						<input type="text" id="add-name" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="add-name-error"></div>
 					</div>
 
 					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-						<label>ชื่อเต็ม(ออกรายงาน)</label>
-						<input type="text" id="add-fullname" class="form-control" maxlength="100"	required />
-						<div class="err-label" id="add-fullname-error"></div>
+						<label>เขต</label>
+						<select class="form-control" id="add-team">
+							<option value="">เลือก</option>
+							<?php echo select_area(); ?>
+						</select>
+						<div class="err-label" id="add-team-error"></div>
 					</div>
 
-					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-8">
-						<label>เลขที่สัญญา</label>
-						<input type="text" id="add-contract" class="form-control" maxlength="100"	autofocus required />
-						<div class="err-label" id="add-contract-error"></div>
-					</div>
-          <div class="col-lg-3 col-md-3 col-sm-3 col-xs-4">
-						<label>รายการที่</label>
-						<input type="number" id="add-list" class="form-control" maxlength="2"	required />
-						<div class="err-label" id="add-list-error"></div>
-					</div>
-
-					<div class="col-lg-4 col-lg-offset-1 col-md-4 col-md-offset-1 col-sm-4 col-sm-offset-1 col-xs-12">
-						<label class="display-block not-show hidden-xs">active</label>
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 						<label style="margin-top:7px; padding-left:10px;">
 							<input type="checkbox" class="ace" id="add-active" checked />
 							<span class="lbl">&nbsp; Active</span>
@@ -174,43 +153,30 @@
       </div>
       <div class="modal-body">
         <div class="row" style="padding-left:12px; padding-right:12px;">
-					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-4">
-						<label>รหัสเขต</label>
-						<input type="text" id="edit-code" class="form-control" maxlength="15"	autofocus required />
-						<div class="err-label" id="edit-code-error"></div>
-					</div>
-					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
-						<label>ชื่อย่อ</label>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+						<label>ชื่อพื้นที่</label>
 						<input type="text" id="edit-name" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="edit-name-error"></div>
-            <input type="hidden" id="edit-id"/>
 					</div>
 
 					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-						<label>ชื่อเต็ม(ออกรายงาน)</label>
-						<input type="text" id="edit-fullname" class="form-control" maxlength="100"	required />
-						<div class="err-label" id="edit-fullname-error"></div>
+						<label>เขต</label>
+						<select class="form-control" id="edit-team">
+							<option value="">เลือก</option>
+							<?php echo select_area(); ?>
+						</select>
+						<div class="err-label" id="edit-team-error"></div>
 					</div>
 
-					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-8">
-						<label>เลขที่สัญญา</label>
-						<input type="text" id="edit-contract" class="form-control" maxlength="100"	required />
-						<div class="err-label" id="edit-contract-error"></div>
-					</div>
-          <div class="col-lg-3 col-md-3 col-sm-3 col-xs-4">
-						<label>รายการที่</label>
-						<input type="number" id="edit-list" class="form-control" maxlength="2"	required />
-						<div class="err-label" id="edit-list-error"></div>
-					</div>
-
-					<div class="col-lg-4 col-lg-offset-1 col-md-4 col-md-offset-1 col-sm-4 col-sm-offset-1 col-xs-12">
-						<label class="display-block not-show hidden-xs">active</label>
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 						<label style="margin-top:7px; padding-left:10px;">
 							<input type="checkbox" class="ace" id="edit-active" checked />
 							<span class="lbl">&nbsp; Active</span>
 						</label>
 					</div>
         </div>
+
+				<input type="hidden" id="edit-id" />
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-sm btn-default btn-100" onclick="closeModal('edit-modal')">Close</button>
@@ -228,11 +194,8 @@
 		<button type="button" class="btn btn-minier btn-danger" onclick="getDelete({{id}}, '{{name}}')"><i class="fa fa-trash"></i></button>
 	</td>
   <td class="middle text-center no">{{no}}</td>
-	<td class="middle">{{code}}</td>
   <td class="middle">{{name}}</td>
-	<td class="middle">{{full_name}}</td>
-	<td class="middle">{{contract_no}}</td>
-	<td class="middle text-center">{{list_no}}</td>
+	<td class="middle">{{team_name}}</td>
   <td class="middle text-center">{{{status}}}</td>
   <td class="middle">{{create_at}}</td>
   <td class="middle">{{create_by}}</td>
@@ -246,12 +209,9 @@
 		<button type="button" class="btn btn-minier btn-warning" onclick="getEdit({{id}})"><i class="fa fa-pencil"></i></button>
 		<button type="button" class="btn btn-minier btn-danger" onclick="getDelete({{id}}, '{{name}}')"><i class="fa fa-trash"></i></button>
 	</td>
-  <td class="middle text-center no">{{no}}</td>
-	<td class="middle">{{code}}</td>
+	<td class="middle text-center no">{{no}}</td>
   <td class="middle">{{name}}</td>
-	<td class="middle">{{full_name}}</td>
-	<td class="middle">{{contract_no}}</td>
-	<td class="middle text-center">{{list_no}}</td>
+	<td class="middle">{{team_name}}</td>
   <td class="middle text-center">{{{status}}}</td>
   <td class="middle">{{create_at}}</td>
   <td class="middle">{{create_by}}</td>
@@ -259,6 +219,6 @@
   <td class="middle">{{update_by}}</td>
 </script>
 
-<script src="<?php echo base_url(); ?>scripts/admin/team.js?v=<?php echo date('Ymd'); ?>"></script>
+<script src="<?php echo base_url(); ?>scripts/admin/sub_area.js?v=<?php echo date('Ymd'); ?>"></script>
 
 <?php $this->load->view('include/footer'); ?>

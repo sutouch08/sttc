@@ -16,6 +16,19 @@ function thai_date($date, $time = FALSE, $sp = '-')
   return NULL;
 }
 
+function date_range( $first, $last, $step = '+1 day', $format = 'Y-m-d' ) {
+    $dates = [];
+    $current = strtotime( $first );
+    $last = strtotime( $last );
+
+    while( $current <= $last ) {
+
+        $dates[] = date( $format, $current );
+        $current = strtotime( $step, $current );
+    }
+
+    return $dates;
+}
 
 
 function thai_short_text_date($date, $time = FALSE)

@@ -6,10 +6,16 @@ $('#date_add').datepicker({
 function add() {
   let date = $('#date_add').val();
   let phase = $('#phase').val();
+  let sub_area = $('#sub-area').val();
   let remark = $.trim($('#remark').val());
 
   if( ! isDate(date)) {
     swal("วันที่ไม่ถูกต้อง");
+    return false;
+  }
+
+  if(sub_area == "") {
+    swal("กรุณาระบุพื้นที่");
     return false;
   }
 
@@ -22,6 +28,7 @@ function add() {
     data:{
       'date_add' : date,
       'phase' : phase,
+      'sub_area' : sub_area,
       'remark' : remark
     },
     success:function(rs) {
@@ -55,7 +62,13 @@ function add() {
 
 function updateRemark() {
   let pack_id = $('#pack_id').val();
+  let sub_area = $('#sub-area').val();
   let remark = $('#remark').val();
+
+  if(sub_area == "") {
+    swal("กรุณาระบุพื้นที่");
+    return false;
+  }
 
   $.ajax({
     url:HOME + 'update_remark',
@@ -63,6 +76,7 @@ function updateRemark() {
     cache:false,
     data: {
       'id' : pack_id,
+      'sub_area' : sub_area,
       'remark' : remark
     },
     success:function(rs) {

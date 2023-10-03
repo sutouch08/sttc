@@ -1,13 +1,16 @@
 <?php $this->load->view('include/header'); ?>
 <div class="row">
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+	<div class="col-lg-6 col-md-6 col-sm-6 hidden-xs">
     <h3 class="title"><?php echo $this->title; ?></h3>
   </div>
-  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+	<div class="col-xs-12 visible-xs">
+		<h3 class="title-xs"><?php echo $this->title; ?></h3>
+	</div>
+  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 		<p class="pull-right top-p">
 			<button type="button" class="btn btn-xs btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i>  Back</button>
 		<?php if($this->pm->can_add OR $this->pm->can_edit) : ?>
-			<button type="button" class="btn btn-xs btn-success btn-100 top-btn hidden-xs" onclick="savePermission()">Save</button>
+			<button type="button" class="btn btn-xs btn-success btn-100 top-btn" onclick="savePermission()">Save</button>
 		<?php endif; ?>
 		</p>
 	</div>
@@ -114,7 +117,7 @@
 		<input type="hidden" name="user_id" id="user_id" value="<?php echo $user->id; ?>" />
 	</div>
 	<div class="divider-hidden"></div>
-	<div class="divider-hidden visible-xs"></div>	
+	<div class="divider-hidden visible-xs"></div>
 </div>
 
 <script src="<?php echo base_url(); ?>scripts/users/users.js?v=<?php echo date('Ymd'); ?>"></script>

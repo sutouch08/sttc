@@ -13,9 +13,8 @@ class Auto_complete extends CI_Controller
   {
     $txt = $_REQUEST['term'];
     $sc = array();
-    $this->db
-    ->select('code')
-    ->where('status', 'F');
+    $this->db->select('code');
+    // ->where_in('status', array('F', 'C'));
 
     if($txt != '*')
     {
@@ -37,7 +36,37 @@ class Auto_complete extends CI_Controller
     }
 
     echo json_encode($sc);
-  }  
+  }
+
+
+  public function get_pack_code()
+  {
+    $txt = $_REQUEST['term'];
+    $sc = array();
+    $this->db->select('code');
+    // ->where_in('status', array('F', 'C'));
+
+    if($txt != '*')
+    {
+      $this->db->like('code', $txt);
+    }
+
+    $rs = $this->db->limit(50)->get('pack');
+
+    if($rs->num_rows() > 0)
+    {
+      foreach($rs->result() as $rd)
+      {
+        $sc[] = $rd->code;
+      }
+    }
+    else
+    {
+      $sc[] = "not found";
+    }
+
+    echo json_encode($sc);
+  }
 
 } //-- end class
 ?>
