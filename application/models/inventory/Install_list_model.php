@@ -512,11 +512,11 @@ class Install_list_model extends CI_Model
   }
 
 
-  public function count_worker_by_date($date)
+  public function count_worker_by_date($date, $area)
   {
     $qr = "SELECT COUNT(DISTINCT(worker)) AS workers_qty ";
     $qr .= "FROM install_list ";
-    $qr .= "WHERE work_date = '{$date}'";
+    $qr .= "WHERE work_date = '{$date}' AND area = '{$area}'";
 
     $rs = $this->db->query($qr);
 

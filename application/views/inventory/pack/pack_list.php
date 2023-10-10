@@ -53,7 +53,19 @@
 			</select>
 		</div>
 
-		<div class="col-lg-2 col-md-1-harf col-sm-1-harf col-xs-3 margin-bottom-5">
+		<div class="col-lg-2 col-md-1-harf col-sm-1-harf col-xs-4 margin-bottom-5">
+			<label>สี</label>
+			<select class="form-control input-sm filter" name="color">
+				<option value="all">ทั้งหมด</option>
+				<option value="Green" <?php echo is_selected('Green', $color); ?>>เขียว</option>
+				<option value="Blue" <?php echo is_selected('Blue', $color); ?>>น้ำเงิน</option>
+				<option value="Orange" <?php echo is_selected('Orange', $color); ?>>ส้ม</option>
+				<option value="Red" <?php echo is_selected('Red', $color); ?>>แดง</option>
+				<option value="NULL" <?php echo is_selected('NULL', $color); ?>>ไม่ระบุ</option>
+			</select>
+		</div>
+
+		<div class="col-lg-2 col-md-1-harf col-sm-1-harf col-xs-4 margin-bottom-5">
 			<label>สถานะ</label>
 			<select class="form-control input-sm filter" name="status">
 				<option value="all">ทั้งหมด</option>
@@ -65,7 +77,7 @@
 			</select>
 		</div>
 
-		<div class="col-lg-2 col-md-1-harf col-sm-1-harf col-xs-3 margin-bottom-5">
+		<div class="col-lg-2 col-md-1-harf col-sm-1-harf col-xs-4 margin-bottom-5">
 			<label>เฟส</label>
 			<select class="form-control input-sm filter" name="phase">
 				<option value="all">ทั้งหมด</option>
@@ -97,7 +109,7 @@
 <?php echo $this->pagination->create_links(); ?>
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1000px;">
+		<table class="table table-hover border-1" style="min-width:1070px;">
 			<thead>
 				<tr>
 					<th class="fix-width-80 middle"></th>
@@ -107,6 +119,7 @@
 					<th class="fix-width-60 middle text-center">เฟส</th>
 					<th class="fix-width-80 middle">เขต</th>
 					<th class="min-width-150 middle">คลัง</th>
+					<th class="fix-width-80 middle">สี</th>
 					<th class="fix-width-80 middle text-center">จำนวน</th>
 					<th class="fix-width-80 middle">สถานะ</th>
 					<th class="fix-width-100 middle">User</th>
@@ -122,6 +135,13 @@
 					'F' => 'color:#428bca;',
 					'C' => 'color:#87b87f;',
 					'D' => 'color:red;'
+				);
+
+				$boxColor = array(
+					'Green' => 'เขียว',
+					'Blue' => 'น้ำเงิน',
+					'Orange' => 'ส้ม',
+					'Red' => 'แดง'
 				);
 	 ?>
 	<?php foreach($data as $rs) : ?>
@@ -139,6 +159,7 @@
 					<td class="middle text-center"><?php echo $rs->phase; ?></td>
 					<td class="middle"><?php echo area_name($rs->team_id); ?></td>
 					<td class="middle"><?php echo $rs->WhsCode .' : '.warehouse_name($rs->WhsCode); ?></td>
+					<td class="middle text-center"><?php echo empty($boxColor[$rs->color]) ? 'ไม่ระบุ' : $boxColor[$rs->color]; ?></td>
 					<td class="middle text-center"><?php echo sum_pack_qty($rs->id); ?></td>
 					<td class="middle">
 						<?php if($rs->status == 'C' && $rs->DocEntry) : ?>

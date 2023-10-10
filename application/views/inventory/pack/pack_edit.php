@@ -40,7 +40,7 @@
 
 	<div class="divider"></div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-3 col-xs-4">
+	<div class="col-lg-2-harf col-md-2-harf col-sm-3 col-xs-6">
 		<label>พื้นที่</label>
 		<select class="form-control edit" id="sub-area">
 			<option value="">เลือกพื้นที่</option>
@@ -48,7 +48,18 @@
 		</select>
 	</div>
 
-  <div class="col-lg-8-harf col-md-8 col-sm-7-harf col-xs-5">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6">
+		<label>สี</label>
+		<select class="form-control edit" id="color">
+			<option value="">เลือกสี</option>
+			<option value="Green" <?php echo is_selected($doc->color, 'Green'); ?>>สีเขียว</option>
+			<option value="Blue" <?php echo is_selected($doc->color, 'Blue'); ?>>น้ำเงิน</option>
+			<option value="Orange" <?php echo is_selected($doc->color, 'Orange'); ?>>ส้ม</option>
+			<option value="Red" <?php echo is_selected($doc->color, 'Red'); ?>>แดง</option>
+		</select>
+	</div>
+
+  <div class="col-lg-7 col-md-6-harf col-sm-6 col-xs-9">
     <label>Remark</label>
     <input type="text" class="form-control edit" name="remark" id="remark" maxlength="254" value="<?php echo $doc->remark; ?>" />
   </div>

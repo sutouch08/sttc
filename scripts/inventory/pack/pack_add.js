@@ -7,6 +7,7 @@ function add() {
   let date = $('#date_add').val();
   let phase = $('#phase').val();
   let sub_area = $('#sub-area').val();
+  let color = $('#color').val();
   let remark = $.trim($('#remark').val());
 
   if( ! isDate(date)) {
@@ -16,6 +17,11 @@ function add() {
 
   if(sub_area == "") {
     swal("กรุณาระบุพื้นที่");
+    return false;
+  }
+
+  if(color == "") {
+    swal("กรุณาระบุสี");
     return false;
   }
 
@@ -29,6 +35,7 @@ function add() {
       'date_add' : date,
       'phase' : phase,
       'sub_area' : sub_area,
+      'color' : color,
       'remark' : remark
     },
     success:function(rs) {
@@ -63,10 +70,16 @@ function add() {
 function updateRemark() {
   let pack_id = $('#pack_id').val();
   let sub_area = $('#sub-area').val();
+  let color = $('#color').val();
   let remark = $('#remark').val();
 
   if(sub_area == "") {
     swal("กรุณาระบุพื้นที่");
+    return false;
+  }
+
+  if(color == "") {
+    swal("กรุณาระบุสี");
     return false;
   }
 
@@ -77,6 +90,7 @@ function updateRemark() {
     data: {
       'id' : pack_id,
       'sub_area' : sub_area,
+      'color' : color,
       'remark' : remark
     },
     success:function(rs) {

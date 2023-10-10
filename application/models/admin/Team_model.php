@@ -21,6 +21,18 @@ class Team_model extends CI_Model
     return NULL;
   }
 
+  public function get_by_code($code)
+  {
+    $rs = $this->db->where('code', $code)->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
 
   public function get_all_active()
   {
@@ -85,7 +97,7 @@ class Team_model extends CI_Model
 
     return NULL;
   }
-  
+
 
   public function get_user_team($user_id)
   {

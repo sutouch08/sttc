@@ -48,6 +48,8 @@
 				<?php echo select_area_code($area); ?>
 			</select>
 		</div>
+<?php else : ?>
+				<input type="hidden" name="area" id="area" value="<?php echo $area; ?>" />
 <?php endif; ?>
 		<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 margin-bottom-5">
 			<label>ผู้ติดตั้ง</label>
@@ -318,15 +320,15 @@
 
 
 <div class="modal fade" id="workerModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	<div class="modal-dialog" style="width:400px; max-width:95%; margin-left:auto; margin-right:auto;">
+	<div class="modal-dialog" style="width:800px; max-width:95%; margin-left:auto; margin-right:auto;">
     <div class="modal-content">
         <div class="modal-header" style="background-color:white; border-bottom:0px;">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="margin-top:-15px;">&times;</button>
         <h4 class="modal-title"></h4>
        </div>
        <div class="modal-body">
          <div class="row" >
-					 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 table-responsive" style="max-width:500px; padding-top:0px;" id="worker-result">
+					 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 table-responsive" style="padding-top:0px;" id="worker-result">
 
 					 </div>
          </div>
@@ -340,9 +342,14 @@
 
 <script type="text/x-handlebarsTemplate" id="worker-template">
 	<table class="table table-striped border-1">
-		<tr><td class="width-50">วันที่ติดตั้ง</td><td class="width-50">จำนวนคน</td></tr>
-		{{#each this}}
-			<tr><td>{{work_date}}</td><td>{{workers_qty}}</td></tr>
+		<tr><td></td><td colspan="{{days}}">จำนวนคน</td></tr>
+		{{#each rows}}
+			<tr>
+				<td>{{area}}</td>
+				{{#each row}}
+				<td>{{workers_qty}}</td>
+				{{/each}}
+			</tr>
 		{{/each}}
 	</table>
 </script>
@@ -429,6 +436,7 @@ function exportFilter() {
 function getWorker() {
 	let fromDate = $('#fromDate').val();
 	let toDate = $('#toDate').val();
+	let area = $('#area').val();
 
 	if( ! isDate(fromDate) || ! isDate(toDate)) {
 		swal("กรุณาระบุวันที่");
@@ -442,32 +450,62 @@ function getWorker() {
 		cache:false,
 		data:{
 			'from_date' : fromDate,
-			'to_date' : toDate
+			'to_date' : toDate,
+			'area' : area
 		},
 		success:function(rs) {
 			load_out();
-			if(isJson(rs)) {
-				let data = JSON.parse(rs);
+			$('#worker-result').html(rs);
 
-				if(data.length) {
-					let source = $('#worker-template').html();
-					let output = $('#worker-result');
-
-					render(source, data, output);
-
-					$('#workerModal').modal('show');
-				}
-			}
-			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error'
-				})
-			}
+			$('#workerModal').modal('show');
 		}
 	})
 }
+
+// function getWorker() {
+// 	let fromDate = $('#fromDate').val();
+// 	let toDate = $('#toDate').val();
+// 	let area = $('#area').val();
+//
+// 	if( ! isDate(fromDate) || ! isDate(toDate)) {
+// 		swal("กรุณาระบุวันที่");
+// 		return false;
+// 	}
+//
+// 	load_in();
+// 	$.ajax({
+// 		url:HOME + 'count_worker_each_day',
+// 		type:'POST',
+// 		cache:false,
+// 		data:{
+// 			'from_date' : fromDate,
+// 			'to_date' : toDate,
+// 			'area' : area
+// 		},
+// 		success:function(rs) {
+// 			load_out();
+// 			if(isJson(rs)) {
+// 				let data = JSON.parse(rs);
+//
+// 				if(data.length) {
+// 					let source = $('#worker-template').html();
+// 					let output = $('#worker-result');
+//
+// 					render(source, data, output);
+//
+// 					$('#workerModal').modal('show');
+// 				}
+// 			}
+// 			else {
+// 				swal({
+// 					title:'Error!',
+// 					text:rs,
+// 					type:'error'
+// 				})
+// 			}
+// 		}
+// 	})
+// }
 
 function countWorker() {
 	let u_pea_no = $('#u_pea_no').val();

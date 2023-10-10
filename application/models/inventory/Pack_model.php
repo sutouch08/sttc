@@ -209,6 +209,18 @@ class Pack_model extends CI_Model
       $this->db->where('p.phase', $ds['phase']);
     }
 
+    if( ! empty($ds['color']) && $ds['color'] != 'all')
+    {
+      if($ds['color'] == 'NULL')
+      {
+        $this->db->where('p.color IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('p.color', $ds['color']);
+      }
+    }
+
     if( ! empty($ds['from_date']))
     {
       $this->db->where('p.date_add >=', from_date($ds['from_date']));
@@ -280,6 +292,18 @@ class Pack_model extends CI_Model
     if( ! empty($ds['phase']) && $ds['phase'] != 'all')
     {
       $this->db->where('p.phase', $ds['phase']);
+    }
+
+    if( ! empty($ds['color']) && $ds['color'] != 'all')
+    {
+      if($ds['color'] == 'NULL')
+      {
+        $this->db->where('p.color IS NULL', NULL, FALSE);
+      }
+      else
+      {
+        $this->db->where('p.color', $ds['color']);
+      }
     }
 
     if( ! empty($ds['from_date']))

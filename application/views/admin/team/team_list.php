@@ -56,7 +56,7 @@
 
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:1250px;">
+		<table class="table table-hover border-1" style="min-width:1370px;">
 			<thead>
 				<tr>
 					<th class="fix-width-80"></th>
@@ -66,6 +66,8 @@
 					<th class="fix-width-200 middle">ชื่อเต็ม</th>
 					<th class="fix-width-150 middle">เลขที่สัญญา</th>
 					<th class="fix-width-80 middle text-center">รายการที่</th>
+					<th class="fix-width-80 middle text-center">จำนวนคน (TOR)</th>
+					<th class="fix-width-120 middle text-right">จำนวนมิเตอร์ (TOR)</th>
 					<th class="fix-width-80 middle text-center">สถานะ</th>
 					<th class="fix-width-100 middle">สร้างเมื่อ</th>
 					<th class="fix-width-100 middle">สร้างโดย</th>
@@ -92,6 +94,8 @@
 					<td class="middle"><?php echo $rs->full_name; ?></td>
 					<td class="middle"><?php echo $rs->contract_no; ?></td>
 					<td class="middle text-center"><?php echo $rs->list_no; ?></td>
+					<td class="middle text-center"><?php echo $rs->tor_worker; ?></td>
+					<td class="middle text-right"><?php echo number($rs->tor_qty); ?></td>
 					<td class="middle text-center"><?php echo is_active($rs->status); ?></td>
 					<td class="middle"><?php echo thai_date($rs->create_at, FALSE); ?></td>
 					<td class="middle"><?php echo uname($rs->create_by); ?></td>
@@ -108,7 +112,7 @@
 
 
 <div class="modal fade" id="add-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
- <div class="modal-dialog" style="width:500px; max-width:95%; margin-left:auto; margin-right:auto;">
+ <div class="modal-dialog" style="width:600px; max-width:95%; margin-left:auto; margin-right:auto;">
    <div class="modal-content">
        <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -133,19 +137,31 @@
 						<div class="err-label" id="add-fullname-error"></div>
 					</div>
 
-					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-8">
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
 						<label>เลขที่สัญญา</label>
 						<input type="text" id="add-contract" class="form-control" maxlength="100"	autofocus required />
 						<div class="err-label" id="add-contract-error"></div>
 					</div>
+
           <div class="col-lg-3 col-md-3 col-sm-3 col-xs-4">
 						<label>รายการที่</label>
 						<input type="number" id="add-list" class="form-control" maxlength="2"	required />
 						<div class="err-label" id="add-list-error"></div>
 					</div>
 
-					<div class="col-lg-4 col-lg-offset-1 col-md-4 col-md-offset-1 col-sm-4 col-sm-offset-1 col-xs-12">
-						<label class="display-block not-show hidden-xs">active</label>
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+						<label>จำนวนคน (TOR)</label>
+						<input type="number" id="add-worker" class="form-control" maxlength="5"	required />
+						<div class="err-label" id="add-worker-error"></div>
+					</div>
+
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+						<label>จำนวนมิเตอร์ (TOR)</label>
+						<input type="number" id="add-qty" class="form-control" maxlength="10"	required />
+						<div class="err-label" id="add-qty-error"></div>
+					</div>
+
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
 						<label style="margin-top:7px; padding-left:10px;">
 							<input type="checkbox" class="ace" id="add-active" checked />
 							<span class="lbl">&nbsp; Active</span>
@@ -156,7 +172,6 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-sm btn-default btn-100" onclick="closeModal('add-modal')">Close</button>
 				<button type="button" id="btn-add" class="btn btn-sm btn-success btn-100" onclick="saveAdd()">Add</button>
-
       </div>
    </div>
  </div>
@@ -166,7 +181,7 @@
 
 
 <div class="modal fade" id="edit-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
- <div class="modal-dialog" style="width:500px; max-width:95%; margin-left:auto; margin-right:auto;">
+ <div class="modal-dialog" style="width:600px; max-width:95%; margin-left:auto; margin-right:auto;">
    <div class="modal-content">
        <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -192,19 +207,31 @@
 						<div class="err-label" id="edit-fullname-error"></div>
 					</div>
 
-					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-8">
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-8">
 						<label>เลขที่สัญญา</label>
 						<input type="text" id="edit-contract" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="edit-contract-error"></div>
 					</div>
+
           <div class="col-lg-3 col-md-3 col-sm-3 col-xs-4">
 						<label>รายการที่</label>
 						<input type="number" id="edit-list" class="form-control" maxlength="2"	required />
 						<div class="err-label" id="edit-list-error"></div>
 					</div>
 
-					<div class="col-lg-4 col-lg-offset-1 col-md-4 col-md-offset-1 col-sm-4 col-sm-offset-1 col-xs-12">
-						<label class="display-block not-show hidden-xs">active</label>
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+						<label>จำนวนคน (TOR)</label>
+						<input type="number" id="edit-worker" class="form-control" maxlength="5"	required />
+						<div class="err-label" id="edit-worker-error"></div>
+					</div>
+
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+						<label>จำนวนมิเตอร์ (TOR)</label>
+						<input type="number" id="edit-qty" class="form-control" maxlength="10"	required />
+						<div class="err-label" id="edit-qty-error"></div>
+					</div>
+
+					<div class="col-lg-3 3col-md-3 col-sm-3 col-xs-6">
 						<label style="margin-top:7px; padding-left:10px;">
 							<input type="checkbox" class="ace" id="edit-active" checked />
 							<span class="lbl">&nbsp; Active</span>
@@ -233,6 +260,8 @@
 	<td class="middle">{{full_name}}</td>
 	<td class="middle">{{contract_no}}</td>
 	<td class="middle text-center">{{list_no}}</td>
+	<td class="middle text-center">{{tor_worker}}</td>
+	<td class="middle text-center">{{tor_qty}}</td>
   <td class="middle text-center">{{{status}}}</td>
   <td class="middle">{{create_at}}</td>
   <td class="middle">{{create_by}}</td>
@@ -252,6 +281,8 @@
 	<td class="middle">{{full_name}}</td>
 	<td class="middle">{{contract_no}}</td>
 	<td class="middle text-center">{{list_no}}</td>
+	<td class="middle text-center">{{tor_worker}}</td>
+	<td class="middle text-center">{{tor_qty}}</td>
   <td class="middle text-center">{{{status}}}</td>
   <td class="middle">{{create_at}}</td>
   <td class="middle">{{create_by}}</td>

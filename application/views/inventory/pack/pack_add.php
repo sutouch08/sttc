@@ -18,18 +18,18 @@
     <label>วันที่</label>
     <input type="text" class="form-control text-center edit" id="date_add" value="<?php echo date('d-m-Y'); ?>" disabled />
   </div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-5 col-xs-6">
+	<div class="col-lg-2 col-md-2 col-sm-2-harf col-xs-6">
 		<label>เขต</label>
 		<input type="text" class="form-control edit" id="area" value="<?php echo $this->_user->team_name; ?>" disabled />
 		<input type="hidden" id="team_id" value="<?php echo $this->_user->team_id; ?>" />
 	</div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-5 col-xs-6">
+	<div class="col-lg-4-harf col-md-4-harf col-sm-4-harf col-xs-12">
 		<label>คลัง</label>
 		<input type="text" class="form-control edit" id="WhsCode" value="<?php echo $this->_user->fromWhsCode.' : '.warehouse_name($this->_user->fromWhsCode); ?>" disabled />
 	</div>
 
-	<div class="col-lg-1-harf col-md-1-harf col-sm-2-harf col-xs-6">
+	<div class="col-lg-2 col-md-2-harf col-sm-3 col-xs-6">
 		<label>พื้นที่</label>
 		<select class="form-control edit" id="sub-area">
 			<option value="">เลือกพื้นที่</option>
@@ -37,7 +37,18 @@
 		</select>
 	</div>
 
-  <div class="col-lg-4 col-md-3-harf col-sm-8 col-xs-9">
+	<div class="col-lg-2 col-md-1-harf col-sm-2-harf col-xs-6">
+		<label>สี</label>
+		<select class="form-control edit" id="color">
+			<option value="">เลือกสี</option>
+			<option value="Green">สีเขียว</option>
+			<option value="Blue">น้ำเงิน</option>
+			<option value="Orange">ส้ม</option>
+			<option value="Red">แดง</option>
+		</select>
+	</div>
+
+  <div class="col-lg-11 col-md-10-harf col-sm-8 col-xs-9">
     <label>Remark</label>
     <input type="text" class="form-control edit" name="remark" id="remark" maxlength="254" value="" autofocus />
   </div>

@@ -488,26 +488,57 @@ class Install_list extends PS_Controller
     $sc = TRUE;
     $from_date = db_date($this->input->post('from_date'));
     $to_date = db_date($this->input->post('to_date'));
+    $area = $this->input->post('area');
+    $ds = "";
 
-    $ds = array();
+    if($area === 'all')
+    {
+      $areas = $this->team_model->get_all();
+    }
+    else
+    {
+      $areas = array($this->team_model->get_by_code($area));
+    }
+
     $range = date_range($from_date, $to_date);
+    $days = count($range);
+    $width = ($days * 80) + 160;
+
+    $ds  = '<table class="table table-bordered table-striped border-1" style="min-width:'.$width.'px;">';
+    $ds .= '<tr><td colspan="2" class=""></td> <td colspan="'.$days.'">จำนวนคน</td></tr>';
 
     if( ! empty($range))
     {
+      $ds .= '<tr><td class="fix-width-80"><strong>เขต<strong></td><td class="fix-width-80 text-center" style="color:white; background-color:#4e585d;">TOR</td>';
+
       foreach($range as $date)
       {
-        $workers_qty = $this->install_list_model->count_worker_by_date($date);
-
-        $arr = array(
-          'work_date' => thai_date($date),
-          'workers_qty' => $workers_qty
-        );
-
-        array_push($ds, $arr);
+        $ds .= '<td class="fix-width-80 text-center"><strong>'.date('d-M', strtotime($date)).'</strong></td>';
       }
+
+      $ds .= '</tr>';
+
+      if( ! empty($areas))
+      {
+        foreach($areas as $ar)
+        {
+          $ds .= '<tr><td class="fix-width-80">'.$ar->name.'</td><td class="fix-width-80 text-center" style="color:white; background-color:#4e585d;">'.$ar->tor_worker.'</td>';
+
+          foreach($range as $date)
+          {
+            $workers_qty = $this->install_list_model->count_worker_by_date($date, $ar->code);
+
+            $ds .= '<td class="fix-width-80 text-center">'.$workers_qty.'</td>';
+          }
+
+          $ds .= '</tr>';
+        }
+      }
+
+      $ds .= '</table>';
     }
 
-    echo json_encode($ds);
+    echo $ds;
   }
 
 

@@ -1,7 +1,7 @@
 <?php
 $this->load->helper('print');
 $footer_address = FALSE; //--- แสดงที่อยู่ท้ายแผ่นหรือไม่
-$row_per_page = 50; //--- จำนวนบรรทัด/หน้า
+$row_per_page = 40; //--- จำนวนบรรทัด/หน้า
 $total_row = count($details);
 
 $total_row 	= $total_row == 0 ? 1 : $total_row;
@@ -25,7 +25,21 @@ $this->printer->config($config);
 
 $page  = '';
 $page .= $this->printer->doc_header();
-
+$page .= '<style>
+						.sender-name, .receiver-name { border:0; border-bottom:dotted 1px;}
+					</style>';
+$page .= '<div class="hidden-print" style="width:190mm; border:none; top:10px; margin-left:auto; margin-right:auto; margin-bottom:10px;">
+  <div class="row">
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+      <label>ชื่อผู้ส่ง</label>
+      <input type="text" class="form-control input-large sender" autofocus/>
+    </div>
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+      <label>ชื่อผู้รับ</label>
+      <input type="text" class="form-control input-large receiver" autofocus/>
+    </div>
+  </div>
+</div>';
 //**************  กำหนดหัวตาราง  ******************************//
 $thead	= array(
           array("ลำดับ", "width:10mm; text-align:center; padding:0px; font-family:calibri;"),
@@ -55,10 +69,36 @@ $pattern = array(
 
 $this->printer->set_pattern($pattern);
 
-$footer = "<div style='width:190mm; height:10mm; margin:auto; border:none;'>";
-$footer .=   "<p class='text-right' style='font-size:11px; padding-left:15px; padding-top:10px;'>พิมพ์วันที่ &nbsp;&nbsp; ".date('d/m/Y').' &nbsp; '.date('H:i:s')." &nbsp; โดย ".display_name($this->_user->id)."</p>";
-$footer .= "</div>";
+// $footer = "<div style='width:190mm; height:10mm; margin:auto; border:none;'>";
+// $footer .=   "<p class='text-right' style='font-size:11px; padding-left:15px; padding-top:10px;'>พิมพ์วันที่ &nbsp;&nbsp; ".date('d/m/Y').' &nbsp; '.date('H:i:s')." &nbsp; โดย ".display_name($this->_user->id)."</p>";
+// $footer .= "</div>";
 
+$footer = "<div style='width:190mm; height:30mm; margin:auto; border:none; position:absolute; bottom:100px;'>";
+
+$footer .="<div style='width:100%; height30mm;'>";
+$footer .= '<table class="table" style="width:100%; margin-top:60px;">
+							<tr>
+								<td class="text-right" style="width:10mm; border:none; font-size:16px;">ลงชื่อ</td>
+								<td class="" style="width:50mm; height:10mm; padding:1px; border:none; font-size:16px;"><input type="text" class="width-100" style="border:none; border-bottom:dotted 1px;" readonly/></td>
+								<td class="text-right font-size-16" style="width:50mm; border:none;"></td>
+								<td class="text-right" style="width:10mm; border:none; font-size:16px;">ลงชื่อ</td>
+								<td class="" style="width:50mm; height:10mm; padding:1px; border:none; font-size:16px;"><input type="text" class="width-100" style="border:none; border-bottom:dotted 1px;" readonly/></td>
+
+							</tr>
+							<tr>
+								<td colspan="2" class="middle text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">(<input type="text" class="sender-name text-center" style="width:65mm;" readonly/>)</td>
+								<td class="text-right font-size-16" style="width:50mm; border:none;"></td>
+								<td colspan="2" class="middle text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">(<input type="text" class="receiver-name text-center" style="width:65mm;" readonly/>)</td>
+
+							</tr>
+							<tr>
+								<td colspan="2" class="text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">ตัวแทนบริษัท</td>
+								<td class="text-right font-size-16" style="width:50mm; border:none;"></td>
+								<td colspan="2" class="text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">การไฟฟ้าส่วนภูมิภาค</td>
+							</tr>
+						</table>';
+$footer .= "</div>";
+$footer .= "</div>";
 
 $this->printer->footer = $footer;
 
@@ -127,7 +167,7 @@ while($total_page > 0 )
   $subTotal = array();
 	$page .= $this->printer->table_end();
   $page .= $this->printer->content_end();
-  //$page .= $this->printer->footer;
+  $page .= $this->printer->footer;
 
 	$page .= $this->printer->page_end(FALSE);
 
@@ -140,7 +180,17 @@ $page .= $this->printer->doc_footer();
 
 echo $page;
  ?>
+<script>
+	$('.sender').keyup(function() {
+		let value = $(this).val();
+		$('.sender-name').val(value);
+	});
 
+	$('.receiver').keyup(function() {
+		let value = $(this).val();
+		$('.receiver-name').val(value);
+	})
+</script>
  <style type="text/css" media="print">
  	@page{
  		margin:0;

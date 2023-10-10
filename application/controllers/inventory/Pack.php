@@ -35,7 +35,8 @@ class Pack extends PS_Controller
       'reference' => get_filter('reference', 'pack_reference', ''),
       'user' => get_filter('user', 'pack_user', 'all'),
       'from_date' => get_filter('from_date', 'pack_from_date', ''),
-      'to_date' => get_filter('to_date', 'pack_to_date', '')
+      'to_date' => get_filter('to_date', 'pack_to_date', ''),
+      'color' => get_filter('color', 'pack_color', 'all')
 		);
 
     if($this->input->post('search'))
@@ -80,11 +81,13 @@ class Pack extends PS_Controller
         $phase = $this->input->post('phase') == 3 ? 3 : 1;
         $remark = get_null($this->input->post('remark'));
         $sub_area_id = get_null($this->input->post('sub_area'));
+        $color = get_null($this->input->post('color'));
 
         $ds = array(
           'code' => $this->get_new_code($date_add),
           'team_id' => $this->_user->team_id,
           'sub_area_id' => $sub_area_id,
+          'color' => $color,
           'WhsCode' => $this->_user->fromWhsCode,
           'date_add' => $date_add,
           'user' => $this->_user->id,
@@ -398,10 +401,12 @@ class Pack extends PS_Controller
     $sc = TRUE;
     $id = $this->input->post('id');
     $sub_area_id = get_null($this->input->post('sub_area'));
+    $color = get_null($this->input->post('color'));
     $remark = get_null(trim($this->input->post('remark')));
 
     $arr = array(
       'sub_area_id' => $sub_area_id,
+      'color' => $color,
       'remark' => $remark
     );
 
@@ -608,7 +613,8 @@ class Pack extends PS_Controller
       'pack_to_date',
       'pack_reference',
       'pack_phase',
-      'pack_status'
+      'pack_status',
+      'pack_color'
     );
 
     return clear_filter($filter);

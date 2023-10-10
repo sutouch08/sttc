@@ -31,6 +31,8 @@ function addNew() {
   $('#add-list').val('');
   $('#add-list-error').text('');
   $('#add-active').prop('checked', true);
+  $('#add-worker').val('');
+  $('#add-qty').val('');
 
   openModal('add-modal');
 }
@@ -42,6 +44,8 @@ function saveAdd() {
   let fullname = $('#add-fullname').val();
   let contract = $('#add-contract').val();
   let list = $('#add-list').val();
+  let worker = parseDefault(parseInt($('#add-worker').val()), 0);
+  let qty = parseDefault(parseInt($('#add-qty').val()), 0);
   let status = $('#add-active').is(':checked') ? 1 : 0;
 
   if(code.length == 0) {
@@ -84,6 +88,22 @@ function saveAdd() {
     $('#add-list-error').text('');
   }
 
+  if(worker.length == 0 || worker <= 0) {
+    $('#add-worker-error').text('required');
+    return false;
+  }
+  else {
+    $('#add-worker-error').text('');
+  }
+
+  if(qty.length == 0 || qty <= 0) {
+    $('#add-qty-error').text('required');
+    return false;
+  }
+  else {
+    $('#add-qty-error').text('');
+  }
+
   closeModal('add-modal');
 
   $.ajax({
@@ -96,6 +116,8 @@ function saveAdd() {
       'full_name' : fullname,
       'contract_no' : contract,
       'list_no' : list,
+      'worker' : worker,
+      'qty' : qty,
       'status' : status
     },
     success:function(rs) {
@@ -146,6 +168,8 @@ function getEdit(id) {
         $('#edit-fullname').val(ds.full_name);
         $('#edit-contract').val(ds.contract_no);
         $('#edit-list').val(ds.list_no);
+        $('#edit-worker').val(ds.tor_worker);
+        $('#edit-qty').val(ds.tor_qty);
 
         if(ds.status == 1) {
           $('#edit-active').prop('checked', true);
@@ -159,6 +183,8 @@ function getEdit(id) {
         $('#edit-fullname-error').text('');
         $('#edit-contract-error').text('');
         $('#edit-list-error').text('');
+        $('#edit-worker-error').text('');
+        $('#edit-qty-error').text('');
         openModal('edit-modal');
       }
       else {
@@ -180,6 +206,8 @@ function update() {
   let fullname = $('#edit-fullname').val();
   let contract = $('#edit-contract').val();
   let list = $('#edit-list').val();
+  let worker = parseDefault(parseInt($('#edit-worker').val()), 0);
+  let qty = parseDefault(parseInt($('#edit-qty').val()), 0);
   let status = $('#edit-active').is(':checked') ? 1 : 0;
 
   if(code.length == 0) {
@@ -222,6 +250,22 @@ function update() {
     $('#edit-list-error').text('');
   }
 
+  if(worker.length == 0 || worker <= 0) {
+    $('#edit-worker-error').text('Required');
+    return false;
+  }
+  else {
+    $('#edit-worker-error').text('');
+  }
+
+  if(qty.length == 0 || qty <= 0) {
+    $('#edit-qty-error').text('Required');
+    return false;
+  }
+  else {
+    $('#edit-qty-error').text('');
+  }
+
   closeModal('edit-modal');
 
   $.ajax({
@@ -235,6 +279,8 @@ function update() {
       'full_name' : fullname,
       'contract_no' : contract,
       'list_no' : list,
+      'worker' : worker,
+      'qty' : qty,
       'status' : status
     },
     success:function(rs) {
@@ -267,6 +313,9 @@ function update() {
         $('#edit-contract-error').text('')
         $('#edit-list').val('');
         $('#edit-list-error').text('');
+        $('#edit-worker').val('');
+        $('#edit-worker-error').text('');
+        $('#edit-qty-error').text('');
       }
       else {
         setTimeout(function() {

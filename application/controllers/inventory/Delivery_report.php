@@ -26,36 +26,19 @@ class Delivery_report extends PS_Controller
 
   public function index()
   {
-    // $filter = array(
-    //   'from_code' => get_filter('from_code', 'de_from_pack_code', ''),
-    //   'to_code' => get_filter('to_code', 'de_to_pack_code', ''),
-    //   'team_id' => get_filter('team_id', 'de_team_id', ''),
-    //   'sub_area_id' => get_filter('sub_area_id', 'de_sub_area_id', ''),
-    //   'list_no' => get_filter('list_no', 'de_list_no', '')
-    // );
-    //
-    // if($this->input->post('search'))
-    // {
-    //   redirect($this->home);
-    // }
-    // else
-    // {
-    //   //--- แสดงผลกี่รายการต่อหน้า
-  	// 	$perpage = get_rows();
-    //
-  	// 	$rows = $this->pack_model->count_rows($filter);
-    //
-  	// 	$filter['data'] = $this->pack_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
-    //
-  	// 	//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-  	// 	$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
-    //
-  	// 	$this->pagination->initialize($init);
-    //
-    //   $this->load->view('inventory/pack/pack_list', $filter);
-    // }
+    $limit = date_create('2023-10-16');
+    $now = date_create(date('Y-m-d'));
+    $end = $limit < $now ? TRUE : FALSE;
 
-    $this->load->view('report/delivery/delivery_report');
+    if($end)
+    {
+      $text = "เมนูนี้ถูกระงับใช้งาน เนื่องจากระยะเวลาทดลองใช้สิ้นสุดลง โปรดติดต่อผู้ให้บริการเพื่อชำระค่าบริการและเปิดใช้งานระบบอีกครั้ง";
+      $this->load->view('trial_expired', array('text' => $text));
+    }
+    else
+    {
+      $this->load->view('report/delivery/delivery_report');
+    }
   }
 
 
@@ -170,7 +153,13 @@ class Delivery_report extends PS_Controller
             {
               if($no < $limit && $no >= $count)
               {
-                while($no < $limit)
+                $rest = $limit - $no;
+                while($rest > $perpage)
+                {
+                  $rest = $rest - $perpage;
+                }
+
+                while($rest > 0)
                 {
                   $arr = array(
                     'no' => NULL,
@@ -185,6 +174,7 @@ class Delivery_report extends PS_Controller
                   );
 
                   array_push($page['data'], $arr);
+                  $rest--;
                 }
 
                 array_push($pages, $page);
@@ -281,11 +271,25 @@ class Delivery_report extends PS_Controller
     $perpage = 40;
     $row = 1;
     $no = 1;
+    $packCode = NULL;
 
     if( ! empty($details))
     {
       foreach($details as $rs)
       {
+        if($packCode != $rs->code)
+        {
+          if($no > 1)
+          {
+            $rox = $rows -1;
+            $this->excel->getActiveSheet()->setBreak("A{$rox}", PHPExcel_Worksheet::BREAK_ROW);
+          }
+
+          $packCode = $rs->code;
+          $no = 1;
+          $row = 1;
+        }
+
         $this->excel->getActiveSheet()->getRowDimension("{$rows}")->setRowHeight(21);
         $this->excel->getActiveSheet()->setCellValue("A{$rows}", $no);
         $this->excel->getActiveSheet()->setCellValue("B{$rows}", $rs->code);
@@ -343,7 +347,7 @@ class Delivery_report extends PS_Controller
     $this->excel->getActiveSheet()->getPageSetup()->setPaperSize(PHPExcel_Worksheet_PageSetup::PAPERSIZE_A4);
     $this->excel->getActiveSheet()->getPageSetup()->setScale(85);
     $this->excel->getActiveSheet()->getPageSetup()->setHorizontalCentered(TRUE);
-    $this->excel->getActiveSheet()->getPageSetup()->setVerticalCentered(TRUE);
+    //$this->excel->getActiveSheet()->getPageSetup()->setVerticalCentered(TRUE);
     //$this->excel->getActiveSheet()->getPageSetup()->setFitToPage(TRUE);
     $this->excel->getActiveSheet()->getPageMargins()->setTop(0.5);
     $this->excel->getActiveSheet()->getPageMargins()->setHeader(0.5);
@@ -360,161 +364,6 @@ class Delivery_report extends PS_Controller
     $writer->save('php://output');
 
   }
-
-  // public function do_export()
-  // {
-  //   $token = $this->input->post('token');
-  //   $filter = array(
-  //     'from_code' => $this->input->post('exFromCode'),
-  //     'to_code' => $this->input->post('exToCode'),
-  //     'team_id' => $this->input->post('exTeamId'),
-  //     'sub_area_id' => $this->input->post('exSubArea')
-  //   );
-  //
-  //   $sub_area = $this->sub_area_model->get_area_data($filter['sub_area_id']);
-  //
-  //   $team_full_name = empty($sub_area) ? "" : $sub_area->full_name;
-  //   $sub_area_name = empty($sub_area) ? "" : $sub_area->name;
-  //   $contract_no = empty($sub_area) ? "" : $sub_area->contract_no;
-  //   $list_no = empty($sub_area) ? "" : $sub_area->list_no;
-  //   $round_no = $this->input->post('exRoundNo');
-  //
-  //   $sheetName = empty($sub_area) ? "Sheet1" : $sub_area->name;
-  //   $title_1 = "รายละเอียดมิเตอร์จานหมุนรื้อถอน ตามสัญญาเลขที่ {$contract_no}....... งวดที่ ....{$round_no}......";
-  //   $title_2 = "รายการที่ ..{$list_no}... จัดซื้อมิเตอร์อิเล็กทรอนิกส์พร้อมติดตั้งสับเปลี่ยนทดแทนจานหมุนในพื้นที่ {$sub_area_name} การไฟฟ้า {$team_full_name}";
-  //
-  //   //--- load excel library
-  //   $this->load->library('excel');
-  //
-  //   $this->excel->setActiveSheetIndex(0);
-  //   $this->excel->getActiveSheet()->setTitle($sheetName);
-  //   //--- set default font style and font size
-  //   $this->excel->getDefaultStyle()->getFont()->setName('TH SarabunPSK');
-  //   $this->excel->getDefaultStyle()->getFont()->setSize(16);
-  //
-  //   //--- set report title header
-  //   $this->excel->getActiveSheet()->getRowDimension('1')->setRowHeight(24);
-  //   $this->excel->getActiveSheet()->setCellValue('A1', $title_1);
-  //   $this->excel->getActiveSheet()->mergeCells('A1:I1');
-  //   $this->excel->getActiveSheet()->getRowDimension('2')->setRowHeight(24);
-  //   $this->excel->getActiveSheet()->setCellValue('A2', $title_2);
-  //   $this->excel->getActiveSheet()->mergeCells('A2:I2');
-  //   $this->excel->getActiveSheet()->getStyle('A1:I2')->getFont()->setBold(TRUE);
-  //
-  //   //--- table header
-  //   $this->excel->getActiveSheet()->getRowDimension('3')->setRowHeight(24);
-  //   $this->excel->getActiveSheet()->setCellValue('A3', 'ลำดับ');
-  //   $this->excel->getActiveSheet()->setCellValue('B3', 'ลังที่');
-  //   $this->excel->getActiveSheet()->setCellValue('C3', 'วันที่รื้อถอน');
-  //   $this->excel->getActiveSheet()->setCellValue('D3', 'PEA No.');
-  //   $this->excel->getActiveSheet()->setCellValue('E3', 'เฟส');
-  //   $this->excel->getActiveSheet()->setCellValue('F3', 'ขนาด');
-  //   $this->excel->getActiveSheet()->setCellValue('G3', 'หน่วย (kWh)');
-  //   $this->excel->getActiveSheet()->setCellValue('H3', 'อายุ (ปี)');
-  //   $this->excel->getActiveSheet()->setCellValue('I3', 'ลักษณะชำรุด (ถ้ามี)');
-  //
-  //   //--- set Column width
-  //   $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(7.1);
-  //   $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(13);
-  //   $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(11.5); //--10.8
-  //   $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(13); //-- 12.14
-  //   $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(7.1); //-- 6.7
-  //   $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(9); //-- 8.43
-  //   $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(10.95); //-- 10.29
-  //   $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(8.1); //--- 7.57
-  //   $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(24.2); //-- 26.3
-  //
-  //   $this->excel->getActiveSheet()->getStyle('A3:I3')->getFont()->setBold(TRUE);
-  //   $this->excel->getActiveSheet()->getStyle('A3:I3')->getBorders()->getAllBorders()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
-  //
-  //   //--- set print header to repeate every page
-  //   $this->excel->getActiveSheet()->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 3);
-  //
-  //   $rows = 4; //--- data start at row 4
-  //
-  //   $list = $this->delivery_report_model->get_pack_list($filter);
-  //
-  //   if( ! empty($list))
-  //   {
-  //     $limit = 120;
-  //     $no = 1;
-  //
-  //     $totalPackCode = count($list);
-  //     $box = 1;
-  //     foreach($list as $pack)
-  //     {
-  //       $details = $this->delivery_report_model->get_pack_details($pack->id);
-  //
-  //       if( ! empty($details))
-  //       {
-  //         $perpage = 40;
-  //         $row = 1;
-  //
-  //         foreach($details as $rs)
-  //         {
-  //           $this->excel->getActiveSheet()->getRowDimension("{$rows}")->setRowHeight(21);
-  //           $this->excel->getActiveSheet()->setCellValue("A{$rows}", $no);
-  //           $this->excel->getActiveSheet()->setCellValue("B{$rows}", $pack->code);
-  //           $this->excel->getActiveSheet()->setCellValue("C{$rows}", thai_date($rs->work_date));
-  //           $this->excel->getActiveSheet()->setCellValue("D{$rows}", $rs->u_pea_no);
-  //           $this->excel->getActiveSheet()->setCellValue("E{$rows}", $rs->phase);
-  //           $this->excel->getActiveSheet()->setCellValue("F{$rows}", $rs->meter_size);
-  //           $this->excel->getActiveSheet()->setCellValue("G{$rows}", $rs->meter_read_end);
-  //           $this->excel->getActiveSheet()->setCellValue("H{$rows}", $rs->meter_age);
-  //           $this->excel->getActiveSheet()->setCellValue("I{$rows}", (empty($rs->dispose_reason_name) && $rs->dispose_reason_id == 0) ? "สภาพปกติ" : $rs->dispose_reason_name);
-  //
-  //           if($row == $perpage)
-  //           {
-  //             $this->excel->getActiveSheet()->setBreak("A{$rows}", PHPExcel_Worksheet::BREAK_ROW);
-  //             $row = 1;
-  //           }
-  //           else
-  //           {
-  //             $row++;
-  //           }
-  //
-  //           $rows++;
-  //
-  //           if($no == $limit)
-  //           {
-  //             $no = 1;
-  //           }
-  //           else
-  //           {
-  //             $no++;
-  //           }
-  //         } //-- end foreach
-  //       } //-- end if
-  //     } //--- end foreach
-  //
-  //     if($rows > 4)
-  //     {
-  //       $this->excel->getActiveSheet()->getStyle("A4:I{$rows}")->getBorders()->getAllBorders()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
-  //       $this->excel->getActiveSheet()->getStyle("A3:A{$rows}")->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-  //     }
-  //   } //-- end if
-  //
-  //   //--- Print setup
-  //   $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_PORTRAIT);
-  //   $this->excel->getActiveSheet()->getPageSetup()->setPaperSize(PHPExcel_Worksheet_PageSetup::PAPERSIZE_A4);
-  //   $this->excel->getActiveSheet()->getPageSetup()->setFitToPage(TRUE);
-  //   $this->excel->getActiveSheet()->getPageSetup()->setScale(85);
-  //   $this->excel->getActiveSheet()->getPageMargins()->setTop(0.7);
-  //   $this->excel->getActiveSheet()->getPageMargins()->setHeader(0.2);
-  //   $this->excel->getActiveSheet()->getPageMargins()->setLeft(0.5);
-  //   $this->excel->getActiveSheet()->getPageMargins()->setRight(0);
-  //   $this->excel->getActiveSheet()->getPageMargins()->setBottom(0.5);
-  //   $this->excel->getActiveSheet()->getPageMargins()->setFooter(0.5);
-  //
-  //   setToken($token);
-  //   $file_name = "รายงานส่งมอบมิเตอร์.xlsx";
-  //   header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
-  //   header('Content-Disposition: attachment;filename="'.$file_name.'"');
-  //   $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
-  //   $writer->save('php://output');
-  //
-  // }
-
 
 
 } //--- end class

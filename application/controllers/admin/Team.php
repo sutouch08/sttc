@@ -43,7 +43,7 @@ class Team extends PS_Controller {
 
 			$this->pagination->initialize($init);
 
-			$this->load->view('admin/team/team_list', $filter);			
+			$this->load->view('admin/team/team_list', $filter);
 		}
   }
 
@@ -84,6 +84,8 @@ class Team extends PS_Controller {
 				$full_name = trim($this->input->post('full_name'));
 				$contract_no = trim($this->input->post('contract_no'));
 				$list_no = trim($this->input->post('list_no'));
+				$worker = $this->input->post('worker');
+				$tor_qty = $this->input->post('qty');
         $active = $this->input->post('status') == 1 ? 1 : 0;
 
         if( ! $this->team_model->is_exists($code))
@@ -94,6 +96,8 @@ class Team extends PS_Controller {
 						'full_name' => $full_name,
 						'contract_no' => $contract_no,
 						'list_no' => $list_no,
+						'tor_worker' => $worker > 0 ? $worker : 1,
+						'tor_qty' => $tor_qty > 0 ? $tor_qty : 0,
             'status' => $active,
             'create_at' => now(),
             'create_by' => $this->_user->id
@@ -116,6 +120,8 @@ class Team extends PS_Controller {
 							'contract_no' => $contract_no,
 							'list_no' => $list_no,
               'status' => is_active($active),
+							'tor_worker' => $worker > 0 ? $worker : 1,
+							'tor_qty' => $tor_qty > 0 ? number($tor_qty) : 1,
               'create_at' => thai_date(now(), FALSE),
               'create_by' => $this->_user->uname,
               'update_by' => "",
@@ -154,6 +160,8 @@ class Team extends PS_Controller {
 		$full_name = trim($this->input->post('full_name'));
 		$contract_no = trim($this->input->post('contract_no'));
 		$list_no = trim($this->input->post('list_no'));
+		$worker = $this->input->post('worker');
+		$tor_qty = $this->input->post('qty');
     $active = $this->input->post('status') == 1 ? 1 : 0;
 
 		$ds = array();
@@ -170,6 +178,8 @@ class Team extends PS_Controller {
 						'full_name' => $full_name,
 						'contract_no' => $contract_no,
 						'list_no' => $list_no,
+						'tor_worker' => $worker > 0 ? $worker : 1,
+						'tor_qty' => $tor_qty > 0 ? $tor_qty : 1,
             'status' => $active,
             'update_at' => now(),
             'update_by' => $this->_user->id
@@ -186,6 +196,7 @@ class Team extends PS_Controller {
 
             if(! empty($rs))
             {
+							$rs->tor_qty = number($rs->tor_qty);
               $rs->status = is_active($rs->status);
               $rs->create_at = thai_date($rs->create_at, FALSE);
               $rs->update_at = thai_date($rs->update_at, FALSE);
