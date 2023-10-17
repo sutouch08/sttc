@@ -22,19 +22,7 @@ class Summary_report extends PS_Controller
 
   public function index()
   {
-    $limit = date_create('2023-10-16');
-    $now = date_create(date('Y-m-d'));
-    $end = $limit < $now ? TRUE : FALSE;
-
-    if($end)
-    {
-      $text = "เมนูนี้ถูกระงับใช้งาน เนื่องจากระยะเวลาทดลองใช้สิ้นสุดลง โปรดติดต่อผู้ให้บริการเพื่อชำระค่าบริการและเปิดใช้งานระบบอีกครั้ง";
-      $this->load->view('trial_expired', array('text' => $text));
-    }
-    else
-    {
-      $this->load->view('report/summary/summary_report');
-    }
+    $this->load->view('report/summary/summary_report');
   }
 
 
@@ -53,6 +41,9 @@ class Summary_report extends PS_Controller
 
     if( ! empty($teams))
     {
+      $ds['report_date'] = date('d F Y');
+      $ds['data'] = array();
+
       foreach($teams as $team)
       {
         $tor_qty = $team->tor_qty;
@@ -74,14 +65,14 @@ class Summary_report extends PS_Controller
           'color' => $percentage < $MAT ? 'red' : ''
         );
 
-        array_push($ds, $arr);
+        array_push($ds['data'], $arr);
       }
 
       $arr = array(
         'mat' => number($MAT, 2).' %'
       );
 
-      array_push($ds, $arr);
+      array_push($ds['data'], $arr);
     }
     else
     {
