@@ -141,6 +141,13 @@ while($total_page > 0 )
 
     if( ! empty($rs) )
     {
+			$dispose_name = $rs->dispose_reason_name;
+
+			if(empty($dispose_name) && $doc->color == 'Red')
+			{
+				$dispose_name = 'หมดวาระ';
+			}
+
 			$data = array(
 				$n,
 				thai_date($rs->work_date, FALSE, '/'),
@@ -149,7 +156,7 @@ while($total_page > 0 )
 				$rs->meter_size,
 				$rs->meter_read_end,
 				$rs->meter_age,
-				$rs->dispose_reason_name
+				$dispose_name
 			);
     }
     else

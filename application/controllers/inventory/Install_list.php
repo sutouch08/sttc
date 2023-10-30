@@ -394,7 +394,7 @@ class Install_list extends PS_Controller
       'to_date' => $this->input->post('export_to_date')
     );
 
-    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ', 'pack code', 'ลักษณะการชำรุด');
+    $header = array('วันที่ติดตั้ง', 'PeaNo (เก่า)', 'PeaNo (ใหม่)', 'เขต', 'อายุ', 'เฟส', 'ขนาด', 'หน่วย(kWh)', 'ผู้ติดตั้ง', 'สถานะ', 'PACK CODE', 'ลักษณะการชำรุด', 'TR CODE');
     $area = area_code_array();
     $reason = dispose_reason_array();
     $label = array(
@@ -420,6 +420,8 @@ class Install_list extends PS_Controller
       {
         $pk = $rs->status == 'O' ? $rs->status.$rs->pack_status : $rs->status;
         $status = empty($label[$pk]) ? 'unknow' : $label[$pk];
+        
+        $dispose_name = empty($rs->dispose) ? (empty($reason[$rs->dispose_reason]) ? "" : $reason[$rs->dispose_reason]) : $rs->dispose;
 
         $arr = array(
           thai_date($rs->work_date, FALSE),
@@ -433,7 +435,8 @@ class Install_list extends PS_Controller
           $rs->worker,
           $status,
           $rs->pack_code,
-          ( ! empty($rs->dispose) ? $rs->dispose : (empty($reason[$rs->dispose_reason]) ? "" : $reason[$rs->dispose_reason]))
+          $dispose_name,
+          $rs->transfer_code
         );
 
         fputcsv($f, $arr, $delimiter);

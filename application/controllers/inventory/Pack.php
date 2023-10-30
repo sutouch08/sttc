@@ -222,6 +222,13 @@ class Pack extends PS_Controller
         {
           if($rs->phase == $doc->phase)
           {
+            $reason_name = empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason);
+
+            if(empty($reason_name) && $doc->color == 'Red')
+            {
+              $reason_name = "หมดวาระ";
+            }
+
             $arr = array(
               'pack_id' => $pack_id,
               'u_pea_no' => $rs->u_pea_no,
@@ -233,7 +240,7 @@ class Pack extends PS_Controller
               'meter_read_end' => $rs->meter_read_end,
               'dispose_reason_id' => $rs->dispose_reason,
               'user' => $this->_user->id,
-              'dispose_reason_name' => empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason)
+              'dispose_reason_name' => $reason_name
             );
 
             $id = $this->pack_model->add_detail($arr);
@@ -282,6 +289,12 @@ class Pack extends PS_Controller
     $sc = TRUE;
     $id = $this->input->post('id');
     $dispose_reason = get_null(trim($this->input->post('dispose_reason')));
+    $color = get_null(trim($this->input->post('color')));
+
+    if(empty($dispose_reason) && $color == 'Red')
+    {
+      $dispose_reason = 'หมดวาระ';
+    }
 
     $arr = array(
       'dispose_reason_name' => $dispose_reason
@@ -300,6 +313,7 @@ class Pack extends PS_Controller
       if( ! empty($row))
       {
         $pea_no = $row->u_pea_no;
+        
         $arr = array(
           'dispose' => $dispose_reason
         );
@@ -504,8 +518,14 @@ class Pack extends PS_Controller
 
             if( ! empty($row))
             {
-              $arr = array(
+              $reason_name = empty($row->dispose_reason) ? NULL : dispose_reason_name($row->dispose_reason);
 
+              if(empty($reason_name) && $doc->color == 'Red')
+              {
+                $reason_name = "หมดวาระ";
+              }
+
+              $arr = array(
                 'i_pea_no' => $row->i_pea_no,
                 'work_date' => $row->work_date,
                 'meter_age' => $row->meter_age,
@@ -513,7 +533,7 @@ class Pack extends PS_Controller
                 'meter_size' => $row->meter_size_name,
                 'meter_read_end' => $row->meter_read_end,
                 'dispose_reason_id' => $row->dispose_reason,
-                'dispose_reason_name' => empty($row->dispose_reason) ? NULL : dispose_reason_name($row->dispose_reason)
+                'dispose_reason_name' => $reason_name
               );
 
               $this->pack_model->update_detail($rs->id, $arr);

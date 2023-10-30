@@ -176,6 +176,7 @@ $('.dispose').focus(function() {
 
 function updateDispose(id) {
   let dispose = $('#dispose-'+id).val();
+  let color = $('#color').val();
 
   $.ajax({
     url:HOME + 'update_dispose',
@@ -183,7 +184,8 @@ function updateDispose(id) {
     cache:false,
     data: {
       'id' : id,
-      'dispose_reason' : dispose
+      'dispose_reason' : dispose,
+      'color' : color
     },
     success:function(rs) {
       if(rs == 'success') {
