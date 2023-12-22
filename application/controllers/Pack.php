@@ -5,7 +5,6 @@ class Pack extends PS_Controller
 {
   public $menu_code = 'OPISPK';
 	public $menu_group_code = 'OP';
-  public $active_menu = TRUE;
 	public $title = 'แพ็คมิเตอร์เก่า';
 	public $segment = 4;
 
@@ -20,53 +19,45 @@ class Pack extends PS_Controller
     $this->load->helper('warehouse');
     $this->load->helper('area');
     $this->load->helper('pack');
-    $this->active_menu = $this->menu->is_active($this->menu_code);
   }
 
 
 
   public function index()
   {
-    if($this->active_menu)
+		$filter = array(
+			'code' => get_filter('code', 'pack_code', ''),
+      'area' => (! empty($this->_user->team_id) ? $this->_user->team_id : get_filter('area', 'pack_area', 'all')),
+      'sub_area' => get_filter('sub_area', 'pack_sub_area', 'all'),
+      'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'),
+      'status' => get_filter('status', 'pack_status', 'all'),
+      'phase' => get_filter('phase', 'pack_phase', 'all'),
+      'reference' => get_filter('reference', 'pack_reference', ''),
+      'user' => get_filter('user', 'pack_user', 'all'),
+      'from_date' => get_filter('from_date', 'pack_from_date', ''),
+      'to_date' => get_filter('to_date', 'pack_to_date', ''),
+      'color' => get_filter('color', 'pack_color', 'all')
+		);
+
+    if($this->input->post('search'))
     {
-      $filter = array(
-        'code' => get_filter('code', 'pack_code', ''),
-        'area' => (! empty($this->_user->team_id) ? $this->_user->team_id : get_filter('area', 'pack_area', 'all')),
-        'sub_area' => get_filter('sub_area', 'pack_sub_area', 'all'),
-        'warehouse' => get_filter('warehouse', 'pack_warehouse', 'all'),
-        'status' => get_filter('status', 'pack_status', 'all'),
-        'phase' => get_filter('phase', 'pack_phase', 'all'),
-        'reference' => get_filter('reference', 'pack_reference', ''),
-        'user' => get_filter('user', 'pack_user', 'all'),
-        'from_date' => get_filter('from_date', 'pack_from_date', ''),
-        'to_date' => get_filter('to_date', 'pack_to_date', ''),
-        'color' => get_filter('color', 'pack_color', 'all')
-      );
-
-      if($this->input->post('search'))
-      {
-        redirect($this->home);
-      }
-      else
-      {
-        //--- แสดงผลกี่รายการต่อหน้า
-        $perpage = get_rows();
-
-        $rows = $this->pack_model->count_rows($filter);
-
-        $filter['data'] = $this->pack_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
-
-        //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-        $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
-
-        $this->pagination->initialize($init);
-
-        $this->load->view('inventory/pack/pack_list', $filter);
-      }
+      redirect($this->home);
     }
     else
     {
-      $this->load->view('maintenance');
+      //--- แสดงผลกี่รายการต่อหน้า
+  		$perpage = get_rows();
+
+  		$rows = $this->pack_model->count_rows($filter);
+
+  		$filter['data'] = $this->pack_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+
+  		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+  		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
+
+  		$this->pagination->initialize($init);
+
+      $this->load->view('inventory/pack/pack_list', $filter);
     }
   }
 
@@ -286,109 +277,83 @@ class Pack extends PS_Controller
     $pack_id = $this->input->post('pack_id');
     $pea_no = trim($this->input->post('pea_no'));
     $phase = $this->input->post('phase') == 3 ? 3 : 1;
-    $pack_limit = $phase == 3 ? getConfig('PACK_LIMIT_3_PHASE') : ('PACK_LIMIT_1_PHASE');
 
     if( ! empty($pea_no) && ! empty($pack_id))
     {
       $doc = $this->pack_model->get($pack_id);
       $rs = $this->install_list_model->get($pea_no, $op);
       $qty = $this->pack_model->get_sum_qty($pack_id);
-      $limit = $pack_limit > 0 ? $pack_limit : 120;
 
       //---- check limit per package
-      if($qty >= $limit)
+      if($qty >= 120)
       {
         $sc = FALSE;
-        $this->error = "จำนวนมิเตอร์เกิน {$limit} กรุณา refresh หน้าจอแล้วตรวจสอบอีกครั้ง";
+        $this->error = "จำนวนมิเตอร์เกิน 120 กรุณา refresh หน้าจอแล้วตรวจสอบอีกครั้ง";
       }
+
+      //--- check cut off date from user
+      if($sc === TRUE)
+      {
+        if( ! empty($this->_user->cut_off_date) && ($this->_user->cut_off_date < $rs->work_date))
+        {
+          $sc = FALSE;
+          $this->error = "วันที่สับเปลี่ยนมิเตอร์เกินวันที่ cut off ของคุณ";
+        }
+      }
+
 
       if($sc === TRUE)
       {
         if( ! empty($rs))
         {
-          //--- check cut off date from user
-          if($sc === TRUE)
+          if($rs->pack_status == 0)
           {
-            if( ! empty($this->_user->cut_off_date) && ($this->_user->cut_off_date < $rs->work_date))
+            if($rs->phase == $doc->phase)
             {
-              $sc = FALSE;
-              $this->error = "วันที่สับเปลี่ยนมิเตอร์เกินวันที่ cut off ของคุณ";
-            }
-          }
+              $reason_name = empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason);
 
-          if($sc === TRUE && getConfig('PACK_STRICT_SUB_AREA'))
-          {
-            if( ! empty($doc->sub_area_id))
-            {
-              $this->load->model('admin/sub_area_model');
-
-              //---- รหัสพื่นที่ ตามหัวเอกสาร
-              $doc_area_code = $this->sub_area_model->get_code($doc->sub_area_id);
-
-              if( ! empty($doc_area_code))
+              if(empty($reason_name) && $doc->color == 'Red')
               {
-                $area_code = substr($rs->route, 0, 4); //-- 4 ตัวอักษรแรกของ route
-
-                if($area_code != $doc_area_code)
-                {
-                  $sc = FALSE;
-                  $this->error = "สายจดหน่วยไม่ตรงกับพื้นที่ของใบแพ็ค";
-                }
+                $reason_name = "หมดวาระ";
               }
-            }
-          }
 
-          if($sc === TRUE)
-          {
-            if($rs->pack_status == 0)
-            {
-              if($rs->phase == $doc->phase)
+              $arr = array(
+                'pack_id' => $pack_id,
+                'u_pea_no' => $rs->u_pea_no,
+                'i_pea_no' => $rs->i_pea_no,
+                'work_date' => $rs->work_date,
+                'meter_age' => $rs->meter_age,
+                'phase' => $rs->phase,
+                'meter_size' => $rs->meter_size_name,
+                'meter_read_end' => $rs->meter_read_end,
+                'dispose_reason_id' => $rs->dispose_reason,
+                'user' => $this->_user->id,
+                'dispose_reason_name' => $reason_name
+              );
+
+              $id = $this->pack_model->add_detail($arr);
+
+              if($id)
               {
-                $reason_name = empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason);
-
-                if(empty($reason_name) && $doc->color == 'Red')
-                {
-                  $reason_name = "หมดวาระ";
-                }
-
-                $arr = array(
-                  'pack_id' => $pack_id,
-                  'u_pea_no' => $rs->u_pea_no,
-                  'i_pea_no' => $rs->i_pea_no,
-                  'work_date' => $rs->work_date,
-                  'meter_age' => $rs->meter_age,
-                  'phase' => $rs->phase,
-                  'meter_size' => $rs->meter_size_name,
-                  'meter_read_end' => $rs->meter_read_end,
-                  'dispose_reason_id' => $rs->dispose_reason,
-                  'user' => $this->_user->id,
-                  'dispose_reason_name' => $reason_name
-                );
-
-                $id = $this->pack_model->add_detail($arr);
-
-                if($id)
-                {
-                  $arr['id'] = $id;
-                  $this->install_list_model->update($rs->id, array('pack_status' => 1, 'pack_code' => $doc->code));
-                }
-                else
-                {
-                  $sc = FALSE;
-                  $this->error = "เพิ่มรายการไม่สำเร็จ";
-                }
+                $arr['id'] = $id;
+                $this->install_list_model->update($rs->id, array('pack_status' => 1, 'pack_code' => $doc->code));
               }
               else
               {
                 $sc = FALSE;
-                $this->error = "กรุณาแพ็คมิเตอร์ {$doc->phase} เฟสเท่านั้น";
+                $this->error = "เพิ่มรายการไม่สำเร็จ";
               }
             }
             else
             {
               $sc = FALSE;
-              $this->error = "มิเตอร์นี้เคยถูกแพ็คไปแล้ว";
+              $this->error = "กรุณาแพ็คมิเตอร์ {$doc->phase} เฟสเท่านั้น";
             }
+          }
+          else
+          {
+            $sc = FALSE;
+            $this->error = "มิเตอร์นี้เคยถูกแพ็คไปแล้ว";
           }
         }
         else

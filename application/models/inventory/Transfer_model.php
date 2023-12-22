@@ -107,6 +107,12 @@ class Transfer_model extends CI_Model
   }
 
 
+  public function update_pack_list($pack_id, $docEntry)
+  {
+    return $this->db->set('DocEntry', $docEntry)->where('id', $pack_id)->update('pack');
+  }
+
+
   public function change_to_warehouse_code($transfer_id, $toWhsCode)
   {
     return $this->db->set('toWhsCode', $toWhsCode)->where('transfer_id', $transfer_id)->update($this->td);

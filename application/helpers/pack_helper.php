@@ -20,4 +20,16 @@ function pack_status_label($status = 'O')
   return empty($arr[$status]) ? 'Open' : $arr[$status];
 }
 
+function color_name($color)
+{
+  $arr = array(
+    'Green' => 'เขียว',
+    'Blue' => 'น้ำเงิน',
+    'Orange' => 'ส้ม',
+    'Red' => 'แดง'
+  );
+
+  return ! empty($arr[$color]) ? $arr[$color] : "Unknow";
+}
+
  ?>

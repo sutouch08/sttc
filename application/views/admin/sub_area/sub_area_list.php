@@ -55,11 +55,12 @@
 
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive">
-		<table class="table table-hover border-1" style="min-width:820px;">
+		<table class="table table-hover border-1" style="min-width:920px;">
 			<thead>
 				<tr>
 					<th class="fix-width-80"></th>
 					<th class="fix-width-60 middle text-center">#</th>
+					<th class="fix-width-100 middle">รหัส</th>
 					<th class="fix-width-100 middle">พื้นที่</th>
 					<th class="fix-width-100 middle">เขต</th>
 					<th class="fix-width-80 middle text-center">สถานะ</th>
@@ -83,6 +84,7 @@
 						<?php endif; ?>
 					</td>
 					<td class="middle text-center no"><?php echo $no; ?></td>
+					<td class="middle"><?php echo $rs->code; ?></td>
 					<td class="middle"><?php echo $rs->name; ?></td>
 					<td class="middle"><?php echo $rs->team_name; ?></td>
 					<td class="middle text-center"><?php echo is_active($rs->status); ?></td>
@@ -108,14 +110,20 @@
        <h4 class="modal-title">เพิ่ม พื้นที่</h4>
       </div>
       <div class="modal-body">
-        <div class="row" style="padding-left:12px; padding-right:12px;">
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+				<div class="row" style="padding-left:12px; padding-right:12px;">
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 						<label>ชื่อพื้นที่</label>
 						<input type="text" id="add-name" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="add-name-error"></div>
 					</div>
 
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+						<label>รหัสพื้นที่(Route)</label>
+						<input type="text" id="add-code" class="form-control" maxlength="4" placeholder="รหัส 4 ตัวหน้าของสายจดหน่วย"	required />
+						<div class="err-label" id="add-code-error"></div>
+					</div>
+
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 						<label>เขต</label>
 						<select class="form-control" id="add-team">
 							<option value="">เลือก</option>
@@ -153,13 +161,19 @@
       </div>
       <div class="modal-body">
         <div class="row" style="padding-left:12px; padding-right:12px;">
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 						<label>ชื่อพื้นที่</label>
 						<input type="text" id="edit-name" class="form-control" maxlength="100"	required />
 						<div class="err-label" id="edit-name-error"></div>
 					</div>
 
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+						<label>รหัสพื้นที่(Route)</label>
+						<input type="text" id="edit-code" class="form-control" maxlength="4" placeholder="4 ตัวหน้ายองสายจดหน่วย" title="รหัส 4 ตัวหน้าของสายจดหน่วย"	required />
+						<div class="err-label" id="edit-code-error"></div>
+					</div>
+
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 						<label>เขต</label>
 						<select class="form-control" id="edit-team">
 							<option value="">เลือก</option>
@@ -194,6 +208,7 @@
 		<button type="button" class="btn btn-minier btn-danger" onclick="getDelete({{id}}, '{{name}}')"><i class="fa fa-trash"></i></button>
 	</td>
   <td class="middle text-center no">{{no}}</td>
+	<td class="middle">{{code}}</td>
   <td class="middle">{{name}}</td>
 	<td class="middle">{{team_name}}</td>
   <td class="middle text-center">{{{status}}}</td>
@@ -210,6 +225,7 @@
 		<button type="button" class="btn btn-minier btn-danger" onclick="getDelete({{id}}, '{{name}}')"><i class="fa fa-trash"></i></button>
 	</td>
 	<td class="middle text-center no">{{no}}</td>
+	<td class="middle">{{code}}</td>
   <td class="middle">{{name}}</td>
 	<td class="middle">{{team_name}}</td>
   <td class="middle text-center">{{{status}}}</td>

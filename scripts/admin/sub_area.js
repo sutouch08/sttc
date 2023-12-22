@@ -20,6 +20,8 @@ function openModal(name) {
 
 
 function addNew() {
+  $('#add-code').val('');
+  $('#add-code-error').text('');
   $('#add-name').val('');
   $('#add-name-error').text('');
   $('#add-team').val('');
@@ -31,7 +33,8 @@ function addNew() {
 
 
 function saveAdd() {
-  let name = $('#add-name').val();
+  let code = $.trim($('#add-code').val());
+  let name = $.trim($('#add-name').val());
   let team = $('#add-team').val();
   let status = $('#add-active').is(':checked') ? 1 : 0;
 
@@ -41,6 +44,14 @@ function saveAdd() {
   }
   else {
     $('#add-name-error').text('');
+  }
+
+  if(code.length < 4) {
+    $('#add-code-error').text('Required 4 characters');
+    return false;
+  }
+  else {
+    $('#add-code-error').text('');
   }
 
   if(team.val == "") {
@@ -58,6 +69,7 @@ function saveAdd() {
     type:'POST',
     cache:false,
     data:{
+      'code' : code,
       'name' : name,
       'team_id' : team,
       'status' : status
@@ -105,6 +117,7 @@ function getEdit(id) {
       if(isJson(rs)) {
         let ds = $.parseJSON(rs);
         $('#edit-id').val(ds.id);
+        $('#edit-code').val(ds.code);
         $('#edit-name').val(ds.name);
         $('#edit-team').val(ds.team_id);
 
@@ -115,6 +128,7 @@ function getEdit(id) {
           $('#edit-active').prop('checked', false);
         }
 
+        $('#edit-code-error').text('');
         $('#edit-name-error').text('');
         $('#edit-team-error').text('');
         openModal('edit-modal');
@@ -133,7 +147,8 @@ function getEdit(id) {
 
 function update() {
   let id = $('#edit-id').val();
-  let name = $('#edit-name').val();
+  let code = $.trim($('#edit-code').val());
+  let name = $.trim($('#edit-name').val());
   let team = $('#edit-team').val();
   let status = $('#edit-active').is(':checked') ? 1 : 0;
 
@@ -143,6 +158,14 @@ function update() {
   }
   else {
     $('#edit-name-error').text('');
+  }
+
+  if(code.length < 4) {
+    $('#edit-code-error').text('Required 4 characters');
+    return false;
+  }
+  else {
+    $('#edit-code-error').text('');
   }
 
   if(team.val == "") {
@@ -161,6 +184,7 @@ function update() {
     cache:false,
     data:{
       'id' : id,
+      'code' : code,
       'name' : name,
       'team_id' : team,
       'status' : status
@@ -185,10 +209,12 @@ function update() {
         reIndex();
 
         $('#edit-id').val('');
+        $('#edit-code').val('');
         $('#edit-name').val('');
         $('#edit-name-error').text('');
+        $('#edit-code-error').text('');
         $('#edit-team').val('');
-        $('#edit-team-error').text('');      
+        $('#edit-team-error').text('');
       }
       else {
         setTimeout(function() {

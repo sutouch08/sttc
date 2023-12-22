@@ -5,7 +5,9 @@ var validTeam = true;
 var validWh = true;
 var validPwd = true;
 
-
+$('#cut-off-date').datepicker({
+  dateFormat:'dd-mm-yy'
+});
 
 function addNew() {
   window.location.href = HOME +'add_new';
@@ -51,6 +53,7 @@ function saveAdd() {
   const can_get_meter = $('#can_get_meter').is(':checked') ? 1 : 0;
   const fromWhsCode = $('#fromWhsCode').val();
   const toWhsCode = $('#toWhsCode').val();
+  let date = $('#cut-off-date').val();
 
   if(team_id != "") {
     if(fromWhsCode.length == 0 || toWhsCode.length == 0) {
@@ -62,6 +65,10 @@ function saveAdd() {
 
       return false;
     }
+  }
+
+  if( ! isDate(date)) {
+    date = "";
   }
 
 	load_in();
@@ -77,6 +84,7 @@ function saveAdd() {
 			'team_id' : team_id,
       'fromWhsCode' : fromWhsCode,
       'toWhsCode' : toWhsCode,
+      'cut_off_date' : date,
 			'pwd' : pwd,
 			'active' : active,
 			'force_reset' : force_reset
@@ -134,6 +142,7 @@ function update() {
 	const active = $('#active').is(':checked') ? 1 : 0;
   const fromWhsCode = $('#fromWhsCode').val();
   const toWhsCode = $('#toWhsCode').val();
+  let date = $('#cut-off-date').val();
 
   if(team_id != "") {
     if(fromWhsCode.length == 0 || toWhsCode.length == 0) {
@@ -145,6 +154,10 @@ function update() {
 
       return false;
     }
+  }
+
+  if( ! isDate(date)) {
+    date = "";
   }
 
 	load_in();
@@ -161,6 +174,7 @@ function update() {
 			'ugroup' : ugroup,
       'fromWhsCode' : fromWhsCode,
       'toWhsCode' : toWhsCode,
+      'cut_off_date' : date,
 			'active' : active
 		},
 		success:function(rs) {

@@ -110,18 +110,14 @@ class Menu extends CI_Model{
   {
     return $this->db->where('group_code', $group_code)->count_all_results('menu');
   }
+  
 
   public function is_active($menu_code)
   {
-    $rs = $this->db->where('code', $menu_code)->where('active', 1)->get('menu');
-    if($rs->num_rows() === 1)
-    {
-      return TRUE;
-    }
+    $count = $this->db->where('code', $menu_code)->where('active', 1)->count_all_results('menu');
 
-    return FALSE;
+    return $count > 0 ? TRUE : FALSE;
   }
-
 
 }
 ?>

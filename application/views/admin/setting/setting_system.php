@@ -6,6 +6,10 @@
 		$disable = $this->_SuperAdmin ? "" : "disabled";
     $checkboxOn = $RETURN_CHECKBOX == 1 ? 'btn-primary' : '';
     $checkboxOff = $RETURN_CHECKBOX == 0 ? 'btn-primary' : '';
+    $strictAreaOn = $PACK_STRICT_SUB_AREA == 1 ? 'btn-primary' : '' ;
+    $strictAreaOff = $PACK_STRICT_SUB_AREA == 0 ? 'btn-primary' : '';
+    $createTrOn = $ALLOW_CREATE_TRANSFER_FROM_PACK_LIST == 1 ? 'btn-primary' : '';
+    $createTrOff = $ALLOW_CREATE_TRANSFER_FROM_PACK_LIST == 0 ? 'btn-primary' : '';
 ?>
 
   <form id="systemForm" method="post" action="<?php echo $this->home; ?>/update_config">
@@ -62,6 +66,29 @@
       <span class="help-block">ตั้งค่าจำกัดจำนวนมิเตอร์ 3 เฟส ที่สามารถแพ็คลงลังได้ต่อ 1 ลังไม่เกินจำนวนที่กำหนด</span>
     </div>
     <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">บังคับแพ็คให้สายจดหน่วยตรงกับพื้นที่</span></div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <div class="btn-group input-medium">
+        <button type="button" class="btn btn-sm width-50 <?php echo $strictAreaOn; ?>" id="btn-strict-on" onClick="toggleStrictPack(1)" >เปิด</button>
+        <button type="button" class="btn btn-sm width-50 <?php echo $strictAreaOff; ?>" id="btn-strict-off" onClick="toggleStrictPack(0)">ปิด</button>
+      </div>
+      <input type="hidden" class="form-control input-sm input-small text-center" name="PACK_STRICT_SUB_AREA" id="strict-pack" value="<?php echo $PACK_STRICT_SUB_AREA; ?>" />
+      <span class="help-block">บังคับการแพ็ค สายจดหน่วยของมิเตอร์เก่าต้องตรงกับพื่นที่ที่ระบุบนหัวเอกสารแพ็ค</span>
+    </div>
+    <div class="divider-hidden"></div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">สร้างใบโอนในหน้าแพ็คมิเตอร์</span></div>
+    <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+      <div class="btn-group input-medium">
+        <button type="button" class="btn btn-sm width-50 <?php echo $createTrOn; ?>" id="btn-tr-on" onClick="toggleCreateTransfer(1)" >เปิด</button>
+        <button type="button" class="btn btn-sm width-50 <?php echo $createTrOff; ?>" id="btn-tr-off" onClick="toggleCreateTransfer(0)">ปิด</button>
+      </div>
+      <input type="hidden" class="form-control input-sm input-small text-center" name="ALLOW_CREATE_TRANSFER_FROM_PACK_LIST" id="create-tr-from-pack" value="<?php echo $ALLOW_CREATE_TRANSFER_FROM_PACK_LIST; ?>" />
+      <span class="help-block">อนุญาติให้สร้างเอกสารโอนสินค้าในหน้าแพ็คมิเตอร์เก่าโดยตรงหรือไม่</span>
+    </div>
+    <div class="divider-hidden"></div>
+
 
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12"><span class="form-control left-label">จำนวนบรรทัดการพิมพ์/กล่อง</span></div>
     <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">

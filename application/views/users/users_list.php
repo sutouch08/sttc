@@ -84,18 +84,19 @@
 
 <div class="row">
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 table-responsive" style="min-height:400px;">
-		<table class="table table-hover table-bordered border-1" style="min-width:1000px;">
+		<table class="table table-hover table-bordered border-1" style="min-width:1020px;">
 			<thead>
 				<tr>
+					<th class="fix-width-120">&nbsp;</th>
 					<th class="fix-width-40 middle text-center">#</th>
 					<th class="fix-width-150 middle">ชื่อผู้ใช้งาน</th>
-					<th class="fix-width-200 middle">ชื่อพนักงาน</th>
+					<th class="min-width-150 middle">ชื่อพนักงาน</th>
 					<th class="fix-width-100 middle text-center">กลุ่มผู้ใช้งาน</th>
-					<th class="fix-width-150 middle">เขต</th>
+					<th class="fix-width-100 middle">เขต</th>
 					<th class="fix-width-100 middle">คลังสำเร็จ</th>
 					<th class="fix-width-100 middle">คลังลงลัง</th>
+					<th class="fix-width-100 middle">Cut Off</th>
 					<th class="fix-width-60 middle text-center">สถานะ</th>
-					<th class="min-width-150"></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -107,6 +108,20 @@
 	<?php foreach($data as $rs) : ?>
 		<?php $dropup = ($cno > $pno && $cno > 4) ? "dropup" : ""; ?>
 				<tr>
+					<td class="middle">
+						<?php if($this->pm->can_add OR $this->pm->can_edit) : ?>
+							<button type="button" class="btn btn-minier btn-purple" title="Reset password" onclick="getReset('<?php echo $rs->id; ?>')"><i class="fa fa-key"></i></button>
+						<?php endif; ?>
+						<?php if($this->pm->can_edit) : ?>
+							<button type="button" class="btn btn-minier btn-warning" onclick="getEdit('<?php echo $rs->id; ?>')"><i class="fa fa-pencil"></i></button>
+						<?php endif; ?>
+						<?php if($this->pm->can_delete) : ?>
+							<button type="button" class="btn btn-minier btn-danger" onclick="getDelete('<?php echo $rs->id; ?>', '<?php echo $rs->uname; ?>')"><i class="fa fa-trash"></i></button>
+						<?php endif; ?>
+						<?php if($can_edit_permission) : ?>
+							<button type="button" class="btn btn-minier btn-primary" title="Permission" onclick="getPermission('<?php echo $rs->id; ?>')"><i class="fa fa-lock"></i></button>
+						<?php endif; ?>
+					</td>
 					<td class="middle text-center"><?php echo $no; ?></td>
 					<td class="middle"><?php echo $rs->uname; ?></td>
 					<td class="middle"><?php echo $rs->display_name; ?></td>
@@ -114,21 +129,8 @@
 					<td class="middle"><?php echo empty($rs->team_name) ? 'ไม่ระบุ' : $rs->team_name; ?></td>
 					<td class="middle"><?php echo empty($rs->fromWhsCode) ? 'ไม่ระบุ' : $rs->fromWhsCode; ?></td>
 					<td class="middle"><?php echo empty($rs->toWhsCode) ? 'ไม่ระบุ' : $rs->toWhsCode; ?></td>
+					<td class="middle"><?php echo empty($rs->cut_off_date) ? 'ไม่ระบุ' : thai_date($rs->cut_off_date); ?></td>
 					<td class="middle text-center"><?php echo is_active($rs->active); ?></td>
-					<td class="middle">						
-						<?php if($this->pm->can_add OR $this->pm->can_edit) : ?>
-							<button type="button" class="btn btn-mini btn-purple" title="Reset password" onclick="getReset('<?php echo $rs->id; ?>')"><i class="fa fa-key"></i></button>
-						<?php endif; ?>
-						<?php if($this->pm->can_edit) : ?>
-							<button type="button" class="btn btn-mini btn-warning" onclick="getEdit('<?php echo $rs->id; ?>')"><i class="fa fa-pencil"></i></button>
-						<?php endif; ?>
-						<?php if($this->pm->can_delete) : ?>
-							<button type="button" class="btn btn-mini btn-danger" onclick="getDelete('<?php echo $rs->id; ?>', '<?php echo $rs->uname; ?>')"><i class="fa fa-trash"></i></button>
-						<?php endif; ?>
-						<?php if($can_edit_permission) : ?>
-							<button type="button" class="btn btn-mini btn-primary" title="Permission" onclick="getPermission('<?php echo $rs->id; ?>')"><i class="fa fa-lock"></i></button>
-						<?php endif; ?>
-					</td>
 				</tr>
 				<?php $no++; ?>
 				<?php $cno++; ?>

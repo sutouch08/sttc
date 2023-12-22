@@ -3,13 +3,13 @@
    <div class="modal-content">
        <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-       <h4 class="modal-title">นำเข้าไฟล์ Excel</h4>
+       <h4 class="modal-title">นำเข้าไฟล์ CSV</h4>
       </div>
       <div class="modal-body">
         <form id="upload-form" name="upload-form" method="post" enctype="multipart/form-data">
         <div class="row margin-left-0 margin-right-0">
           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5">
-            <button type="button" class="btn btn-lg btn-primary btn-block" id="show-file-name" onclick="getFile()">เลือกไฟล์ Excel</button>
+            <button type="button" class="btn btn-lg btn-primary btn-block" id="show-file-name" onclick="getFile()">เลือกไฟล์ CSV</button>
           </div>
         </div>
         <input type="file" class="hide" name="uploadFile" id="uploadFile" accept=".csv" />
@@ -32,18 +32,22 @@
 
 </style>
 <div class="modal fade" id="progress-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
- <div class="modal-dialog" style="width:250px;">
+ <div class="modal-dialog" style="width:500px;">
    <div class="modal-content"  id="modal-body">
       <div class="modal-body">
         <div class="row">
           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 margin-bottom-15 text-center font-size-18" id="txt-label">Reading file..</div>
           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center" style="padding-left:20px; padding-right:20px;">
             <div class="progress pos-rel progress-striped" style="background-color:#CCC;" id="txt-percent" data-percent="0%">
-        			<div class="progress-bar progress-bar-primary" id="progress-bar" style="width: 0%;"></div>
+        			<div class="progress-bar progress-bar-primary active" id="progress-bar" style="width: 0%;"></div>
         		</div>
           </div>
           <div class="col-xs-12 text-center margin-top-10">
             <button type="button" class="btn btn-sm btn-primary btn-100" onclick="stop_import()">หยุด</button>
+          </div>
+
+          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" id="err-list" style="max-height:300px; overflow:auto;">
+
           </div>
         </div>
       </div>
@@ -70,11 +74,12 @@ var allow_import = 0;
 var label = $('#txt-label');
 var importData = [];
 var importKey = 0;
+var error = 0;
 
 function sendData(data) {
   if(data.length > 0) {
     count = data.length;
-    label.text()
+    label.text('');
     label.text('Importing '+ imported +'/'+ count);
     $('#progress-modal').modal('show');
 
@@ -124,18 +129,39 @@ function send_data() {
         "data" : JSON.stringify(data)
       },
       success:function(rs) {
-        imported += no;
-        importKey++;
-        label.text('Imported '+ imported +'/'+ count);
-        update_progress();
-        if(imported >= count) {
-          finish_import();
-        }
+        if(isJson(rs)) {
+          let ds = JSON.parse(rs);
 
-        ro = importKey + 1;
-        if(ro <= limit) {
-          send_data();
+          if(ds.status == 'success') {
+            imported += no;
+            importKey++;
+            label.text('Imported '+ imported +'/'+ count);
+            update_progress();
+            if(imported >= count) {
+              finish_import();
+            }
+
+            ro = importKey + 1;
+            if(ro <= limit) {
+              send_data();
+            }
+
+            if(ds.ex == 1) {
+              error++;
+              $('#err-list').append(ds.message);
+            }
+          }
         }
+        else {
+          swal({
+            title:'Error!',
+            text:rs,
+            type:'error'
+          });
+        }
+      },
+      error:function(xhr, status, error) {
+        $('#err-list').append(xhr.responseText);
       }
     })
   }
@@ -143,13 +169,20 @@ function send_data() {
 
 
 function finish_import() {
-  setTimeout(() => {
-    $('#progress-modal').modal('hide');
-
+  if(error == 0) {
     setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  }, 1000);
+      $('#progress-modal').modal('hide');
+      swal({
+        title:'Success',
+        type:'success',
+        timer:1000
+      });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    }, 200);
+  }
 }
 
 function stop_import() {

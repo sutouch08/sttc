@@ -56,12 +56,6 @@ class Users extends PS_Controller{
 		if($this->pm->can_add)
 		{
 			$this->title = "Add user";
-			// $whList = $this->warehouse_model->get_listed();
-			// $teams = $this->team_model->get_all_active();
-			//
-			// $ds = array(
-			// 	'teamList' => $teams
-			// );
 
 			$this->load->view('users/user_add');
 		}
@@ -87,6 +81,7 @@ class Users extends PS_Controller{
 				$team_id = get_null($this->input->post('team_id'));
 				$fromWhsCode = get_null($this->input->post('fromWhsCode'));
 				$toWhsCode = get_null($this->input->post('toWhsCode'));
+				$cut_off_date = get_null($this->input->post('cut_off_date'));
 				$pwd = $this->input->post('pwd');
 				$active = $this->input->post('active') == 1 ? 1 : 0;
 				$force_reset = $this->input->post('force_reset') == 1 ? 1 : 0;
@@ -108,7 +103,8 @@ class Users extends PS_Controller{
 							'last_pass_change' => date('Y-m-d'),
 							'force_reset' => $force_reset,
 							'create_at' => now(),
-							'create_by' => $this->_user->id
+							'create_by' => $this->_user->id,
+							'cut_off_date' => empty($cut_off_date) ? NULL : db_date($cut_off_date)
 						);
 
 						if( ! $this->user_model->add($arr))
@@ -190,6 +186,7 @@ class Users extends PS_Controller{
 				$ugroup = $this->input->post('ugroup');
 				$fromWhsCode = get_null($this->input->post('fromWhsCode'));
 				$toWhsCode = get_null($this->input->post('toWhsCode'));
+				$cut_off_date = get_null($this->input->post('cut_off_date'));
 				$active = $this->input->post('active') == 1 ? 1 : 0;
 
 				if( ! $this->user_model->is_exists_display_name($dname, $id))
@@ -202,7 +199,8 @@ class Users extends PS_Controller{
 						'fromWhsCode' => $fromWhsCode,
 						'toWhsCode' => $toWhsCode,
 						'update_at' => now(),
-						'update_by' => $this->_user->id
+						'update_by' => $this->_user->id,
+						'cut_off_date' => empty($cut_off_date) ? NULL : db_date($cut_off_date)
 					);
 
 					if( ! $this->user_model->update($id, $arr))

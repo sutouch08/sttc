@@ -18,8 +18,7 @@ $config = array(
 	"total_row" => $total_row,
 	"font_size" => 11,
 	"total_page" => ceil($total_row/$row_per_page),
-	"text_color" => "text-orange", //--- hilight text color class
-	"css_files" => array("assets/css/font-sarabun.css")
+	"text_color" => "text-orange" //--- hilight text color class
 );
 
 $this->printer->config($config);
@@ -27,7 +26,6 @@ $this->printer->config($config);
 $page  = '';
 $page .= $this->printer->doc_header();
 $page .= '<style>
-						body { font-family: Sarabun, sans-serif;}
 						.sender-name, .receiver-name { border:0; border-bottom:dotted 1px;}
 					</style>';
 $page .= '<div class="hidden-print" style="width:190mm; border:none; top:10px; margin-left:auto; margin-right:auto; margin-bottom:10px;">
@@ -44,14 +42,14 @@ $page .= '<div class="hidden-print" style="width:190mm; border:none; top:10px; m
 </div>';
 //**************  กำหนดหัวตาราง  ******************************//
 $thead	= array(
-          array("ลำดับ", "width:10mm; text-align:center; padding:0px;"),
-          array("วัน/เดือน/ปี สับเปลี่ยน", "width:30mm; text-align:center; padding:0px;"),
-					array("PEA NO", "width:25mm; text-align:center;padding:0px;"),
-          array("เฟส", "width:20mm; text-align:center; padding:0px;"),
-					array("ขนาด", "width:20mm; text-align:center;padding:0px;"),
-					array("หน่วย(kWh)", "width:20mm; text-align:center; padding:0px;"),
-          array("อายุ", "width:20mm; text-align:center; padding:0px;"),
-					array("ลักษณะชำรุด", "width:40mm; text-align:center; padding:0px;")
+          array("ลำดับ", "width:10mm; text-align:center; padding:0px; font-family:calibri;"),
+          array("วัน/เดือน/ปี สับเปลี่ยน", "width:30mm; text-align:center; padding:0px; font-family:calibri;"),
+					array("PEA NO", "width:25mm; text-align:center;padding:0px; font-family:calibri;"),
+          array("เฟส", "width:20mm; text-align:center; padding:0px; font-family:calibri;"),
+					array("ขนาด", "width:20mm; text-align:center;padding:0px; font-family:calibri;"),
+					array("หน่วย(kWh)", "width:20mm; text-align:center; padding:0px; font-family:calibri;"),
+          array("อายุ", "width:20mm; text-align:center; padding:0px; font-family:calibri;"),
+					array("ลักษณะชำรุด", "width:40mm; text-align:center; padding:0px; font-family:calibri;")
           );
 
 $this->printer->add_subheader($thead);
@@ -59,14 +57,14 @@ $this->printer->add_subheader($thead);
 
 //***************************** กำหนด css ของ td *****************************//
 $pattern = array(
-            "text-align:center; padding:1px; min-height:5mm; border-bottom:solid 1px #333;",
-            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; border-bottom:solid 1px #333;",
-            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; border-bottom:solid 1px #333;",
-            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; border-bottom:solid 1px #333;",
-						"text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; border-bottom:solid 1px #333;",
-            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; border-bottom:solid 1px #333;",
-						"text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; border-bottom:solid 1px #333;",
-						"text-align:left; padding:1px; min-height:5mm; overflow-x:hidden; border-bottom:solid 1px #333;"
+            "text-align:center; padding:1px; min-height:5mm; font-family:calibri; border-bottom:solid 1px #333;",
+            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; font-family:calibri; border-bottom:solid 1px #333;",
+            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; font-family:calibri; border-bottom:solid 1px #333;",
+            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; font-family:calibri; border-bottom:solid 1px #333;",
+						"text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; font-family:calibri; border-bottom:solid 1px #333;",
+            "text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; font-family:calibri; border-bottom:solid 1px #333;",
+						"text-align:center; padding:1px; min-height:5mm; white-space:pre-wrap; font-family:calibri; border-bottom:solid 1px #333;",
+						"text-align:left; padding:1px; min-height:5mm; overflow-x:hidden; font-family:calibri; border-bottom:solid 1px #333;"
             );
 
 $this->printer->set_pattern($pattern);
@@ -80,27 +78,26 @@ $footer = "<div style='width:190mm; height:30mm; margin:auto; border:none; posit
 $footer .="<div style='width:100%; height30mm;'>";
 $footer .= '<table class="table" style="width:100%; margin-top:60px;">
 							<tr>
-								<td class="text-left" style="width:10mm; border:none; padding-left:0px; font-size:14px;">ลงชื่อ</td>
+								<td class="text-right" style="width:10mm; border:none; font-size:16px;">ลงชื่อ</td>
 								<td class="" style="width:50mm; height:10mm; padding:1px; border:none; font-size:16px;"><input type="text" class="width-100" style="border:none; border-bottom:dotted 1px;" readonly/></td>
 								<td class="text-right font-size-16" style="width:50mm; border:none;"></td>
-								<td class="text-left" style="width:10mm; border:none; padding-left:0px; font-size:14px;">ลงชื่อ</td>
+								<td class="text-right" style="width:10mm; border:none; font-size:16px;">ลงชื่อ</td>
 								<td class="" style="width:50mm; height:10mm; padding:1px; border:none; font-size:16px;"><input type="text" class="width-100" style="border:none; border-bottom:dotted 1px;" readonly/></td>
 
 							</tr>
 							<tr>
-								<td colspan="2" class="middle text-center" style="height:10mm; padding:1px; border:none; font-size:14px;">(&nbsp;<input type="text" class="sender-name text-center" style="width:60mm;" readonly/>&nbsp;)</td>
+								<td colspan="2" class="middle text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">(<input type="text" class="sender-name text-center" style="width:65mm;" readonly/>)</td>
 								<td class="text-right font-size-16" style="width:50mm; border:none;"></td>
-								<td colspan="2" class="middle text-center" style="height:10mm; padding:1px; border:none; font-size:14px;">(&nbsp;<input type="text" class="receiver-name text-center" style="width:60mm;" readonly/>&nbsp;)</td>
+								<td colspan="2" class="middle text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">(<input type="text" class="receiver-name text-center" style="width:65mm;" readonly/>)</td>
 
 							</tr>
 							<tr>
-								<td colspan="2" class="text-center" style="height:10mm; padding:1px; border:none; font-size:14px;">เจ้าหน้าที่คู่สัญญา</td>
+								<td colspan="2" class="text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">ตัวแทนบริษัท</td>
 								<td class="text-right font-size-16" style="width:50mm; border:none;"></td>
-								<td colspan="2" class="text-center" style="height:10mm; padding:1px; border:none; font-size:14px;">เจ้าหน้าที่การไฟฟ้าส่วนภูมิภาค</td>
+								<td colspan="2" class="text-center" style="height:10mm; padding:1px; border:none; font-size:16px;">การไฟฟ้าส่วนภูมิภาค</td>
 							</tr>
 						</table>';
 $footer .= "</div>";
-$footer .= "<p class='pull-right' style='font-size:14px;'>อ้างอิง : {$doc->code}</p>";
 $footer .= "</div>";
 
 $this->printer->footer = $footer;
@@ -116,13 +113,14 @@ while($total_page > 0 )
 	$top .= "<div class='text-left' style='padding-top:10px; padding-bottom:10px;'>";
 	$top .= "<table class='width-100'>
 						<tr>
+							<td style='width:33.33%;'>&nbsp;</td>
+							<td style='width:33.33%; text-align:center;'><strong>ใบคุมการบรรจุ</strong></td>
 							<td style='font-size:12px; text-align:right;'>Page {$this->printer->current_page}/{$this->printer->total_page}</td>
 						</tr>
 						<tr>
-							<td style='font-size:12px;'>รายละเอียดมิเตอร์จานหมุนรื้อถอน ตามสัญญาเลขที่..{$contract_no}.. งวดที่ .....{$doc->period_no}..... ลังที่ ....{$doc->box_no}..... สี ...{$color}.....</td>
-						</tr>
-						<tr>
-							<td style='font-size:12px;'>รายการที่ ..{$list_no}... จัดซื้อมิเตอร์อิเล็กทรอนิกส์พร้อมติดตั้งสับเปลี่ยนทดแทนจานหมุนในพื้นที่ {$sub_area_name} การไฟฟ้า {$team_full_name}</td>
+							<td style='font-size:12px;'>เลขที่เอกสาร : {$doc->code}</td>
+							<td style='font-size:12px; vertical-align:bottom;'>ผู้ทำรายการ : {$doc->user_name}</td>
+							<td style='font-size:12px; text-align:right; vertical-align:bottom;'>วันที่ : ".thai_date($doc->date_add, FALSE, '/')."</td>
 						</tr>
 						</table>";
 	$top .= "";

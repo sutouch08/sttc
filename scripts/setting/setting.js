@@ -82,6 +82,33 @@ function toggleReturnCheckbox(option) {
 }
 
 
+function toggleStrictPack(option) {
+	$('#strict-pack').val(option);
+
+	if(option == 1) {
+		$('#btn-strict-on').addClass('btn-primary');
+		$('#btn-strict-off').removeClass('btn-primary');
+	}
+	else {
+		$('#btn-strict-on').removeClass('btn-primary');
+		$('#btn-strict-off').addClass('btn-primary');
+	}
+}
+
+function toggleCreateTransfer(option) {
+	$('#create-tr-from-pack').val(option);
+
+	if(option == 1) {
+		$('#btn-tr-on').addClass('btn-primary');
+		$('#btn-tr-off').removeClass('btn-primary');
+	}
+	else {
+		$('#btn-tr-on').removeClass('btn-primary');
+		$('#btn-tr-off').addClass('btn-primary');
+	}
+}
+
+
 function changeURL(tab)
 {
 	var url = HOME + 'index/'+tab;

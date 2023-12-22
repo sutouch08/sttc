@@ -2,12 +2,14 @@
 class Maintenance extends CI_Controller
 {
 	public $_SuperAdmin = FALSE;
+	public $_Admin = FALSE;
 
   public function __construct()
   {
     parent::__construct();
 
     $this->_SuperAdmin = get_cookie('ugroup') == -987654321 ? TRUE : FALSE;
+		$this->_Admin = get_cookie('ugroup') == 2 ? TRUE : FALSE;
     $this->load->model('admin/config_model');
   }
 

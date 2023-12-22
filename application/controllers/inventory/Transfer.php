@@ -5,6 +5,7 @@ class Transfer extends PS_Controller
 {
   public $menu_code = 'OPWHTR';
 	public $menu_group_code = 'OP';
+  public $active_menu = TRUE;
 	public $title = 'โอนสินค้า';
 	public $segment = 4;
   public $ms;
@@ -20,44 +21,52 @@ class Transfer extends PS_Controller
     $this->load->helper('transfer');
     $this->load->helper('warehouse');
     $this->load->helper('area');
+    $this->active_menu = $this->menu->is_active($this->menu_code);
   }
 
 
   public function index()
   {
-		$filter = array(
-			'code' => get_filter('code', 'tr_code', ''),
-      'pack_code' => get_filter('pack_code', 'tr_pack_code', ''),
-      'from_warehouse' => get_filter('from_warehouse', 'tr_from_warehouse', 'all'),
-      'to_warehouse' => get_filter('to_warehouse', 'tr_to_warehouse', 'all'),
-      'user' => get_filter('user', 'tr_user', ''),
-      'export_status' => get_filter('export_status', 'sap_status', 'all'),
-      'status' => get_filter('status', 'tr_status', 'all'),
-      'from_date' => get_filter('from_date', 'tr_from_date', ''),
-      'to_date' => get_filter('to_date', 'tr_to_date', '')
-		);
-
-    if($this->input->post('search'))
+    if($this->active_menu)
     {
-      redirect($this->home);
+      $filter = array(
+        'code' => get_filter('code', 'tr_code', ''),
+        'pack_code' => get_filter('pack_code', 'tr_pack_code', ''),
+        'from_warehouse' => get_filter('from_warehouse', 'tr_from_warehouse', 'all'),
+        'to_warehouse' => get_filter('to_warehouse', 'tr_to_warehouse', 'all'),
+        'user' => get_filter('user', 'tr_user', ''),
+        'export_status' => get_filter('export_status', 'sap_status', 'all'),
+        'status' => get_filter('status', 'tr_status', 'all'),
+        'from_date' => get_filter('from_date', 'tr_from_date', ''),
+        'to_date' => get_filter('to_date', 'tr_to_date', '')
+      );
+
+      if($this->input->post('search'))
+      {
+        redirect($this->home);
+      }
+      else
+      {
+        $filter['user_in'] = empty($filter['user']) ? NULL : $this->user_model->get_user_in($ds['user']);
+
+        //--- แสดงผลกี่รายการต่อหน้า
+        $perpage = get_rows();
+
+        $rows = $this->transfer_model->count_rows($filter);
+
+        $filter['data'] = $this->transfer_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
+
+        //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+        $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
+
+        $this->pagination->initialize($init);
+
+        $this->load->view('inventory/transfer/transfer_list', $filter);
+      }
     }
     else
     {
-      $filter['user_in'] = empty($filter['user']) ? NULL : $this->user_model->get_user_in($ds['user']);
-
-      //--- แสดงผลกี่รายการต่อหน้า
-      $perpage = get_rows();
-
-      $rows = $this->transfer_model->count_rows($filter);
-
-      $filter['data'] = $this->transfer_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
-
-      //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-      $init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
-
-      $this->pagination->initialize($init);
-
-      $this->load->view('inventory/transfer/transfer_list', $filter);
+      $this->load->view('maintenance');
     }
   }
 

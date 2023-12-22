@@ -98,14 +98,14 @@ $db['default'] = array(
 
 $db['ms'] = array(
 	'dsn'	=> '',
-	'hostname' => '192.168.10.102', //'stto-gctjkgtvbz.dynamic-m.com',
-	'username' => 'inet',
-	'password' => 'BXSttc2020',
-	'database' => 'SBO_TTC', //'TEST_BARCODE',
+	'hostname' => 'localhost',
+	'username' => 'wrx_admin',
+	'password' => 'W@rr1X$p0rt',
+	'database' => 'SBO_TTC',
 	'dbdriver' => 'sqlsrv',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
-	'db_debug' => (ENVIRONMENT !== 'production'),
+	'db_debug' => FALSE, //(ENVIRONMENT !== 'production'),
 	'cache_on' => FALSE,
 	'cachedir' => '',
 	'char_set' => 'utf8',
@@ -117,27 +117,3 @@ $db['ms'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
-
-
-// $db['mc'] = array(
-// 	'dsn'	=> '',
-// 	'hostname' => 'localhost',
-// 	'username' => 'wrx_adminx',
-// 	'password' => 'W@rr1X$p0rt',
-// 	'database' => 'SHOTemp',
-// 	'dbdriver' => 'sqlsrv',
-// 	'dbprefix' => '',
-// 	'pconnect' => FALSE,
-// 	'db_debug' => FALSE, //(ENVIRONMENT !== 'production'),
-// 	'cache_on' => FALSE,
-// 	'cachedir' => '',
-// 	'char_set' => 'utf8',
-// 	'dbcollat' => 'utf8_general_ci',
-// 	'swap_pre' => '',
-// 	'encrypt' => FALSE,
-// 	'compress' => FALSE,
-// 	'stricton' => FALSE,
-// 	'options' => array(PDO::ATTR_TIMEOUT => 10),
-// 	'failover' => array(),
-// 	'save_queries' => TRUE
-// );

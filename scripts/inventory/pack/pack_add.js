@@ -8,6 +8,8 @@ function add() {
   let phase = $('#phase').val();
   let sub_area = $('#sub-area').val();
   let color = $('#color').val();
+  let period_no = $('#period-no').val();
+  let box_no = $('#box-no').val();
   let remark = $.trim($('#remark').val());
 
   if( ! isDate(date)) {
@@ -25,6 +27,16 @@ function add() {
     return false;
   }
 
+  if(period_no.length == 0) {
+    swal("กรุณาระบุงวดที่");
+    return false;
+  }
+
+  if(box_no.length == 0) {
+    swal("กรุณาระบุลังที่");
+    return false;
+  }
+
   load_in();
 
   $.ajax({
@@ -36,6 +48,8 @@ function add() {
       'phase' : phase,
       'sub_area' : sub_area,
       'color' : color,
+      'period_no' : period_no,
+      'box_no' : box_no,
       'remark' : remark
     },
     success:function(rs) {
@@ -71,6 +85,8 @@ function updateRemark() {
   let pack_id = $('#pack_id').val();
   let sub_area = $('#sub-area').val();
   let color = $('#color').val();
+  let period_no = $('#period-no').val();
+  let box_no = $('#box-no').val();
   let remark = $('#remark').val();
 
   if(sub_area == "") {
@@ -83,6 +99,16 @@ function updateRemark() {
     return false;
   }
 
+  if(period_no.length == 0) {
+    swal("กรุณาระบุงวดที่");
+    return false;
+  }
+
+  if(box_no.length == 0) {
+    swal("กรุณาระบุลังที่");
+    return false;
+  }
+
   $.ajax({
     url:HOME + 'update_remark',
     type:'POST',
@@ -91,6 +117,8 @@ function updateRemark() {
       'id' : pack_id,
       'sub_area' : sub_area,
       'color' : color,
+      'period_no' : period_no,
+      'box_no' : box_no,
       'remark' : remark
     },
     success:function(rs) {
@@ -114,6 +142,22 @@ function updateRemark() {
 
 
 function finishPack() {
+  let pack_id = $('#pack_id').val();
+  let sub_area = $('#sub-area').val();
+  let color = $('#color').val();
+  let period_no = $('#period-no').val();
+  let box_no = $('#box-no').val();
+
+  if(sub_area == "") {
+    swal("กรุณาระบุพื้นที่");
+    return false;
+  }
+
+  if(color == "") {
+    swal("กรุณาระบุสี");
+    return false;
+  }
+
   let count = $('.pea-no').length;
 
   if(count > 0) {
@@ -127,14 +171,20 @@ function finishPack() {
       cancelButtonText:'No',
       closeOnConfirm:true
     }, function() {
-      let id = $('#pack_id').val();
 
       load_in();
+
       setTimeout(() => {
         $.ajax({
-          url:HOME + 'finish_pack/'+id,
+          url:HOME + 'finish_pack/'+pack_id,
           type:'GET',
           cache:false,
+          data:{
+            "sub_area" : sub_area,
+            "color" : color,
+            "period_no" : period_no,
+            "box_no" : box_no
+          },
           success:function(rs) {
             load_out();
             if(rs === 'success') {
@@ -145,7 +195,7 @@ function finishPack() {
               });
 
               setTimeout(() => {
-                viewDetail(id);
+                viewDetail(pack_id);
               }, 1200)
             }
             else {

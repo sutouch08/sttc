@@ -43,7 +43,7 @@ class Sub_area extends PS_Controller {
 
 			$this->pagination->initialize($init);
 
-			$this->load->view('admin/sub_area/sub_area_list', $filter);			
+			$this->load->view('admin/sub_area/sub_area_list', $filter);
 		}
   }
 
@@ -79,46 +79,57 @@ class Sub_area extends PS_Controller {
 		{
 			if($this->input->post('name') && $this->input->post('team_id'))
       {
+				$code = trim($this->input->post('code'));
         $name = trim($this->input->post('name'));
 				$team_id = $this->input->post('team_id');
         $active = $this->input->post('status') == 1 ? 1 : 0;
 
         if( ! $this->sub_area_model->is_exists($name, $team_id))
         {
-          $arr = array(
-            'name' => $name,
-						'team_id' => $team_id,
-            'status' => $active,
-            'create_at' => now(),
-            'create_by' => $this->_user->id
-          );
-
-          $id = $this->sub_area_model->add($arr);
-
-          if( ! $id)
-          {
-            $sc = FALSE;
-            set_error('insert');
-          }
-          else
-          {
-            $ds = array(
-              'id' => $id,
-              'name' => $name,
+					if( ! $this->sub_area_model->is_exists_code($code))
+					{
+						$arr = array(
+							'code' => $code,
+							'name' => $name,
 							'team_id' => $team_id,
-							'team_name' => area_name($team_id),
-              'status' => is_active($active),
-              'create_at' => thai_date(now(), FALSE),
-              'create_by' => $this->_user->uname,
-              'update_by' => "",
-              'update_by' => ""
-            );
-          }
+							'status' => $active,
+							'create_at' => now(),
+							'create_by' => $this->_user->id
+						);
+
+						$id = $this->sub_area_model->add($arr);
+
+						if( ! $id)
+						{
+							$sc = FALSE;
+							set_error('insert');
+						}
+						else
+						{
+							$ds = array(
+								'id' => $id,
+								'code' => $code,
+								'name' => $name,
+								'team_id' => $team_id,
+								'team_name' => area_name($team_id),
+								'status' => is_active($active),
+								'create_at' => thai_date(now(), FALSE),
+								'create_by' => $this->_user->uname,
+								'update_by' => "",
+								'update_by' => ""
+							);
+						}
+					}
+					else
+					{
+						$sc = FALSE;
+						set_error('exists', $code);
+					}
         }
         else
         {
           $sc = FALSE;
-          set_error('exists', $code);
+          set_error('exists', $name);
         }
       }
       else
@@ -141,6 +152,7 @@ class Sub_area extends PS_Controller {
   {
     $sc = TRUE;
     $id = $this->input->post('id');
+		$code = trim($this->input->post('code'));
     $name = trim($this->input->post('name'));
 		$team_id = $this->input->post('team_id');
     $active = $this->input->post('status') == 1 ? 1 : 0;
@@ -149,43 +161,52 @@ class Sub_area extends PS_Controller {
 
     if($this->pm->can_edit)
     {
-      if( ! empty($id) && ! empty($name))
+      if( ! empty($id) && ! empty($name) && ! empty($code))
       {
         if( ! $this->sub_area_model->is_exists($name, $team_id, $id))
         {
-					$arr = array(
-            'name' => $name,
-						'team_id' => $team_id,
-            'status' => $active,
-            'update_at' => now(),
-            'update_by' => $this->_user->id
-          );
+					if( ! $this->sub_area_model->is_exists_code($code, $id))
+					{
+						$arr = array(
+							'code' => $code,
+							'name' => $name,
+							'team_id' => $team_id,
+							'status' => $active,
+							'update_at' => now(),
+							'update_by' => $this->_user->id
+						);
 
-          if( ! $this->sub_area_model->update($id, $arr))
-          {
-            $sc = FALSE;
-            set_error('update');
-          }
-          else
-          {
-            $rs = $this->sub_area_model->get($id);
+						if( ! $this->sub_area_model->update($id, $arr))
+						{
+							$sc = FALSE;
+							set_error('update');
+						}
+						else
+						{
+							$rs = $this->sub_area_model->get($id);
 
-            if(! empty($rs))
-            {
-              $rs->status = is_active($rs->status);
-              $rs->create_at = thai_date($rs->create_at, FALSE);
-              $rs->update_at = thai_date($rs->update_at, FALSE);
-              $rs->create_by = uname($rs->create_by);
-              $rs->update_by = uname($rs->update_by);
+							if(! empty($rs))
+							{
+								$rs->status = is_active($rs->status);
+								$rs->create_at = thai_date($rs->create_at, FALSE);
+								$rs->update_at = thai_date($rs->update_at, FALSE);
+								$rs->create_by = uname($rs->create_by);
+								$rs->update_by = uname($rs->update_by);
 
-							$ds = (array) $rs;
-            }
-            else
-            {
-              $sc = FALSE;
-              set_error('notfound');
-            }
-          }
+								$ds = (array) $rs;
+							}
+							else
+							{
+								$sc = FALSE;
+								set_error('notfound');
+							}
+						}
+					}
+					else
+					{
+						$sc = FALSE;
+	          set_error('exists', $code);
+					}
         }
         else
         {

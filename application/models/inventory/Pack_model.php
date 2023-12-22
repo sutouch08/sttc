@@ -155,83 +155,75 @@ class Pack_model extends CI_Model
 
   public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
   {
-    $this->db
-    ->select('p.*')
-    ->select('t.DocEntry')
-    ->from('pack AS p')
-    ->join('transfer AS t', 'p.transfer_code = t.code', 'left');
-
     if( ! empty($ds['code']))
     {
-      $this->db->like('p.code', $ds['code']);
+      $this->db->like('code', $ds['code']);
     }
 
     if( ! empty($ds['reference']))
     {
-      $this->db->like('p.transfer_code', $ds['reference']);
+      $this->db->like('transfer_code', $ds['reference']);
     }
 
     if( ! empty($ds['area']) && $ds['area'] != 'all')
     {
-      $this->db->where('p.team_id', $ds['area']);
+      $this->db->where('team_id', $ds['area']);
     }
 
     if( ! empty($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
-      $this->db->where('p.WhsCode', $ds['warehouse']);
+      $this->db->where('WhsCode', $ds['warehouse']);
     }
-
 
     if( ! empty($ds['user']) && $ds['user'] != 'all')
     {
-      $this->db->where('p.user', $ds['user']);
+      $this->db->where('user', $ds['user']);
     }
 
     if( ! empty($ds['status']) && $ds['status'] != 'all')
     {
       if($ds['status'] == 'S')
       {
-        $this->db->where('p.status', 'C')->where('t.DocEntry IS NOT NULL', NULL, FALSE)->where('t.status', 'S');
+        $this->db->where('status', 'C')->where('DocEntry IS NOT NULL', NULL, FALSE);
       }
       elseif($ds['status'] == 'C')
       {
-        $this->db->where('p.status', 'C')->where('t.DocEntry IS NULL', NULL, FALSE);
+        $this->db->where('status', 'C')->where('DocEntry IS NULL', NULL, FALSE);
       }
       else
       {
-        $this->db->where('p.status', $ds['status']);
+        $this->db->where('status', $ds['status']);
       }
     }
 
-
     if( ! empty($ds['phase']) && $ds['phase'] != 'all')
     {
-      $this->db->where('p.phase', $ds['phase']);
+      $this->db->where('phase', $ds['phase']);
     }
 
     if( ! empty($ds['color']) && $ds['color'] != 'all')
     {
       if($ds['color'] == 'NULL')
       {
-        $this->db->where('p.color IS NULL', NULL, FALSE);
+        $this->db->where('color IS NULL', NULL, FALSE);
       }
       else
       {
-        $this->db->where('p.color', $ds['color']);
+        $this->db->where('color', $ds['color']);
       }
     }
 
     if( ! empty($ds['from_date']))
     {
-      $this->db->where('p.date_add >=', from_date($ds['from_date']));
+      $this->db->where('date_add >=', from_date($ds['from_date']));
     }
 
     if( ! empty($ds['to_date']))
     {
-      $this->db->where('p.date_add <=', to_date($ds['to_date']));
+      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
 
-    $rs = $this->db->order_by('p.code', 'DESC')->limit($perpage, $offset)->get();
+    $rs = $this->db->order_by('code', 'DESC')->limit($perpage, $offset)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -244,79 +236,75 @@ class Pack_model extends CI_Model
 
   public function count_rows(array $ds = array())
   {
-    $this->db
-    ->from('pack AS p')
-    ->join('transfer AS t', 'p.transfer_code = t.code', 'left');
-
     if( ! empty($ds['code']))
     {
-      $this->db->like('p.code', $ds['code']);
+      $this->db->like('code', $ds['code']);
     }
 
     if( ! empty($ds['reference']))
     {
-      $this->db->like('p.transfer_code', $ds['reference']);
+      $this->db->like('transfer_code', $ds['reference']);
     }
 
     if( ! empty($ds['area']) && $ds['area'] != 'all')
     {
-      $this->db->where('p.team_id', $ds['area']);
+      $this->db->where('team_id', $ds['area']);
     }
 
     if( ! empty($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
-      $this->db->where('p.WhsCode', $ds['warehouse']);
+      $this->db->where('WhsCode', $ds['warehouse']);
     }
 
     if( ! empty($ds['user']) && $ds['user'] != 'all')
     {
-      $this->db->where('p.user', $ds['user']);
+      $this->db->where('user', $ds['user']);
     }
 
     if( ! empty($ds['status']) && $ds['status'] != 'all')
     {
       if($ds['status'] == 'S')
       {
-        $this->db->where('p.status', 'C')->where('t.DocEntry IS NOT NULL', NULL, FALSE)->where('t.status', 'S');
+        $this->db->where('status', 'C')->where('DocEntry IS NOT NULL', NULL, FALSE);
       }
       elseif($ds['status'] == 'C')
       {
-        $this->db->where('p.status', 'C')->where('t.DocEntry IS NULL', NULL, FALSE);
+        $this->db->where('status', 'C')->where('DocEntry IS NULL', NULL, FALSE);
       }
       else
       {
-        $this->db->where('p.status', $ds['status']);
+        $this->db->where('status', $ds['status']);
       }
     }
 
     if( ! empty($ds['phase']) && $ds['phase'] != 'all')
     {
-      $this->db->where('p.phase', $ds['phase']);
+      $this->db->where('phase', $ds['phase']);
     }
 
     if( ! empty($ds['color']) && $ds['color'] != 'all')
     {
       if($ds['color'] == 'NULL')
       {
-        $this->db->where('p.color IS NULL', NULL, FALSE);
+        $this->db->where('color IS NULL', NULL, FALSE);
       }
       else
       {
-        $this->db->where('p.color', $ds['color']);
+        $this->db->where('color', $ds['color']);
       }
     }
 
     if( ! empty($ds['from_date']))
     {
-      $this->db->where('p.date_add >=', from_date($ds['from_date']));
+      $this->db->where('date_add >=', from_date($ds['from_date']));
     }
 
     if( ! empty($ds['to_date']))
     {
-      $this->db->where('p.date_add <=', to_date($ds['to_date']));
+      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
 
-    return $this->db->count_all_results();
+    return $this->db->count_all_results($this->tb);
   }
 
 

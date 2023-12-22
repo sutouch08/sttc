@@ -75,6 +75,14 @@
   </div>
 
 	<div class="form-group">
+    <label class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label">Cut off date</label>
+    <div class="col-lg-1 col-md-1 col-sm-1-harf col-xs-12">
+			<input type="text" name="cut_off_date" id="cut-off-date" class="form-control width-100 text-center" value="<?php echo (empty($user->cut_off_date) ? NULL : thai_date($user->cut_off_date)); ?>" />
+    </div>
+		<div class="col-xs-12 col-sm-reset inline red" id="cut-off-date-error"></div>
+  </div>
+
+	<div class="form-group">
     <label class="col-lg-3 col-md-3 col-sm-3 hidden-xs control-label"></label>
     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 			<label style="margin-top:7px; padding-left:10px;">

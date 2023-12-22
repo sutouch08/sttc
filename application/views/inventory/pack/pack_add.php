@@ -48,7 +48,17 @@
 		</select>
 	</div>
 
-  <div class="col-lg-11 col-md-10-harf col-sm-8 col-xs-9">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6">
+		<label>งวดที่</label>
+		<input type="text" class="form-control edit" maxlength="20" id="period-no" />
+	</div>
+
+	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6">
+		<label>ลังที่</label>
+		<input type="text" class="form-control edit" maxlength="20" id="box-no" />
+	</div>
+
+  <div class="col-lg-8 col-md-7-harf col-sm-5 col-xs-9">
     <label>Remark</label>
     <input type="text" class="form-control edit" name="remark" id="remark" maxlength="254" value="" autofocus />
   </div>

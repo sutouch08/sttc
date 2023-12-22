@@ -16,6 +16,10 @@ class Printer
 	public $logo_position = "left"; //-- left or middle or right
 	public $cancle_watermark = "";
 
+	public $css_files = array();
+
+	public $js_files = array();
+
 
 	public $header_rows = 4;
 	public $sub_total_row	= 2;
@@ -74,8 +78,27 @@ class Printer
 		$header .= "	<link href='".base_url()."assets/css/bootstrap.css' rel='stylesheet' />";
 		$header .= "	<link href='".base_url()."assets/css/template.css' rel='stylesheet' />";
 		$header .= "	<link href='".base_url()."assets/css/print.css' rel='stylesheet' />";
+
+		if( ! empty($css_files))
+		{
+			foreach($css_files as $css)
+			{
+				//--- only path
+				$header .= "<link rel='".base_url().$css."' rel='stylesheet' />";
+			}
+		}
+
 		$header .= "	<script src='".base_url()."assets/js/jquery.min.js'></script>";
 		$header .= "	<script src='".base_url()."assets/js/bootstrap.min.js'></script> ";
+
+		if( ! empty($js_files))
+		{
+			foreach($js_files as $js)
+			{
+				$header .= "<script src='".base_url().$js."'></script>";
+			}
+		}
+
 		$header .= "	<style>
 										.page_layout{
 											border: solid 1px #aaa;

@@ -25,17 +25,6 @@ class Api
 
 		$testMode = getConfig('TEST_MODE') ? TRUE : FALSE;
 
-		if($testMode)
-		{
-			$arr = array(
-				'export_status' => 'S',
-				'DocEntry' => 1,
-				'DocNum' => "22000001"
-			);
-
-			$this->ci->transfer_model->update($id, $arr);
-			return TRUE;
-		}
 
 		$logJson = getConfig('LOGS_JSON') == 1 ? TRUE : FALSE;
 
@@ -44,6 +33,19 @@ class Api
 		$sc = TRUE;
 		$doc = $this->ci->transfer_model->get($id);
     $details = $this->ci->transfer_model->get_details($id);
+
+    if($testMode)
+    {
+      $arr = array(
+        'export_status' => 'S',
+        'DocEntry' => 1,
+        'DocNum' => "22000001"
+      );
+
+      $this->ci->transfer_model->update($id, $arr);
+      $this->ci->transfer_model->update_pack_list($doc->pack_id, 1);
+      return TRUE;
+    }
 
 		if(! empty($doc) && ! empty($details))
 		{
@@ -167,6 +169,7 @@ class Api
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
+          $this->ci->transfer_model->update_pack_list($doc->pack_id, $rs->docEntry);
 
 				}
         elseif($rs->status == 'exists')
@@ -178,6 +181,7 @@ class Api
 					);
 
 					$this->ci->transfer_model->update($id, $arr);
+          $this->ci->transfer_model->update_pack_list($doc->pack_id, $rs->docEntry);
         }
 				else
 				{

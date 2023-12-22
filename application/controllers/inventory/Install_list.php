@@ -5,6 +5,7 @@ class Install_list extends PS_Controller
 {
   public $menu_code = 'OPISTL';
 	public $menu_group_code = 'OP';
+  public $active_menu = TRUE;
 	public $title = 'รายการติดตั้งสำเร็จ';
 	public $segment = 4;
   public $error;
@@ -14,23 +15,21 @@ class Install_list extends PS_Controller
   {
     parent::__construct();
 
-    if($this->config->item('system_date'))
-    {
-      $this->home = base_url().'inventory/install_list';
-      $this->load->model('inventory/install_list_model');
-      $this->load->model('inventory/transfer_model');
-      $this->load->model('admin/team_model');
-      $this->load->helper('warehouse');
-      $this->load->helper('area');
-      $this->load->helper('dispose_reason');
-      $this->load->helper('meter');
-    }
+    $this->home = base_url().'inventory/install_list';
+    $this->load->model('inventory/install_list_model');
+    $this->load->model('inventory/transfer_model');
+    $this->load->model('admin/team_model');
+    $this->load->helper('warehouse');
+    $this->load->helper('area');
+    $this->load->helper('dispose_reason');
+    $this->load->helper('meter');
+    $this->active_menu = $this->menu->is_active($this->menu_code);
   }
 
 
   public function index()
   {
-    if($this->config->item('system_date'))
+    if($this->active_menu)
     {
       $filter = array(
         'transfer_code' => get_filter('transfer_code', 'transfer_code', ''),
@@ -70,11 +69,11 @@ class Install_list extends PS_Controller
         $this->load->view('inventory/install_list/install_list', $filter);
 
       }
-
     }
     else
     {
-      redirect(base_url().'suspended');
+      $this->load->view('maintenance');
+      // redirect(base_url().'maintenance');
     }
 
   }
@@ -83,7 +82,9 @@ class Install_list extends PS_Controller
   public function add_rows()
   {
     $sc = TRUE;
+    $ex = 0;
     $data = json_decode($this->input->post('data'));
+
     if( ! empty($data))
     {
       $this->ms = $this->load->database('ms', TRUE);
@@ -126,7 +127,8 @@ class Install_list extends PS_Controller
           if( ! $this->install_list_model->add($arr))
           {
             $sc = FALSE;
-            $this->error = "Insert failed at : {$rs->u_pea_no}";
+            $this->error .= "<label class='display-block red'>Insert failed at : {$rs->u_pea_no}</label>";
+            $ex = 1;
           }
         }
         else
@@ -134,7 +136,8 @@ class Install_list extends PS_Controller
           if( ! $this->install_list_model->update($id, $arr))
           {
             $sc = FALSE;
-            $this->error = "Update failed at : {$rs->u_pea_no}";
+            $this->error .= "<label class='display-block red'>Update failed at : {$rs->u_pea_no}</label>";
+            $ex = 1;
           }
         }
       }
@@ -145,7 +148,13 @@ class Install_list extends PS_Controller
       $this->error = "Nodata";
     }
 
-    $this->_response($sc);
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'ex' => $ex
+    );
+
+    echo json_encode($arr);
   }
 
 
@@ -420,7 +429,7 @@ class Install_list extends PS_Controller
       {
         $pk = $rs->status == 'O' ? $rs->status.$rs->pack_status : $rs->status;
         $status = empty($label[$pk]) ? 'unknow' : $label[$pk];
-        
+
         $dispose_name = empty($rs->dispose) ? (empty($reason[$rs->dispose_reason]) ? "" : $reason[$rs->dispose_reason]) : $rs->dispose;
 
         $arr = array(

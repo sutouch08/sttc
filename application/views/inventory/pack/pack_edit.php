@@ -40,17 +40,17 @@
 
 	<div class="divider"></div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-3 col-xs-6">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6">
 		<label>พื้นที่</label>
-		<select class="form-control edit" id="sub-area">
+		<select class="form-control edit" id="sub-area" <?php echo (getConfig('PACK_STRICT_SUB_AREA') ? 'disabled' : ''); ?>>
 			<option value="">เลือกพื้นที่</option>
 			<?php echo select_sub_area_team($doc->team_id, $doc->sub_area_id); ?>
 		</select>
 	</div>
 
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-6">
 		<label>สี</label>
-		<select class="form-control edit" id="color">
+		<select class="form-control edit" id="color" disabled>
 			<option value="">เลือกสี</option>
 			<option value="Green" <?php echo is_selected($doc->color, 'Green'); ?>>สีเขียว</option>
 			<option value="Blue" <?php echo is_selected($doc->color, 'Blue'); ?>>น้ำเงิน</option>
@@ -59,12 +59,22 @@
 		</select>
 	</div>
 
-  <div class="col-lg-7 col-md-6-harf col-sm-6 col-xs-9">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-6">
+		<label>งวดที่</label>
+		<input type="text" class="form-control text-center edit" id="period-no" value="<?php echo $doc->period_no; ?>" />
+	</div>
+
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-6">
+		<label>ลังที่</label>
+		<input type="text" class="form-control text-center edit" id="box-no" value="<?php echo $doc->box_no; ?>" />
+	</div>
+
+  <div class="col-lg-6-harf col-md-5 col-sm-4 col-xs-9">
     <label>Remark</label>
     <input type="text" class="form-control edit" name="remark" id="remark" maxlength="254" value="<?php echo $doc->remark; ?>" />
   </div>
 
-	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3">
+	<div class="col-lg-1 col-md-1 col-sm-1-harf col-xs-3">
 		<label class="display-block not-show">btn</label>
 		<button type="button" class="btn btn-sm btn-primary btn-block" onclick="updateRemark()">อัพเดต</button>
 	</div>

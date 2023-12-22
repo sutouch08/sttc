@@ -3,18 +3,20 @@
 	$pm = get_permission('OPWHTR', $this->_user->id);
 ?>
 <div class="row">
-	<div class="col-lg-2 col-md-4 col-sm-4 hidden-xs">
+	<div class="col-lg-2 col-md-12 col-sm-12 hidden-xs">
     <h3 class="title"> <?php echo $this->title; ?></h3>
   </div>
 	<div class="col-xs-12 visible-xs">
 		<h3 class="title-xs"><?php echo $this->title; ?></h3>
 	</div>
-	<div class="col-lg-10 col-md-8 col-sm-8 col-xs-12">
+	<div class="col-lg-10 col-md-12 col-sm-12 col-xs-12">
     <p class="pull-right top-p">
 			<button type="button" class="btn btn-sm btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+			<?php if(empty($doc->DocEntry)) : ?>
 			<button type="button" class="btn btn-sm btn-purple top-btn" onclick="updateInstallData()">Update ข้อมูลสับเปลี่ยน</button>
+			<?php endif; ?>
 			<?php if($doc->status != 'O' && $doc->status != 'D') : ?>
-				<?php if($pm->can_add && $doc->status == 'F') : ?>
+				<?php if($pm->can_add && $doc->status == 'F' && getConfig('ALLOW_CREATE_TRANSFER_FROM_PACK_LIST')) : ?>
 					<button type="button" class="btn btn-sm btn-success top-btn" onclick="createTransfer()">สร้างใบโอนสินค้า</button>
 				<?php endif; ?>
 				<?php if($doc->status == 'F' && $this->pm->can_edit) : ?>
@@ -44,14 +46,17 @@
 		<input type="text" class="form-control" id="area" value="<?php echo area_name($doc->team_id); ?>" disabled />
 	</div>
 
-	<div class="col-lg-2-harf col-md-2-harf col-sm-2-harf col-xs-6">
+	<div class="col-lg-2-harf col-md-3-harf col-sm-3-harf col-xs-4">
 		<label>คลัง</label>
 		<input type="text" class="form-control" id="WhsCode" value="<?php echo $doc->WhsCode.' : '.warehouse_name($doc->WhsCode); ?>" disabled />
 	</div>
 
-	<div class="col-lg-2 col-md-2-harf col-sm-2-harf col-xs-6">
+	<div class="col-lg-2 col-md-4 col-sm-3-harf col-xs-4">
 		<label>พื้นที่</label>
-		<input type="text" class="form-control" id="sub-area" value="<?php echo sub_area_name($doc->sub_area_id); ?>" disabled />
+		<select class="form-control edit" id="sub-area" disabled>
+			<option value="">เลือกพื้นที่</option>
+			<?php echo select_sub_area_team($doc->team_id, $doc->sub_area_id); ?>
+		</select>
 	</div>
 
 	<div class="col-lg-2 col-md-2-harf col-sm-2 col-xs-4">
@@ -59,7 +64,28 @@
 		<input type="text" class="form-control" id="user" value="<?php echo display_name($doc->user); ?>" disabled />
 	</div>
 
-	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4">
+		<label>สี</label>
+		<select class="form-control edit" id="color">
+			<option value="">เลือกสี</option>
+			<option value="Green" <?php echo is_selected($doc->color, 'Green'); ?>>สีเขียว</option>
+			<option value="Blue" <?php echo is_selected($doc->color, 'Blue'); ?>>น้ำเงิน</option>
+			<option value="Orange" <?php echo is_selected($doc->color, 'Orange'); ?>>ส้ม</option>
+			<option value="Red" <?php echo is_selected($doc->color, 'Red'); ?>>แดง</option>
+		</select>
+	</div>
+
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4">
+		<label>งวดที่</label>
+		<input type="text" class="form-control text-center edit" id="period-no" value="<?php echo $doc->period_no; ?>" />
+	</div>
+
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4">
+		<label>ลังที่</label>
+		<input type="text" class="form-control text-center edit" id="box-no" value="<?php echo $doc->box_no; ?>"/>
+	</div>
+
+	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4">
 		<label>Reference</label>
 		<input type="text" class="form-control text-center" value="<?php echo $doc->transfer_code; ?>" disabled />
 	</div>
@@ -69,15 +95,19 @@
 		<input type="text" class="form-control text-center" value="<?php echo pack_status_label($doc->status); ?>" disabled />
 	</div>
 
-	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4">
 		<label>เฟส</label>
 		<input type="text" class="form-control text-center" value="<?php echo $doc->phase; ?>" disabled />
 	</div>
 
-  <div class="col-lg-8-harf col-md-7-harf col-sm-7 col-xs-9">
+  <div class="col-lg-4-harf col-md-12 col-sm-12 col-xs-12">
     <label>Remark</label>
     <input type="text" class="form-control" name="remark" id="remark" maxlength="254" value="<?php echo $doc->remark; ?>" disabled/>
   </div>
+	<div class="col-lg-1 col-md-1 col-sm-1-harf col-xs-3">
+		<label class="display-block not-show">u</label>
+		<button type="button" class="btn btn-sm btn-primary btn-block" onclick="updateRemark()">Update</button>
+	</div>
 </div>
 
 <?php if($doc->status == 'D') : ?>

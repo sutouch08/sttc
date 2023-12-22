@@ -86,6 +86,19 @@ class Sub_area_model extends CI_Model
   }
 
 
+  public function get_code($id)
+  {
+    $rs = $this->db->select('code')->where('id', $id)->get($this->tb);
+
+    if( $rs->num_rows() === 1)
+    {
+      return $rs->row()->code;
+    }
+
+    return NULL;
+  }
+
+
   public function get_name($id)
   {
     $rs = $this->db->select('name')->where('id', $id)->get($this->tb);
@@ -153,9 +166,25 @@ class Sub_area_model extends CI_Model
     return FALSE;
   }
 
+
+  public function is_exists_code($code, $id = NULL)
+  {
+    if( ! empty($id))
+    {
+      $this->db->where('id !=', $id);
+    }
+
+    $count = $this->db->where('code', $code)->count_all_results($this->tb);
+
+    return $count > 0 ? TRUE : FALSE;
+  }
+
+
+
   public function is_exists_transection($id)
   {
-    return FALSE;
+    $count = $this->db->where('sub_area_id', $id)->count_all_results('pack');
+    return $count > 0 ? TRUE : FALSE;
   }
 
 
