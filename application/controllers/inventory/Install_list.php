@@ -73,7 +73,6 @@ class Install_list extends PS_Controller
     else
     {
       $this->load->view('maintenance');
-      // redirect(base_url().'maintenance');
     }
 
   }
@@ -82,6 +81,7 @@ class Install_list extends PS_Controller
   public function add_rows()
   {
     $sc = TRUE;
+    $err = array();
     $ex = 0;
     $data = json_decode($this->input->post('data'));
 
@@ -116,7 +116,7 @@ class Install_list extends PS_Controller
           'date_add' => now(),
           'user' => $this->_user->uname
         );
-
+      
         $id = $this->install_list_model->get_id($rs->u_pea_no);
 
         if( ! $id)
@@ -126,8 +126,7 @@ class Install_list extends PS_Controller
 
           if( ! $this->install_list_model->add($arr))
           {
-            $sc = FALSE;
-            $this->error .= "<label class='display-block red'>Insert failed at : {$rs->u_pea_no}</label>";
+            $err[] = $arr;
             $ex = 1;
           }
         }
@@ -135,8 +134,7 @@ class Install_list extends PS_Controller
         {
           if( ! $this->install_list_model->update($id, $arr))
           {
-            $sc = FALSE;
-            $this->error .= "<label class='display-block red'>Update failed at : {$rs->u_pea_no}</label>";
+            $err[] = $arr;
             $ex = 1;
           }
         }
@@ -150,7 +148,8 @@ class Install_list extends PS_Controller
 
     $arr = array(
       'status' => $sc === TRUE ? 'success' : 'failed',
-      'message' => $sc === TRUE ? 'success' : $this->error,
+      'err' => $err,
+      'message' => $sc === TRUE ? 'success' :  $this->error,
       'ex' => $ex
     );
 

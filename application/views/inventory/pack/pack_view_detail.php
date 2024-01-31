@@ -66,7 +66,7 @@
 
 	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4">
 		<label>สี</label>
-		<select class="form-control edit" id="color">
+		<select class="form-control edit" id="color" disabled>
 			<option value="">เลือกสี</option>
 			<option value="Green" <?php echo is_selected($doc->color, 'Green'); ?>>สีเขียว</option>
 			<option value="Blue" <?php echo is_selected($doc->color, 'Blue'); ?>>น้ำเงิน</option>

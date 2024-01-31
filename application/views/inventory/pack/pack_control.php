@@ -8,7 +8,7 @@
   <div class="col-xs-12 visible-xs">&nbsp;</div>
   <div class="col-lg-3 col-md-2-harf col-sm-2-harf col-xs-8 padding-5">
     <label class="hidden-xs">PEA NO(เก่า)</label>
-    <input type="text" class="form-control input-lg text-center" inputmode="none" id="u-pea-no" placeholder="PEA NO (เก่า)">
+    <input type="text" class="form-control input-lg text-center" inputmode="" id="u-pea-no" placeholder="PEA NO (เก่า)">
   </div>
   <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
     <label class="display-block not-show hidden-xs">btn</label>
@@ -17,7 +17,7 @@
   <div class="col-xs-12 visible-xs">&nbsp;</div>
   <div class="col-lg-3 col-md-2-harf col-sm-2-harf col-xs-8 padding-5">
     <label class="hidden-xs">PEA NO(ใหม่)</label>
-    <input type="text" class="form-control input-lg text-center" inputmode="none" id="i-pea-no" placeholder="PEA NO (ใหม่)" autofocus>
+    <input type="text" class="form-control input-lg text-center" inputmode="" id="i-pea-no" placeholder="PEA NO (ใหม่)" autofocus>
   </div>
   <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
     <label class="display-block not-show hidden-xs">btn</label>
