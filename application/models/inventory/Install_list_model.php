@@ -486,10 +486,12 @@ class Install_list_model extends CI_Model
 
   public function unpack($pea_no, $op = 'u')
   {
+    $pea_no = strval($pea_no);
+
     $ds = array(
       'pack_status' => 0,
       'pack_code' => NULL
-    );
+    );    
 
     if($op == 'i')
     {

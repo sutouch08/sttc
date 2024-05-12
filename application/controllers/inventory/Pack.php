@@ -342,46 +342,70 @@ class Pack extends PS_Controller
           {
             if($rs->pack_status == 0)
             {
-              if($rs->phase == $doc->phase)
+              if($rs->status != 'C')
               {
-                $reason_name = empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason);
-
-                if(empty($reason_name) && $doc->color == 'Red')
+                if($rs->phase == $doc->phase)
                 {
-                  $reason_name = "หมดวาระ";
-                }
+                  $reason_name = empty($rs->dispose_reason) ? NULL : dispose_reason_name($rs->dispose_reason);
 
-                $arr = array(
-                  'pack_id' => $pack_id,
-                  'u_pea_no' => $rs->u_pea_no,
-                  'i_pea_no' => $rs->i_pea_no,
-                  'work_date' => $rs->work_date,
-                  'meter_age' => $rs->meter_age,
-                  'phase' => $rs->phase,
-                  'meter_size' => $rs->meter_size_name,
-                  'meter_read_end' => $rs->meter_read_end,
-                  'dispose_reason_id' => $rs->dispose_reason,
-                  'user' => $this->_user->id,
-                  'dispose_reason_name' => $reason_name
-                );
+                  if(empty($reason_name) && $doc->color == 'Red')
+                  {
+                    $reason_name = "หมดวาระ";
+                  }
 
-                $id = $this->pack_model->add_detail($arr);
+                  $arr = array(
+                    'pack_id' => $pack_id,
+                    'u_pea_no' => $rs->u_pea_no,
+                    'i_pea_no' => $rs->i_pea_no,
+                    'work_date' => $rs->work_date,
+                    'meter_age' => $rs->meter_age,
+                    'phase' => $rs->phase,
+                    'meter_size' => $rs->meter_size_name,
+                    'meter_read_end' => $rs->meter_read_end,
+                    'dispose_reason_id' => $rs->dispose_reason,
+                    'user' => $this->_user->id,
+                    'dispose_reason_name' => $reason_name
+                  );
 
-                if($id)
-                {
-                  $arr['id'] = $id;
-                  $this->install_list_model->update($rs->id, array('pack_status' => 1, 'pack_code' => $doc->code));
+                  $this->db->trans_begin();
+
+                  $id = $this->pack_model->add_detail($arr);
+
+                  if($id)
+                  {
+                    $arr['id'] = $id;
+
+                    if( ! $this->install_list_model->update($rs->id, array('pack_status' => 1, 'pack_code' => $doc->code)))
+                    {
+                      $sc = FALSE;
+                      $this->error = "Failed to update install list";
+                    }
+                  }
+                  else
+                  {
+                    $sc = FALSE;
+                    $this->error = "เพิ่มรายการไม่สำเร็จ";
+                  }
+
+                  if($sc === TRUE)
+                  {
+                    $this->db->trans_commit();
+                  }
+                  else
+                  {
+                    $this->db->trans_rollback();
+                  }
                 }
                 else
                 {
                   $sc = FALSE;
-                  $this->error = "เพิ่มรายการไม่สำเร็จ";
+                  $this->error = "กรุณาแพ็คมิเตอร์ {$doc->phase} เฟสเท่านั้น";
                 }
               }
               else
               {
                 $sc = FALSE;
-                $this->error = "กรุณาแพ็คมิเตอร์ {$doc->phase} เฟสเท่านั้น";
+                $this->error = "มิเตอรนี้์ถูก close ไปแล้ว";
               }
             }
             else
@@ -458,12 +482,37 @@ class Pack extends PS_Controller
 
     if( ! empty($data))
     {
+      $this->db->trans_begin();
+
       foreach($data as $rs)
       {
+        if($sc === FALSE)
+        {
+          break;
+        }
+
         if($this->pack_model->delete_detail($rs->id))
         {
-          $this->install_list_model->unpack($rs->u_pea_no, 'u');
+          if( ! $this->install_list_model->unpack($rs->u_pea_no, 'u'))
+          {
+            $sc = FALSE;
+            $this->error = "Failed to update install list";
+          }
         }
+        else
+        {
+          $sc = FALSE;
+          $this->error = "Delete failed";
+        }
+      }
+
+      if($sc === TRUE)
+      {
+        $this->db->trans_commit();
+      }
+      else
+      {
+        $this->db->trans_rollback();
       }
     }
     else
